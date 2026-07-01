@@ -1,0 +1,9 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+<div class="container mt-4">
+    <h2>Welcome, @User.Identity?.Name 👋</h2>
+    <p class="text-muted">Role: @User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</p>
+    <hr />
+    <p>M0 complete — dashboard coming in M7.</p>
+</div>

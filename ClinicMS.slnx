@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="ClinicMS.Api/ClinicMS.Api.csproj" />
+  <Project Path="ClinicMS.Application/ClinicMS.Application.csproj" />
+  <Project Path="ClinicMS.Domain/ClinicMS.Domain.csproj" />
+  <Project Path="ClinicMS.Infrastructure/ClinicMS.Infrastructure.csproj" />
+  <Project Path="ClinicMS.Shared/ClinicMS.Shared.csproj" />
+  <Project Path="ClinicMS.Web/ClinicMS.Web.csproj" />
+</Solution>
