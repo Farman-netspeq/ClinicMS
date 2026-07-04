@@ -466,9 +466,9 @@ $(function () {
         // hide dropdown if any (this is used wehen invoking modal from link in bootstrap dropdown )
         //$(e.target).closest('.btn-group').children('.dropdown-toggle').dropdown('toggle');
 
-        $('#AddEditModalContent').load(this.data_href, function () {
+        $('#AddEditModalContent').load(this.href, function () {
+            $('#AddEditModal').modal('dispose');   // clear any stale instance first
             $('#AddEditModal').modal({
-                /*backdrop: 'static',*/
                 keyboard: true
             }, 'show');
             bindForm(this);

@@ -1,0 +1,22 @@
+﻿@model List<DoctorScheduleListItemDto>
+@{
+    ViewBag.Title = "Doctor Schedule";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Weekly Schedule</h4>
+    <a href="/DoctorSchedules/AddEdit?id=&doctorId=@ViewBag.DoctorId"
+       class="btn btn-primary btn-sm" data-modal>
+        + Add Slot
+    </a>
+</div>
+
+<div id="pageContent">
+    <partial name="_List" model="Model" />
+</div>
+
+<div class="modal fade" id="AddEditModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" id="AddEditModalContent"></div>
+    </div>
+</div>

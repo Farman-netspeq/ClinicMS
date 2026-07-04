@@ -1,0 +1,124 @@
+﻿@model ClinicMS.Shared.Common.PaginatedResult<ClinicMS.Application.DTOs.Department.DepartmentListItemDto>
+
+<div id="replacetarget">
+<input type="hidden"
+       id="ErrMsgHiddenField"
+       data-msg-code="@TempData["MsgCode"]"
+       value="@TempData["Msg"]" />
+
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Status</th>
+            @if (User.IsInRole("Admin"))
+            {
+                <th>Actions</th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @if (!Model.Items.Any())
+        {
+            <tr>
+                <td colspan="4" class="text-center text-muted">
+                    No departments found
+                </td>
+            </tr>
+        }
+
+        @foreach (var dept in Model.Items)
+        {
+            <tr>
+                <td>@dept.Name</td>
+                <td>@dept.Description</td>
+                <td>
+                    @* Badge color based on IsActive *@
+                        <span class="badge @(dept.IsActive
+                                                            ? "badge-success" : "badge-secondary")">
+                        @dept.StatusDisplay
+                    </span>
+                </td>
+                @if (User.IsInRole("Admin"))
+                {
+                    <td>
+                        <a href="/Departments/Edit/@dept.Id"
+                           data-modal
+                           class="btn btn-sm btn-warning">
+                            Edit
+                        </a>
+
+                        @if (dept.IsActive)
+                    {
+                                <form method="post"
+                                      action="/Departments/Deactivate/@dept.Id"
+                                      data-sks-ajax="true"
+                                      data-sks-target="#replacetarget"
+                                      class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <a class="delete btn btn-sm btn-danger"
+                                   href="/Departments/Deactivate/@dept.Id">
+                                    Deactivate
+                                </a>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="text-muted small">Inactive</span>
+                        }
+                    </td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (Model.TotalPages > 1)
+{
+    <div class="ns-grid-pager"
+         data-sks-target="#replacetarget">
+
+        <nav>
+            <ul class="pagination">
+                @* Previous button *@
+                <li class="page-item @(!Model.HasPreviousPage
+                                        ? "disabled" : "")">
+                    <a class="page-link ns-page-link"
+                       href="/Departments/List?PageNo=@(Model.Page - 1)">
+                        «
+                    </a>
+                </li>
+
+                @* Page number buttons *@
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.Page
+                                                ? "active" : "")">
+                <a class="page-link ns-page-link"
+                   href="/Departments/List?PageNo=@i">
+                    @i
+                </a>
+            </li>
+        }
+
+        @* Next button *@
+        <li class="page-item @(!Model.HasNextPage
+                                ? "disabled" : "")">
+            <a class="page-link ns-page-link"
+               href="/Departments/List?PageNo=@(Model.Page + 1)">
+                »
+            </a>
+        </li>
+    </ul>
+</nav>
+
+@* Total count info *@
+<small class="text-muted">
+    Showing @((Model.Page - 1) * Model.PageSize + 1)
+    - @(Math.Min(Model.Page * Model.PageSize, Model.TotalCount))
+    of @Model.TotalCount departments
+</small>
+</div>
+}
+</div>
