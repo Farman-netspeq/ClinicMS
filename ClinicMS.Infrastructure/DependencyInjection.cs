@@ -1,5 +1,7 @@
-﻿using ClinicMS.Domain.Entities;
+﻿using ClinicMS.Application.Interfaces;
+using ClinicMS.Domain.Entities;
 using ClinicMS.Infrastructure.Data;
+using ClinicMS.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -61,7 +63,7 @@ namespace ClinicMS.Infrastructure
                         Encoding.UTF8.GetBytes(jwtKey))
                 };
             });
-
+            services.AddScoped<IAuthService, AuthService>();
             return services;
         }
     }

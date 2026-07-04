@@ -1,0 +1,11 @@
+﻿@{
+    ViewData["Title"] = "Error";
+    var requestId = ViewData["RequestId"] as string;
+}
+<h1 class="text-danger">Something went wrong.</h1>
+<p>An error occurred while processing your request.</p>
+@if (!string.IsNullOrEmpty(requestId))
+{
+    <p><small>Request ID: @requestId</small></p>
+}
+<a href="/" class="btn btn-primary">Go Home</a>
