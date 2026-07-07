@@ -2,6 +2,7 @@
 using ClinicMS.Infrastructure.Data.Configurations;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace ClinicMS.Infrastructure.Data
 {
@@ -16,7 +17,7 @@ namespace ClinicMS.Infrastructure.Data
         public DbSet<Department> Departments { get; set; }
         public DbSet<Doctor> Doctors { get; set; }
         public DbSet<DoctorSchedule> DoctorSchedules { get; set; }
-
+        public DbSet<Patient> Patients { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -26,6 +27,7 @@ namespace ClinicMS.Infrastructure.Data
             builder.ApplyConfiguration(new DoctorConfiguration());
             builder.ApplyConfiguration(
                 new DoctorScheduleConfiguration());
+            builder.ApplyConfiguration(new PatientConfiguration());
         }
     }
 }

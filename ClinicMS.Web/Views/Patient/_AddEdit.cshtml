@@ -1,0 +1,88 @@
+﻿@model ClinicMS.Application.DTOs.Patient.PatientRequestDto
+
+<div class="modal-header">
+    <h5 class="modal-title">@(string.IsNullOrEmpty(Model.Id) ? "Add Patient" : "Edit Patient")</h5>
+    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+</div>
+
+<form data-sks-ajax="true" data-sks-target="#replacetarget" action="/Patients/Save" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+
+    <div class="modal-body">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label asp-for="FirstName" class="form-label">First Name <span class="text-danger">*</span></label>
+                    <input asp-for="FirstName" class="form-control" />
+                    <span asp-validation-for="FirstName" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label asp-for="LastName" class="form-label">Last Name <span class="text-danger">*</span></label>
+                    <input asp-for="LastName" class="form-control" />
+                    <span asp-validation-for="LastName" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label asp-for="DateOfBirth" class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                    <input asp-for="DateOfBirth" type="date" class="form-control"
+                           max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label asp-for="Gender" class="form-label">Gender <span class="text-danger">*</span></label>
+                    <select asp-for="Gender" class="form-control"
+                            asp-items="Html.GetEnumSelectList<ClinicMS.Domain.Enums.Gender>()"></select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label asp-for="BloodGroup" class="form-label">Blood Group</label>
+                    <select asp-for="BloodGroup" class="form-control"
+                            asp-items="Html.GetEnumSelectList<ClinicMS.Domain.Enums.BloodGroup>()"></select>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label asp-for="Phone" class="form-label">Phone <span class="text-danger">*</span></label>
+                    <input asp-for="Phone" class="form-control" />
+                    <span asp-validation-for="Phone" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <input asp-for="Email" type="email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Address" class="form-label">Address</label>
+            <textarea asp-for="Address" class="form-control" rows="2"></textarea>
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-success">Save</button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

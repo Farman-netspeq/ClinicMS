@@ -10,9 +10,13 @@ namespace ClinicMS.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Already dropped in prior partial run — skip
-            // migrationBuilder.DropForeignKey(...)
-            // migrationBuilder.DropIndex(name: "IX_utblCMSDoctorSchedules_DoctorId_DayOfWeek", ...)
+            migrationBuilder.DropForeignKey(
+                name: "FK_utblCMSDoctorSchedules_utblCMSDoctors_DoctorId",
+                table: "utblCMSDoctorSchedules");
+
+            migrationBuilder.DropIndex(
+                name: "IX_utblCMSDoctorSchedules_DoctorId_DayOfWeek",
+                table: "utblCMSDoctorSchedules");
 
             migrationBuilder.AlterColumn<string>(
                 name: "DoctorId",

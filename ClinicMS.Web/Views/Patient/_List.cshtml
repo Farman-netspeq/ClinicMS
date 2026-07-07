@@ -1,0 +1,89 @@
+﻿@model ClinicMS.Shared.Common.PaginatedResult<ClinicMS.Application.DTOs.Patient.PatientListItemDto>
+
+<div id="replacetarget">
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Patient No.</th>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Gender</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Items.Any())
+            {
+                <tr><td colspan="7" class="text-center text-muted">No patients found</td></tr>
+            }
+            @foreach (var p in Model.Items)
+            {
+                <tr>
+                    <td>@p.PatientNumber</td>
+                    <td>@p.FullName</td>
+                    <td>@p.Age</td>
+                    <td>@p.Gender</td>
+                    <td>@p.Phone</td>
+                    <td>
+                        <span class="badge @(p.IsActive ? "badge-success" : "badge-secondary")">
+                            @(p.IsActive ? "Active" : "Inactive")
+                        </span>
+                    </td>
+                    <td>
+                        <a href="/Patients/AddEdit?id=@p.Id" data-modal class="btn btn-sm btn-warning">Edit</a>
+
+                        @if (p.IsActive)
+                        {
+                            <form method="post" action="/Patients/Deactivate/@p.Id"
+                                  data-sks-ajax="true" data-sks-target="#replacetarget" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <a class="delete btn btn-sm btn-danger" href="/Patients/Deactivate/@p.Id">
+                                    Deactivate
+                                </a>
+                            </form>
+                        }
+                        else
+                        {
+                            <form method="post" action="/Patients/Reactivate/@p.Id"
+                                  data-sks-ajax="true" data-sks-target="#replacetarget" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <a class="delete btn btn-sm btn-success" href="/Patients/Reactivate/@p.Id">
+                                    Reactivate
+                                </a>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (Model.TotalPages > 1)
+    {
+        <div class="ns-grid-pager" data-sks-target="#replacetarget">
+            <nav>
+                <ul class="pagination">
+                    <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                        <a class="page-link ns-page-link" href="/Patients/List?PageNo=@(Model.Page - 1)">«</a>
+                    </li>
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.Page ? "active" : "")">
+                            <a class="page-link ns-page-link" href="/Patients/List?PageNo=@i">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                        <a class="page-link ns-page-link" href="/Patients/List?PageNo=@(Model.Page + 1)">»</a>
+                    </li>
+                </ul>
+            </nav>
+            <small class="text-muted">
+                Showing @((Model.Page - 1) * Model.PageSize + 1)
+                - @(Math.Min(Model.Page * Model.PageSize, Model.TotalCount))
+                of @Model.TotalCount patients
+            </small>
+        </div>
+    }
+</div>

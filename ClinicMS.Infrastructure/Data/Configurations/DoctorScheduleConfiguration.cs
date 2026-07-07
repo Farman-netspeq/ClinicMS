@@ -14,7 +14,8 @@ namespace ClinicMS.Infrastructure.Data.Configurations
 
             builder.Property(s => s.DoctorId)
                 .IsRequired()
-                .HasMaxLength(450);
+                .HasMaxLength(36);
+            builder.Property(s => s.Id).HasMaxLength(36);
 
             builder.HasOne(s => s.Doctor)
                 .WithMany(d => d.Schedules)
