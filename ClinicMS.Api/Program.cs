@@ -1,8 +1,22 @@
 using ClinicMS.Api;
 using ClinicMS.Infrastructure;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Host.UseSerilog((context, services, loggerConfig) =>
+{
+    if (context.HostingEnvironment.IsProduction())
+    {
+        loggerConfig
+            .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day)
+            .MinimumLevel.Information();
+    }
+    else
+    {
+        loggerConfig.MinimumLevel.Fatal();
+    }
+});
 // ── Services ──────────────────────────────────────────────────
 // AddInfrastructure = our extension method from DependencyInjection.cs
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -10,13 +24,14 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddControllers();
 
 // CORS — allows Web project (different port) to call Api
+var allowedOrigins = builder.Configuration
+    .GetSection("CorsSettings:AllowedOrigins")
+    .Get<string[]>() ?? throw new InvalidOperationException("CORS AllowedOrigins not configured");
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("WebClient", policy =>
     {
-        policy.WithOrigins(
-        "https://localhost:7145",
-        "http://localhost:5186")
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();

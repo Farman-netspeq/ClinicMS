@@ -67,6 +67,7 @@ namespace ClinicMS.Infrastructure
             services.AddScoped<IDoctorService, DoctorService>();
             services.AddScoped<IDoctorScheduleService, DoctorScheduleService>();
             services.AddScoped<IPatientService, PatientService>();
+            services.AddScoped<IAuthService, AuthService>();
             return services;
         }
     }
