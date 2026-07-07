@@ -1,0 +1,49 @@
+﻿@{
+    ViewData["Title"] = "Departments";
+}
+<input type="hidden" id="ErrMsgHiddenField" value="" />
+
+<div class="row mb-3">
+    <div class="col">
+        <h4>🏥 Departments</h4>
+    </div>
+    @if (User.IsInRole("Admin"))
+    {
+        <div class="col text-end">
+            <a href="/Departments/Add"
+               data-modal
+               class="btn btn-primary">
+                + Add Department
+            </a>
+        </div>
+    }
+</div>
+<form id="searchFrom" method="get">
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <input type="text"
+                   name="SearchTerm"
+                   class="form-control"
+                   placeholder="Search by name..." />
+        </div>
+        <div class="col-md-3">
+            <select name="IsActive" class="form-control">
+                <option value="">All Status</option>
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-secondary">
+                Search
+            </button>
+        </div>
+    </div>
+</form>
+
+<div id="pageContent"></div>
+
+@section Scripts {
+    <script src="~/js/site.js"></script>
+    <script src="~/js/departments.js"></script>
+}

@@ -63,6 +63,9 @@ namespace ClinicMS.Infrastructure
                         Encoding.UTF8.GetBytes(jwtKey))
                 };
             });
+            services.AddScoped<IDepartmentService, DepartmentService>();
+            services.AddScoped<IDoctorService, DoctorService>();
+            services.AddScoped<IDoctorScheduleService, DoctorScheduleService>();
             services.AddScoped<IAuthService, AuthService>();
             return services;
         }

@@ -50,12 +50,18 @@ namespace ClinicMS.Web.ApiClients
         public async Task<T?> PostAsync<T>(string endpoint, object data)
         {
             AttachToken();
-            // Serialize C# object → JSON string → send to Api
             var json = JsonSerializer.Serialize(data);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await _httpClient.PostAsync(endpoint, content);
             var responseJson = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                // Api rejected it — surface real reason instead of silent empty deserialize
+                throw new HttpRequestException($"Api call failed: {response.StatusCode} — {responseJson}");
+            }
+
             return JsonSerializer.Deserialize<T>(responseJson, _jsonOptions);
         }
 

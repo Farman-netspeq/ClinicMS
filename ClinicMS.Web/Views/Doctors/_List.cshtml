@@ -1,0 +1,128 @@
+﻿@model ClinicMS.Shared.Common.PaginatedResult<ClinicMS.Application.DTOs.Doctor.DoctorListItemDto>
+
+<div id="replacetarget">
+
+    <input type="hidden"
+           id="ErrMsgHiddenField"
+           data-msg-code="@TempData["MsgCode"]"
+           value="@TempData["Msg"]" />
+
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Specialization</th>
+                <th>License No.</th>
+                <th>Fee (₹)</th>
+                <th>Status</th>
+                @if (User.IsInRole("Admin"))
+                {
+                    <th>Actions</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Items.Any())
+            {
+                <tr>
+                    <td colspan="7" class="text-center text-muted">
+                        No doctors found
+                    </td>
+                </tr>
+            }
+
+            @foreach (var doc in Model.Items)
+            {
+                <tr>
+                    <td>@doc.FullName</td>
+                    <td>@doc.DepartmentName</td>
+                    <td>@doc.Specialization</td>
+                    <td>@doc.LicenseNumber</td>
+                    <td>@doc.ConsultationFee.ToString("N2")</td>
+                    <td>
+                        <span class="badge @(doc.IsActive
+                                                                                        ? "badge-success" : "badge-secondary")">
+                            @doc.StatusDisplay
+                        </span>
+                    </td>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <td>
+                            <a href="/Doctors/Edit/@doc.Id"
+                               data-modal
+                               class="btn btn-sm btn-warning">
+                                Edit
+                            </a>
+                            <a href="/DoctorSchedules/Index?doctorId=@doc.Id" class="btn btn-sm btn-info">
+                                Schedule
+                            </a>
+                            @if (doc.IsActive)
+                            {
+                                <form method="post"
+                                      action="/Doctors/Deactivate/@doc.Id"
+                                      data-sks-ajax="true"
+                                      data-sks-target="#replacetarget"
+                                      class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <a class="delete btn btn-sm btn-danger"
+                                       href="/Doctors/Deactivate/@doc.Id">
+                                        Deactivate
+                                    </a>
+                                </form>
+                            }
+                            else
+                            {
+                                <form method="post"
+                                      action="/Doctors/Reactivate/@doc.Id"
+                                      data-sks-ajax="true"
+                                      data-sks-target="#replacetarget"
+                                      class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <a class="delete btn btn-sm btn-success"
+                                       href="/Doctors/Reactivate/@doc.Id">
+                                        Reactivate
+                                    </a>
+                                </form>
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (Model.TotalPages > 1)
+    {
+        <div class="ns-grid-pager"
+             data-sks-target="#replacetarget">
+            <nav>
+                <ul class="pagination">
+                    <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                        <a class="page-link ns-page-link"
+                           href="/Doctors/List?PageNo=@(Model.Page - 1)">«</a>
+                    </li>
+
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.Page ? "active" : "")">
+                            <a class="page-link ns-page-link"
+                               href="/Doctors/List?PageNo=@i">@i</a>
+                        </li>
+                    }
+
+                    <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                        <a class="page-link ns-page-link"
+                           href="/Doctors/List?PageNo=@(Model.Page + 1)">»</a>
+                    </li>
+                </ul>
+            </nav>
+            <small class="text-muted">
+                Showing @((Model.Page - 1) * Model.PageSize + 1)
+                - @(Math.Min(Model.Page * Model.PageSize, Model.TotalCount))
+                of @Model.TotalCount doctors
+            </small>
+        </div>
+    }
+
+</div>

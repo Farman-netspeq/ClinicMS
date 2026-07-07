@@ -1,4 +1,4 @@
-﻿// Toastr configuration
+﻿// site.js
 toastr.options = {
     positionClass: "toast-top-right",
     timeOut: 3000,

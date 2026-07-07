@@ -1,0 +1,21 @@
+﻿@model List<DoctorScheduleListItemDto>
+<div id="replacetarget">
+    <table class="table table-sm table-bordered">
+        <thead><tr><th>Day</th><th>Start</th><th>End</th><th>Slot (min)</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var s in Model ?? new())
+            {
+                <tr>
+                    <td>@s.DayOfWeek</td>
+                    <td>@s.StartTime</td>
+                    <td>@s.EndTime</td>
+                    <td>@s.SlotDurationMinutes</td>
+                    <td>
+                        <a href="/DoctorSchedules/AddEdit?id=@s.Id&doctorId=@ViewBag.DoctorId" data-modal>Edit</a> |
+                        <a href="/DoctorSchedules/Delete/@s.Id" class="delete" data-sks-target="#replacetarget">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,23 +1,29 @@
 ﻿using ClinicMS.Domain.Entities;
+using ClinicMS.Infrastructure.Data.Configurations;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClinicMS.Infrastructure.Data
 {
-    // IdentityDbContext<ApplicationUser> = DbContext that ALSO includes
-    // all Identity tables (AspNetUsers, AspNetRoles, AspNetUserRoles etc.)
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-        // Constructor — receives options (connection string etc.) from DI
-        // and passes it up to base DbContext. You never call this manually.
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        public ApplicationDbContext(
+            DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
         }
+        public DbSet<Department> Departments { get; set; }
+        public DbSet<Doctor> Doctors { get; set; }
+        public DbSet<DoctorSchedule> DoctorSchedules { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
+
             base.OnModelCreating(builder);
+            builder.ApplyConfiguration(new DepartmentConfiguration());
+            builder.ApplyConfiguration(new DoctorConfiguration());
+            builder.ApplyConfiguration(
+                new DoctorScheduleConfiguration());
         }
     }
 }
