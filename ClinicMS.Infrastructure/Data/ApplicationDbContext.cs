@@ -12,12 +12,10 @@ namespace ClinicMS.Infrastructure.Data
             : base(options)
         {
         }
-
         public DbSet<Department> Departments { get; set; }
         public DbSet<Doctor> Doctors { get; set; }
         public DbSet<DoctorSchedule> DoctorSchedules { get; set; }
-
-
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
 
