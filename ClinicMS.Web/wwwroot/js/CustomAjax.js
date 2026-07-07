@@ -450,10 +450,7 @@ $(function () {
         //$(e.target).closest('.btn-group').children('.dropdown-toggle').dropdown('toggle');
 
         $('#AddEditModalContent').load(this.href, function () {
-            $('#AddEditModal').modal({
-                /*backdrop: 'static',*/
-                keyboard: true
-            }, 'show');
+            $('#AddEditModal').modal('show');
             bindForm(this);
         });
         return false;
@@ -465,12 +462,8 @@ $(function () {
     $(".container-fluid").on("click", "button[data-modal]", function (e) {
         // hide dropdown if any (this is used wehen invoking modal from link in bootstrap dropdown )
         //$(e.target).closest('.btn-group').children('.dropdown-toggle').dropdown('toggle');
-
         $('#AddEditModalContent').load(this.href, function () {
-            $('#AddEditModal').modal('dispose');   // clear any stale instance first
-            $('#AddEditModal').modal({
-                keyboard: true
-            }, 'show');
+            $('#AddEditModal').modal('show');
             bindForm(this);
         });
         return false;

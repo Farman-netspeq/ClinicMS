@@ -64,36 +64,64 @@ namespace ClinicMS.Web.Controllers
 
         // POST: /Patients/Save
         [HttpPost]
+        [HttpPost]
         public async Task<IActionResult> Save(PatientRequestDto dto)
         {
-            ApiResponseDto<string>? result;
-            if (string.IsNullOrEmpty(dto.Id))
-                result = await _httpService.PostAsync<ApiResponseDto<string>>("api/patients", dto);
-            else
-                result = await _httpService.PutAsync<ApiResponseDto<string>>($"api/patients/{dto.Id}", dto);
-
-            return Json(new
+            if (!ModelState.IsValid)
             {
-                success = result?.Success ?? false,
-                message = result?.Message ?? "Save failed.",
-                url = Url.Action("List")
-            });
+                return PartialView("_AddEdit", dto);
+            }
+
+            try
+            {
+                ApiResponseDto<string>? result;
+                if (string.IsNullOrEmpty(dto.Id))
+                    result = await _httpService.PostAsync<ApiResponseDto<string>>("api/patients", dto);
+                else
+                    result = await _httpService.PutAsync<ApiResponseDto<string>>($"api/patients/{dto.Id}", dto);
+
+                if (result == null || !result.Success)
+                {
+                    ModelState.AddModelError("", result?.Message ?? "Failed to save patient");
+                    return PartialView("_AddEdit", dto);
+                }
+
+                return Json(new { success = true, url = Url.Action("List") });
+            }
+            catch (HttpRequestException ex) when (ex.Message.Contains("Unauthorized"))
+            {
+                return StatusCode(401);   // let browser's real ajax error handler catch this — see Bug 3 fix below
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", ex.Message);
+                return PartialView("_AddEdit", dto);
+            }
         }
 
         // POST: /Patients/Deactivate/{id}
         [HttpPost]
         public async Task<IActionResult> Deactivate(string id)
         {
-            var result = await _httpService.DeleteAsync<ApiResponseDto<string>>($"api/patients/{id}");
-            return Json(new { success = result?.Success ?? false, message = result?.Message });
+            await _httpService.DeleteAsync<ApiResponseDto<string>>($"api/patients/{id}");
+
+            var filter = new PatientFilterDto();
+            var result = await _httpService.GetAsync<ApiResponseDto<PaginatedResult<PatientListItemDto>>>(
+                $"api/patients?PageNo={filter.PageNo}&PageSize={filter.PageSize}");
+
+            return PartialView("_List", result?.Data ?? new PaginatedResult<PatientListItemDto>());
         }
 
-        // POST: /Patients/Reactivate/{id}
         [HttpPost]
         public async Task<IActionResult> Reactivate(string id)
         {
-            var result = await _httpService.PostAsync<ApiResponseDto<string>>($"api/patients/{id}/reactivate", new { });
-            return Json(new { success = result?.Success ?? false, message = result?.Message });
+            await _httpService.PostAsync<ApiResponseDto<string>>($"api/patients/{id}/reactivate", new { });
+
+            var filter = new PatientFilterDto();
+            var result = await _httpService.GetAsync<ApiResponseDto<PaginatedResult<PatientListItemDto>>>(
+                $"api/patients?PageNo={filter.PageNo}&PageSize={filter.PageSize}");
+
+            return PartialView("_List", result?.Data ?? new PaginatedResult<PatientListItemDto>());
         }
     }
 }

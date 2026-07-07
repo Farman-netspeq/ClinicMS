@@ -26,8 +26,7 @@ namespace ClinicMS.Application.DTOs.Patient
         public BloodGroup BloodGroup { get; set; }
 
         [Required(ErrorMessage = "Phone number is required")]
-        [Phone]
-        [StringLength(20)]
+        [RegularExpression(@"^[6-9]\d{9}$", ErrorMessage = "Enter a valid 10-digit phone number")]
         public string Phone { get; set; } = string.Empty;
 
         [EmailAddress(ErrorMessage = "Invalid email format")]
