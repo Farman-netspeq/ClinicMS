@@ -1,0 +1,68 @@
+﻿@model AppointmentRequestDto
+
+<div class="modal-header">
+    <h5 class="modal-title">Book Appointment</h5>
+    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+</div>
+
+<form data-sks-ajax="true" data-sks-target="#replacetarget" action="/Appointments/Save" method="post">
+    <div class="modal-body">
+        <input type="hidden" asp-for="Id" />
+
+        <div class="form-group">
+            <label>Patient <span class="text-danger">*</span></label>
+            <select asp-for="PatientId" id="ddlPatient" class="form-control">
+                <option value="">-- Select Patient --</option>
+                @foreach (var p in ViewBag.Patients as List<PatientListItemDto> ?? new())
+                {
+                    <option value="@p.Id">@p.FullName (@p.PatientNumber)</option>
+                }
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Department <span class="text-danger">*</span></label>
+            <select asp-for="DepartmentId" id="ddlDepartment" class="form-control dropdown-change"
+                    dataotflink="/Appointments/GetDoctorsByDepartment"
+                    dataotftarget="#ddlDoctor">
+                <option value="">-- Select Department --</option>
+                @foreach (var d in ViewBag.Departments as List<DepartmentListItemDto> ?? new())
+                {
+                    <option value="@d.Id">@d.Name</option>
+                }
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Doctor <span class="text-danger">*</span></label>
+            <select asp-for="DoctorId" id="ddlDoctor" class="form-control">
+                <option value="">-- Select Doctor --</option>
+            </select>
+        </div>
+
+    
+
+        <div class="form-group">
+            <label>Appointment Date <span class="text-danger">*</span></label>
+            <input type="date" name="AppointmentDate" id="txtDate" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label>Available Slot <span class="text-danger">*</span></label>
+            <select id="ddlSlot" class="form-control">
+                <option value="">-- Select Slot --</option>
+            </select>
+            <!-- StartTime hidden field actually submitted — service derives EndTime itself -->
+            <input asp-for="StartTime" type="hidden" id="hdnStartTime" />
+        </div>
+
+        <div class="form-group">
+            <label>Chief Complaint <span class="text-danger">*</span></label>
+
+            <textarea asp-for="ChiefComplaint" class="form-control" rows="2"></textarea>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-success">Book</button>
+    </div>
+</form>

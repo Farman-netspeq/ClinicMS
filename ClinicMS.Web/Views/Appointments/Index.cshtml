@@ -1,0 +1,48 @@
+﻿@model PaginatedResult<AppointmentListItemDto>
+@using ClinicMS.Application.DTOs.Appointment
+@using ClinicMS.Shared.Common
+@{
+    ViewBag.Title = "Appointments";
+}
+<input type="hidden" id="ErrMsgHiddenField" value="" />
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Appointments</h4>
+    <a href="/Appointments/AddEdit" class="btn btn-primary btn-sm" data-modal>
+        + Book Appointment
+    </a>
+</div>
+
+<form id="searchFrom">
+    <div class="row mb-2">
+        <div class="col-md-3">
+            <input type="text" name="SearchTerm" class="form-control form-control-sm" placeholder="Search patient/number" />
+        </div>
+        <div class="col-md-2">
+            <select name="Status" class="form-control form-control-sm">
+                <option value="">All Status</option>
+                <option value="1">Scheduled</option>
+                <option value="2">CheckedIn</option>
+                <option value="3">Completed</option>
+                <option value="4">Cancelled</option>
+                <option value="5">NoShow</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <input type="date" name="FromDate" class="form-control form-control-sm" />
+        </div>
+        <div class="col-md-2">
+            <input type="date" name="ToDate" class="form-control form-control-sm" />
+        </div>
+        <div class="col-md-2">
+            <button type="button" id="btnSearch" class="btn btn-outline-primary btn-sm">Search</button>
+        </div>
+    </div>
+</form>
+
+<div id="pageContent">
+    <partial name="_List" model="Model" />
+</div>
+@section Scripts {
+    <script src="~/js/appointments.js"></script>
+}

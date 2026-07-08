@@ -1,0 +1,50 @@
+﻿@model PaginatedResult<AppointmentListItemDto>
+<div id="replacetarget">
+    <table class="table table-sm table-bordered">
+        <thead>
+            <tr>
+                <th>Apt #</th>
+                <th>Patient</th>
+                <th>Doctor</th>
+                <th>Dept</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Complaint</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var a in Model.Items ?? new())
+            {
+                <tr>
+                    <td>@a.AppointmentNumber</td>
+                    <td>@a.PatientName (@a.PatientNumber)</td>
+                    <td>@a.DoctorName</td>
+                    <td>@a.DepartmentName</td>
+                    <td>@a.AppointmentDate.ToString("dd-MMM-yyyy")</td>
+                    <td>@a.StartTime - @a.EndTime</td>
+                    <td>@a.Status</td>
+                    <td>@a.ChiefComplaint</td>
+                    <td>
+                        @if (a.Status.ToString() == "Scheduled" || a.Status.ToString() == "CheckedIn")
+                        {
+                            <a href="javascript:void(0)" class="btn-cancel-apt" data-id="@a.Id">Cancel</a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="ns-grid-pager" data-sks-target="#replacetarget">
+        @{
+            int totalPages = (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize);
+        }
+        @for (int p = 1; p <= totalPages; p++)
+        {
+            <a class="ns-page-link @(p == Model.Page ? "active" : "")"
+               href="javascript:void(0)" data-page="@p">@p</a>
+        }
+    </div>
+</div>

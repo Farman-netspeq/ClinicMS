@@ -51,28 +51,24 @@ namespace ClinicMS.Api.Controllers
 
         // GET api/doctors/bydepartment/{departmentId}
         [HttpGet("bydepartment/{departmentId}")]
-        public async Task<IActionResult> GetByDepartment(
-            string departmentId)
+        public async Task<IActionResult> GetByDepartment(string departmentId)
         {
-            var result = await _service
-                .GetDoctorsByDepartmentAsync(departmentId);
+            var result = await _service.GetDoctorsByDepartmentAsync(departmentId);
 
             if (!result.IsSuccess)
-                return BadRequest(
-                    ApiResponseDto<List<DoctorListItemDto>>
-                    .ErrorResponse(result.ErrorMessage));
+                return BadRequest(ApiResponseDto<List<DoctorListItemDto>>.ErrorResponse(result.ErrorMessage));
 
-            // CustomAjax cascading dropdown expects:
-            // [{Value: "id", Text: "display name"}]
             var dropdownItems = result.Data!.Select(d => new
             {
                 Value = d.Id,
                 Text = $"{d.FullName} ({d.Specialization})"
-            });
+            }).ToList();
 
-            return Ok(dropdownItems);
+            var json = System.Text.Json.JsonSerializer.Serialize(dropdownItems,
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = null });
+
+            return Content(json, "application/json");
         }
-
         // POST api/doctors
         [HttpPost]
         [Authorize(Roles = "Admin")]
