@@ -1,27 +1,34 @@
 ﻿using ClinicMS.Domain.Enums;
+using System;
+using System.Collections.Generic;
 
-namespace ClinicMS.Domain.Entities
+namespace ClinicMS.Domain.Entities;
+
+public partial class Patient
 {
-    public class Patient
-    {
-        public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string Id { get; set; } = null!;
 
-        public string PatientNumber { get; set; } = string.Empty;
-        // auto-generated server-side, e.g. "PAT-000123" 
+    public string PatientNumber { get; set; } = null!;
 
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-        public DateTime DateOfBirth { get; set; }
-        public Gender Gender { get; set; }
-        public BloodGroup BloodGroup { get; set; }
-        public string Phone { get; set; } = string.Empty;
-        public string? Email { get; set; }
-        public string? Address { get; set; }
+    public string FirstName { get; set; } = null!;
 
-        public bool IsActive { get; set; } = true;
-        // soft-delete flag — BR7
+    public string LastName { get; set; } = null!;
 
-        public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
-        public string? CreatedById { get; set; }  // FK → AspNetUsers.Id, 
-    }
+    public DateTime DateOfBirth { get; set; }
+
+    public Gender Gender { get; set; }
+
+    public BloodGroup BloodGroup { get; set; }
+
+    public string Phone { get; set; } = null!;
+
+    public string? Email { get; set; }
+
+    public string? Address { get; set; }
+
+    public bool IsActive { get; set; }
+
+    public DateTime CreatedOn { get; set; }
+
+    public string? CreatedById { get; set; }
 }

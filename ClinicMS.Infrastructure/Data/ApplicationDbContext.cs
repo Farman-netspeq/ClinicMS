@@ -2,32 +2,28 @@
 using ClinicMS.Infrastructure.Data.Configurations;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
 
-namespace ClinicMS.Infrastructure.Data
+namespace ClinicMS.Infrastructure.Data;
+
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        : base(options) { }
+
+    public DbSet<Department> Departments { get; set; }
+    public DbSet<Doctor> Doctors { get; set; }
+    public DbSet<DoctorSchedule> DoctorSchedules { get; set; }
+    public DbSet<Patient> Patients { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        public ApplicationDbContext(
-            DbContextOptions<ApplicationDbContext> options)
-            : base(options)
-        {
-        }
-        public DbSet<Department> Departments { get; set; }
-        public DbSet<Doctor> Doctors { get; set; }
-        public DbSet<DoctorSchedule> DoctorSchedules { get; set; }
-        public DbSet<RefreshToken> RefreshTokens { get; set; }
-        public DbSet<Patient> Patients { get; set; }
+        base.OnModelCreating(modelBuilder);  
 
-        protected override void OnModelCreating(ModelBuilder builder)
-        {
-
-            base.OnModelCreating(builder);
-            builder.ApplyConfiguration(new DepartmentConfiguration());
-            builder.ApplyConfiguration(new DoctorConfiguration());
-            builder.ApplyConfiguration(
-                new DoctorScheduleConfiguration());
-            builder.ApplyConfiguration(new PatientConfiguration());
-        }
+        modelBuilder.ApplyConfiguration(new DepartmentConfiguration());
+        modelBuilder.ApplyConfiguration(new DoctorConfiguration());
+        modelBuilder.ApplyConfiguration(new DoctorScheduleConfiguration());
+        modelBuilder.ApplyConfiguration(new PatientConfiguration());
+        modelBuilder.ApplyConfiguration(new RefreshTokenConfiguration());
     }
 }

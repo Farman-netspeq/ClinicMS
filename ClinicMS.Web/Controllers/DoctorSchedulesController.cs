@@ -47,11 +47,39 @@ public class DoctorSchedulesController : Controller
 
 
     [HttpPost]
-
     public async Task<IActionResult> Save(DoctorScheduleRequestDto dto)
     {
-        var result = await _httpService.PostAsync<ApiResponseDto<string>>("api/doctorschedules/save", dto);
-        return Json(new { success = result?.Success ?? false, message = result?.Message, url = Url.Action("List", new { doctorId = dto.DoctorId }) });
+        try
+        {
+            var result = await _httpService.PostAsync<ApiResponseDto<string>>("api/doctorschedules/save", dto);
+            return Json(new
+            {
+                success = result?.Success ?? false,
+                message = result?.Message ?? "Save failed.",
+                url = Url.Action("List", new { doctorId = dto.DoctorId })
+            });
+        }
+        catch (HttpRequestException ex)
+        {
+            return Json(new { success = false, message = ExtractApiMessage(ex.Message), url = "" });
+        }
+    }
+
+    private string ExtractApiMessage(string exceptionMessage)
+    {
+        try
+        {
+            var jsonStart = exceptionMessage.IndexOf('{');
+            if (jsonStart >= 0)
+            {
+                var json = exceptionMessage.Substring(jsonStart);
+                var doc = System.Text.Json.JsonDocument.Parse(json);
+                if (doc.RootElement.TryGetProperty("message", out var msg))
+                    return msg.GetString() ?? "Save failed.";
+            }
+        }
+        catch { }
+        return "Save failed.";
     }
     [HttpPost]
     public async Task<IActionResult> Delete(int id)

@@ -10,32 +10,18 @@ namespace ClinicMS.Infrastructure.Data.Configurations
         {
             builder.ToTable("utblCMSPatients");
 
-            builder.HasKey(p => p.Id);
-            builder.Property(p => p.Id).HasMaxLength(450);
+            builder.HasIndex(e => new { e.FirstName, e.LastName }, "IX_utblCMSPatients_FirstName_LastName");
+            builder.HasIndex(e => e.PatientNumber, "IX_utblCMSPatients_PatientNumber").IsUnique();
+            builder.HasIndex(e => e.Phone, "IX_utblCMSPatients_Phone");
 
-            builder.Property(p => p.PatientNumber)
-                .IsRequired()
-                .HasMaxLength(20);
-            builder.HasIndex(p => p.PatientNumber).IsUnique();
-            // unique index — DB itself rejects duplicate patient numbers,
-
-            builder.Property(p => p.FirstName).IsRequired().HasMaxLength(100);
-            builder.Property(p => p.LastName).IsRequired().HasMaxLength(100);
-            builder.Property(p => p.DateOfBirth).IsRequired();
-            builder.Property(p => p.Gender).IsRequired();
-            builder.Property(p => p.BloodGroup).IsRequired();
-
-            builder.Property(p => p.Phone).IsRequired().HasMaxLength(20);
-            builder.Property(p => p.Email).HasMaxLength(150);
-            builder.Property(p => p.Address).HasMaxLength(500);
-
-            builder.Property(p => p.IsActive).HasDefaultValue(true);
-            builder.Property(p => p.CreatedOn).IsRequired();
-            builder.Property(p => p.CreatedById).HasMaxLength(450);
-
-            // index to speed up search-by-name/phone 
-            builder.HasIndex(p => p.Phone);
-            builder.HasIndex(p => new { p.FirstName, p.LastName });
+            builder.Property(e => e.Address).HasMaxLength(500);
+            builder.Property(e => e.CreatedById).HasMaxLength(450);
+            builder.Property(e => e.Email).HasMaxLength(150);
+            builder.Property(e => e.FirstName).HasMaxLength(100);
+            builder.Property(e => e.IsActive).HasDefaultValue(true);
+            builder.Property(e => e.LastName).HasMaxLength(100);
+            builder.Property(e => e.PatientNumber).HasMaxLength(20);
+            builder.Property(e => e.Phone).HasMaxLength(20);
         }
     }
 }

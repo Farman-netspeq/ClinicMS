@@ -1,46 +1,28 @@
-﻿using ClinicMS.Domain.Enums;
+﻿using System;
+using System.Collections.Generic;
 
-namespace ClinicMS.Domain.Entities
+namespace ClinicMS.Domain.Entities;
+
+public partial class Doctor
 {
-    // Maps to utblCMSDoctors table
-    // Doctor has TWO identities:
-    // 1. ApplicationUser (login account — in AspNetUsers)
-    // 2. Doctor entity (medical profile — in utblCMSDoctors)
-    // They link via ApplicationUserId FK
-    public class Doctor
-    {
-        public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string Id { get; set; } = null!;
 
-        // FK → AspNetUsers.Id
-        // When doctor logs in, we find their Doctor record using this
-        public string ApplicationUserId { get; set; } = string.Empty;
+    public string ApplicationUserId { get; set; } = null!;
 
-        public string FullName { get; set; } = string.Empty;
+    public string FullName { get; set; } = null!;
 
-        // FK → Department.Id
-        public string DepartmentId { get; set; } = string.Empty;
+    public string DepartmentId { get; set; } = null!;
 
-        public string Specialization { get; set; } = string.Empty;
-        // e.g. "Cardiology", "Orthopedics"
+    public string Specialization { get; set; } = null!;
 
-        public string LicenseNumber { get; set; } = string.Empty;
-        // Unique medical license — enforced in EF config
+    public string LicenseNumber { get; set; } = null!;
 
-        public decimal ConsultationFee { get; set; }
-        // How much this doctor charges per visit
+    public decimal ConsultationFee { get; set; }
 
-        public bool IsActive { get; set; } = true;
+    public bool IsActive { get; set; }
 
-        // ── Navigation properties ──────────────────────────
+    public virtual ApplicationUser ApplicationUser { get; set; } = null!;
+    public virtual Department Department { get; set; } = null!;
 
-        public ApplicationUser? ApplicationUser { get; set; }
-        // → linked login account
-
-        public Department? Department { get; set; }
-        // → which department this doctor belongs to
-
-        public ICollection<DoctorSchedule> Schedules { get; set; }
-            = new List<DoctorSchedule>();
-        // → this doctor's weekly availability blocks
-    }
+    public ICollection<DoctorSchedule> Schedules { get; set; } = new List<DoctorSchedule>();
 }
