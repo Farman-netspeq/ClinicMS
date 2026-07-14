@@ -27,9 +27,22 @@
                     <td>@a.Status</td>
                     <td>@a.ChiefComplaint</td>
                     <td>
-                        @if (a.Status.ToString() == "Scheduled" || a.Status.ToString() == "CheckedIn")
+                        @if (!User.IsInRole("Doctor"))
                         {
-                            <a href="javascript:void(0)" class="btn-cancel-apt" data-id="@a.Id">Cancel</a>
+                            @if (a.Status.ToString() == "Scheduled")
+                            {
+                                <a href="javascript:void(0)" class="btn-checkin-apt" data-id="@a.Id">Check-in</a>
+                                <text> | </text>
+                                <a href="javascript:void(0)" class="btn-cancel-apt" data-id="@a.Id">Cancel</a>
+                                <text> | </text>
+                                <a href="javascript:void(0)" class="btn-noshow-apt" data-id="@a.Id">No-show</a>
+                            }
+                            else if (a.Status.ToString() == "CheckedIn")
+                            {
+                                <a href="javascript:void(0)" class="btn-complete-apt" data-id="@a.Id">Complete</a>
+                                <text> | </text>
+                                <a href="javascript:void(0)" class="btn-cancel-apt" data-id="@a.Id">Cancel</a>
+                            }
                         }
                     </td>
                 </tr>
@@ -44,7 +57,7 @@
         @for (int p = 1; p <= totalPages; p++)
         {
             <a class="ns-page-link @(p == Model.Page ? "active" : "")"
-               href="javascript:void(0)" data-page="@p">@p</a>
+               href="/Appointments/List?PageNo=@p">@p</a>
         }
     </div>
 </div>

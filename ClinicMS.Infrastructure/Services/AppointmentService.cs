@@ -505,5 +505,199 @@ namespace ClinicMS.Infrastructure.Services
                 CreatedOn = a.CreatedOn
             };
         }
+
+        // ── CHECK-IN ────────────────────────────────────────────
+        // BR4: Scheduled → CheckedIn only. Admin/Receptionist role — no ownership check needed.
+        public async Task<Result> CheckInAppointmentAsync(string id)
+        {
+            try
+            {
+                var appointment = await _context.Appointments.FindAsync(id);
+
+                if (appointment == null)
+                    return Result.Fail("Appointment not found");
+
+                // BR4 guard — reuse shared transition-check helper (see below)
+                var transitionCheck = EnsureValidTransition(
+                    appointment.Status, AppointmentStatus.CheckedIn);
+
+                if (!transitionCheck.IsSuccess)
+                    return transitionCheck;
+
+                appointment.Status = AppointmentStatus.CheckedIn;
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Appointment checked in: {Id}", id);
+                return Result.Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking in appointment {Id}", id);
+                return Result.Fail("Failed to check in appointment");
+            }
+        }
+
+        // ── COMPLETE ────────────────────────────────────────────
+        // BR4: Scheduled|CheckedIn → Completed.
+        // Ownership: only assigned doctor (or Admin) can complete.
+        public async Task<Result> CompleteAppointmentAsync(
+            string id, string currentUserId, bool isAdmin)
+        {
+            try
+            {
+                var appointment = await _context.Appointments.FindAsync(id);
+
+                if (appointment == null)
+                    return Result.Fail("Appointment not found");
+
+                // ── OWNERSHIP CHECK (only for non-Admin) ──────────
+                // Admin bypasses ownership — can complete any appointment.
+                // Non-Admin (Doctor) must match: their logged-in ApplicationUserId
+                // must resolve to the SAME Doctor.Id as appointment.DoctorId.
+                if (!isAdmin)
+                {
+                    var doctor = await _context.Doctors
+                        .FirstOrDefaultAsync(d => d.ApplicationUserId == currentUserId);
+
+                    // doctor == null → the logged-in user has no matching Doctor record at all
+                    if (doctor == null || doctor.Id != appointment.DoctorId)
+                        return Result.Fail(
+                            "You can only complete your own appointments");
+                }
+
+                // BR4 guard
+                var transitionCheck = EnsureValidTransition(
+                    appointment.Status, AppointmentStatus.Completed);
+
+                if (!transitionCheck.IsSuccess)
+                    return transitionCheck;
+
+                appointment.Status = AppointmentStatus.Completed;
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Appointment completed: {Id}", id);
+                return Result.Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error completing appointment {Id}", id);
+                return Result.Fail("Failed to complete appointment");
+            }
+        }
+
+        // ── NO-SHOW ─────────────────────────────────────────────
+        // BR4: Scheduled → NoShow only. Admin/Receptionist — no ownership check.
+        public async Task<Result> MarkNoShowAsync(string id)
+        {
+            try
+            {
+                var appointment = await _context.Appointments.FindAsync(id);
+
+                if (appointment == null)
+                    return Result.Fail("Appointment not found");
+
+                var transitionCheck = EnsureValidTransition(
+                    appointment.Status, AppointmentStatus.NoShow);
+
+                if (!transitionCheck.IsSuccess)
+                    return transitionCheck;
+
+                appointment.Status = AppointmentStatus.NoShow;
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Appointment marked no-show: {Id}", id);
+                return Result.Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error marking no-show {Id}", id);
+                return Result.Fail("Failed to mark appointment as no-show");
+            }
+        }
+
+        // ── DOCTOR DASHBOARD (BR10) ─────────────────────────────
+        // Returns only appointments belonging to the doctor identified by doctorUserId
+        public async Task<Result<List<AppointmentListItemDto>>>
+            GetDoctorAppointmentsAsync(string doctorUserId, DateTime? date)
+        {
+            try
+            {
+                // Resolve ApplicationUserId → Doctor.Id first
+                var doctor = await _context.Doctors
+                    .FirstOrDefaultAsync(d => d.ApplicationUserId == doctorUserId);
+
+                if (doctor == null)
+                    return Result<List<AppointmentListItemDto>>
+                        .Fail("No doctor profile found for this user");
+
+                var query = _context.Appointments
+                    .Include(a => a.Patient)
+                    .Include(a => a.Doctor)
+                    .Include(a => a.Department)
+                    .Where(a => a.DoctorId == doctor.Id);
+
+                if (date.HasValue)
+                {
+                    // Specific date requested → just that day
+                    query = query.Where(a => a.AppointmentDate.Date == date.Value.Date);
+                }
+                else
+                {
+                    // No date given → "today's and upcoming" per spec
+                    query = query.Where(a => a.AppointmentDate.Date >= DateTime.Today);
+                }
+
+                var items = await query
+                    .OrderBy(a => a.AppointmentDate)
+                    .ThenBy(a => a.StartTime)
+                    .Select(a => new AppointmentListItemDto
+                    {
+                        Id = a.Id,
+                        AppointmentNumber = a.AppointmentNumber,
+                        PatientName = a.Patient!.FirstName + " " + a.Patient.LastName,
+                        PatientNumber = a.Patient.PatientNumber,
+                        DoctorName = a.Doctor!.FullName,
+                        DepartmentName = a.Department!.Name,
+                        AppointmentDate = a.AppointmentDate,
+                        StartTime = a.StartTime.ToString(@"hh\:mm"),
+                        EndTime = a.EndTime.ToString(@"hh\:mm"),
+                        Status = a.Status,
+                        ChiefComplaint = a.ChiefComplaint
+                    })
+                    .ToListAsync();
+
+                return Result<List<AppointmentListItemDto>>.Ok(items);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching doctor appointments for user {UserId}", doctorUserId);
+                return Result<List<AppointmentListItemDto>>.Fail("Failed to fetch appointments");
+            }
+        }
+
+        // ══════════════════════════════════════════════════════
+        // PRIVATE HELPER — BR4 shared transition guard
+        // ══════════════════════════════════════════════════════
+        private Result EnsureValidTransition(
+            AppointmentStatus currentStatus, AppointmentStatus targetStatus)
+        {
+
+            bool isValid = (currentStatus, targetStatus) switch
+            {
+                (AppointmentStatus.Scheduled, AppointmentStatus.CheckedIn) => true,
+                (AppointmentStatus.Scheduled, AppointmentStatus.Completed) => true,
+                (AppointmentStatus.CheckedIn, AppointmentStatus.Completed) => true,
+                (AppointmentStatus.Scheduled, AppointmentStatus.NoShow) => true,
+                _ => false
+            };
+
+            if (!isValid)
+                return Result.Fail(
+                    $"Cannot change status from {currentStatus} to {targetStatus}");
+
+            return Result.Ok();
+        }
+
+
     }
 }

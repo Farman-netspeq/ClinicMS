@@ -20,11 +20,8 @@ namespace ClinicMS.Application.Interfaces
                 AppointmentRequestDto dto,
                 string createdByUserId);
         // createdByUserId = logged-in user's Id
-        // Web controller reads from cookie claims → passes here
 
         // Get available slots for Doctor + Date
-        // Used by cascading dropdown in booking form
-        // Returns list of SlotDto (StartTime, EndTime, Display)
         Task<Result<List<AppointmentSlotDto>>>
             GetAvailableSlotsAsync(
                 string doctorId,
@@ -35,5 +32,17 @@ namespace ClinicMS.Application.Interfaces
             CancelAppointmentAsync(
                 string id,
                 string cancelReason);
+
+        // BR4: Scheduled/CheckedIn → Completed. Only assigned doctor or Admin.
+        Task<Result> CompleteAppointmentAsync(string id, string currentUserId, bool isAdmin);
+
+        // BR4: Scheduled → CheckedIn. Admin/Receptionist.
+        Task<Result> CheckInAppointmentAsync(string id);
+
+        // BR4: Scheduled → NoShow. Admin/Receptionist.
+        Task<Result> MarkNoShowAsync(string id);
+
+        // BR10: doctor's own appointments only — resolves ApplicationUserId → Doctor.Id internally
+        Task<Result<List<AppointmentListItemDto>>> GetDoctorAppointmentsAsync(string doctorUserId, DateTime? date);
     }
 }

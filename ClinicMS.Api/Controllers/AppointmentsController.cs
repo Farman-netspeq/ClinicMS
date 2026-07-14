@@ -80,5 +80,57 @@ namespace ClinicMS.Api.Controllers
 
             return Ok(ApiResponseDto<string>.SuccessResponse("Appointment cancelled"));
         }
+        // ── CHECK-IN ────────────────────────────────────────────
+        [HttpPost("{id}/checkin")]
+        [Authorize(Roles = "Admin,Receptionist")]
+        public async Task<IActionResult> CheckIn(string id)
+        {
+            var result = await _service.CheckInAppointmentAsync(id);
+            if (!result.IsSuccess)
+                return BadRequest(ApiResponseDto<string>.ErrorResponse(result.ErrorMessage));
+
+            return Ok(ApiResponseDto<string>.SuccessResponse("Appointment checked in"));
+        }
+
+        // ── COMPLETE ────────────────────────────────────────────
+        [HttpPost("{id}/complete")]
+        [Authorize(Roles = "Admin,Doctor")]
+        public async Task<IActionResult> Complete(string id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var isAdmin = User.IsInRole("Admin");
+
+            var result = await _service.CompleteAppointmentAsync(id, userId, isAdmin);
+            if (!result.IsSuccess)
+                return BadRequest(ApiResponseDto<string>.ErrorResponse(result.ErrorMessage));
+
+            return Ok(ApiResponseDto<string>.SuccessResponse("Appointment completed"));
+        }
+
+        // ── NO-SHOW ─────────────────────────────────────────────
+        [HttpPost("{id}/noshow")]
+        [Authorize(Roles = "Admin,Receptionist")]
+        public async Task<IActionResult> NoShow(string id)
+        {
+            var result = await _service.MarkNoShowAsync(id);
+            if (!result.IsSuccess)
+                return BadRequest(ApiResponseDto<string>.ErrorResponse(result.ErrorMessage));
+
+            return Ok(ApiResponseDto<string>.SuccessResponse("Appointment marked as no-show"));
+        }
+
+        // ── DOCTOR DASHBOARD ─────────────────────────────────────
+        [HttpGet("my-appointments")]
+        [Authorize(Roles = "Admin,Doctor")]
+        public async Task<IActionResult> GetMyAppointments([FromQuery] DateTime? date)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var result = await _service.GetDoctorAppointmentsAsync(userId, date);
+
+            if (!result.IsSuccess)
+                return BadRequest(ApiResponseDto<List<AppointmentListItemDto>>.ErrorResponse(result.ErrorMessage));
+
+            return Ok(ApiResponseDto<List<AppointmentListItemDto>>.SuccessResponse(result.Data!));
+        }
     }
 }

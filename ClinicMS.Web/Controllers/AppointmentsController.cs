@@ -158,5 +158,62 @@ namespace ClinicMS.Web.Controllers
             catch { }
             return "Save failed.";
         }
+        // ── CHECK-IN ────────────────────────────────────────────
+        [HttpPost]
+        public async Task<IActionResult> CheckIn(string id)
+        {
+            try
+            {
+                var result = await _httpService.PostAsync<ApiResponseDto<string>>(
+                    $"api/appointments/{id}/checkin", new { });
+                return Json(new { success = result?.Success ?? false, message = result?.Message });
+            }
+            catch (HttpRequestException ex)
+            {
+                return Json(new { success = false, message = ExtractApiMessage(ex.Message) });
+            }
+        }
+
+        // ── NO-SHOW ────────────────────────────────────────────
+        [HttpPost]
+        public async Task<IActionResult> NoShow(string id)
+        {
+            try
+            {
+                var result = await _httpService.PostAsync<ApiResponseDto<string>>(
+                    $"api/appointments/{id}/noshow", new { });
+                return Json(new { success = result?.Success ?? false, message = result?.Message });
+            }
+            catch (HttpRequestException ex)
+            {
+                return Json(new { success = false, message = ExtractApiMessage(ex.Message) });
+            }
+        }
+
+        // ── COMPLETE ────────────────────────────────────────────
+        [HttpPost]
+        public async Task<IActionResult> Complete(string id)
+        {
+            try
+            {
+                var result = await _httpService.PostAsync<ApiResponseDto<string>>(
+                    $"api/appointments/{id}/complete", new { });
+                return Json(new { success = result?.Success ?? false, message = result?.Message });
+            }
+            catch (HttpRequestException ex)
+            {
+                return Json(new { success = false, message = ExtractApiMessage(ex.Message) });
+            }
+        }
+
+        // ── DOCTOR DASHBOARD ─────────────────────────────────────
+        public async Task<IActionResult> MyAppointments(DateTime? date)
+        {
+            var query = date.HasValue ? $"?date={date.Value:yyyy-MM-dd}" : "";
+            var result = await _httpService.GetAsync<ApiResponseDto<List<AppointmentListItemDto>>>(
+                $"api/appointments/my-appointments{query}");
+
+            return View(result?.Data ?? new List<AppointmentListItemDto>());
+        }
     }
 }

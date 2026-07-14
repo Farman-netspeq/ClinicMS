@@ -1,0 +1,16 @@
+﻿@model List<AppointmentListItemDto>
+@using ClinicMS.Application.DTOs.Appointment
+@{
+    ViewBag.Title = "My Appointments";
+}
+<input type="hidden" id="ErrMsgHiddenField" value="" />
+
+<h4>My Appointments — Today &amp; Upcoming</h4>
+
+<div id="pageContent">
+    <partial name="_DoctorList" model="Model" />
+</div>
+
+@section Scripts {
+    <script src="~/js/appointments.js"></script>
+}

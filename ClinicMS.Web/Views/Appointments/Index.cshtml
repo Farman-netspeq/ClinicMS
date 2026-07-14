@@ -8,9 +8,12 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4>Appointments</h4>
-    <a href="/Appointments/AddEdit" class="btn btn-primary btn-sm" data-modal>
-        + Book Appointment
-    </a>
+    @if (!User.IsInRole("Doctor"))
+    {
+        <a href="/Appointments/AddEdit" class="btn btn-primary btn-sm" data-modal>
+            + Book Appointment
+        </a>
+    }
 </div>
 
 <form id="searchFrom">
