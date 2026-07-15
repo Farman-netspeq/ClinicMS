@@ -19,7 +19,7 @@ namespace ClinicMS.Api.Controllers
         }
 
         // GET api/departments?SearchTerm=cardio&PageNo=1&PageSize=10
-        [HttpGet]
+        [HttpGet(Name = "GetDepartmentsPaged")]
         public async Task<IActionResult> GetDepartments(
             [FromQuery] DepartmentFilterDto filter)
         {
@@ -36,7 +36,7 @@ namespace ClinicMS.Api.Controllers
         }
 
         // GET api/departments/active
-        [HttpGet("active")]
+        [HttpGet("active", Name = "GetActiveDepartments")]
         public async Task<IActionResult> GetActiveDepartments()
         {
             var result = await _service.GetActiveDepartmentsAsync();
@@ -52,7 +52,7 @@ namespace ClinicMS.Api.Controllers
         }
 
         // GET api/departments/{id}
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetDepartmentById")]
         public async Task<IActionResult> GetDepartment(string id)
         {
             var result = await _service.GetDepartmentByIdAsync(id);
@@ -71,9 +71,9 @@ namespace ClinicMS.Api.Controllers
         // Creates new department
         // [Authorize(Roles="Admin")] = ONLY Admin can create
         // Receptionist/Doctor = 403 Forbidden
-        [HttpPost]
+        [HttpPost(Name = "CreateDepartment")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> CreateDepartment(
+         public async Task<IActionResult> CreateDepartment(
             [FromBody] DepartmentRequestDto dto)
         {
             if (!ModelState.IsValid)
@@ -97,7 +97,7 @@ namespace ClinicMS.Api.Controllers
 
         // PUT api/departments/{id}
         // Updates existing department
-        [HttpPut("{id}")]
+        [HttpPut("{id}", Name = "UpdateDepartment")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateDepartment(
             string id, [FromBody] DepartmentRequestDto dto)
@@ -125,7 +125,7 @@ namespace ClinicMS.Api.Controllers
 
         // DELETE api/departments/{id}
         // Deactivates (soft disable) — never hard deletes
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}", Name = "DeactivateDepartment")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeactivateDepartment(string id)
         {

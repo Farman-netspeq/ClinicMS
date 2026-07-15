@@ -53,6 +53,7 @@ namespace ClinicMS.Web.Controllers
 
             var claims = new List<Claim>
             {
+                new Claim(ClaimTypes.NameIdentifier, loginData.UserId),
                 new Claim(ClaimTypes.NameIdentifier, loginData.Email),
                 new Claim(ClaimTypes.Name, loginData.FullName),
                 new Claim(ClaimTypes.Email, loginData.Email),

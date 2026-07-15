@@ -450,10 +450,7 @@ $(function () {
         //$(e.target).closest('.btn-group').children('.dropdown-toggle').dropdown('toggle');
 
         $('#AddEditModalContent').load(this.href, function () {
-            $('#AddEditModal').modal({
-                /*backdrop: 'static',*/
-                keyboard: true
-            }, 'show');
+            $('#AddEditModal').modal('show');
             bindForm(this);
         });
         return false;
@@ -465,12 +462,8 @@ $(function () {
     $(".container-fluid").on("click", "button[data-modal]", function (e) {
         // hide dropdown if any (this is used wehen invoking modal from link in bootstrap dropdown )
         //$(e.target).closest('.btn-group').children('.dropdown-toggle').dropdown('toggle');
-
         $('#AddEditModalContent').load(this.href, function () {
-            $('#AddEditModal').modal('dispose');   // clear any stale instance first
-            $('#AddEditModal').modal({
-                keyboard: true
-            }, 'show');
+            $('#AddEditModal').modal('show');
             bindForm(this);
         });
         return false;
@@ -485,10 +478,16 @@ function bindForm(dialog) {
             type: this.method,
             data: $(this).serialize(),
             success: function (result) {
-                if (result.success) {
-                    $('#AddEditModal').modal('hide');
-                    $('#replacetarget').load(result.url); //  Load data from the server and place the returned HTML into the matched element
+                if (typeof result === 'object' && result !== null) {
+                    // JSON response
+                    if (result.success) {
+                        $('#AddEditModal').modal('hide');
+                        $('#replacetarget').load(result.url);
+                    } else {
+                        toastr.error(result.message || 'Save failed.');
+                    }
                 } else {
+                    // HTML response (re-rendered partial with validation errors)
                     $('#AddEditModalContent').html(result);
                     bindForm(dialog);
                 }

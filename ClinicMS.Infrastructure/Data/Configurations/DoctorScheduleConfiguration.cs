@@ -10,22 +10,15 @@ namespace ClinicMS.Infrastructure.Data.Configurations
         {
             builder.ToTable("utblCMSDoctorSchedules");
 
-            builder.HasKey(s => s.Id);
+            builder.HasIndex(e => new { e.DoctorId, e.DayOfWeek }, "IX_utblCMSDoctorSchedules_DoctorId_DayOfWeek");
 
-            builder.Property(s => s.DoctorId)
-                .IsRequired()
-                .HasMaxLength(450);
+            builder.Property(e => e.Id).HasMaxLength(36);
+            builder.Property(e => e.DoctorId).HasMaxLength(36);
+            builder.Property(e => e.IsActive).HasDefaultValue(true);
 
-            builder.HasOne(s => s.Doctor)
-                .WithMany(d => d.Schedules)
-                .HasForeignKey(s => s.DoctorId)
+            builder.HasOne(d => d.Doctor).WithMany(p => p.Schedules)
+                .HasForeignKey(d => d.DoctorId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            builder.Property(s => s.DayOfWeek).IsRequired();
-            builder.Property(s => s.StartTime).IsRequired();
-            builder.Property(s => s.EndTime).IsRequired();
-            builder.Property(s => s.SlotDurationMinutes).IsRequired();
-            builder.Property(s => s.IsActive).HasDefaultValue(true);
         }
     }
 }

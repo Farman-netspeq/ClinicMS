@@ -16,7 +16,7 @@ namespace ClinicMS.Api.Controllers
             _authService = authService;
         }
 
-        [HttpPost("login")]
+        [HttpPost("login", Name = "Login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
             if (!ModelState.IsValid)
@@ -29,7 +29,7 @@ namespace ClinicMS.Api.Controllers
             return Ok(ApiResponseDto<LoginResponseDto>.SuccessResponse(result.Data!));
         }
 
-        [HttpPost("refresh")]
+        [HttpPost("refresh", Name = "RefreshToken")]
         public async Task<IActionResult> Refresh([FromBody] RefreshRequestDto dto)
         {
             var result = await _authService.RefreshTokenAsync(dto.RefreshToken);

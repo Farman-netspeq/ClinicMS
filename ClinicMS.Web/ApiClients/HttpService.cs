@@ -41,9 +41,13 @@ namespace ClinicMS.Web.ApiClients
         {
             AttachToken();
             var response = await _httpClient.GetAsync(endpoint);
-            if (!response.IsSuccessStatusCode) return default;
-
             var json = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException($"Api call failed: {response.StatusCode} — {json}");
+            }
+
             return JsonSerializer.Deserialize<T>(json, _jsonOptions);
         }
 
@@ -73,6 +77,12 @@ namespace ClinicMS.Web.ApiClients
 
             var response = await _httpClient.PutAsync(endpoint, content);
             var responseJson = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException($"Api call failed: {response.StatusCode} — {responseJson}");
+            }
+
             return JsonSerializer.Deserialize<T>(responseJson, _jsonOptions);
         }
 

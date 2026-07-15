@@ -7,6 +7,7 @@ namespace ClinicMS.Domain.Entities
     public class ApplicationUser : IdentityUser
     {
         // Full name of the person logging in (Admin/Receptionist/Doctor)
+       
         public string FullName { get; set; } = string.Empty;
 
         // IsActive — soft disable a user without deleting them

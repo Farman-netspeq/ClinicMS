@@ -19,7 +19,7 @@ namespace ClinicMS.Api.Controllers
         }
 
         // GET api/doctors
-        [HttpGet]
+        [HttpGet(Name = "GetDoctorsPaged")]
         public async Task<IActionResult> GetDoctors(
             [FromQuery] DoctorFilterDto filter)
         {
@@ -35,7 +35,7 @@ namespace ClinicMS.Api.Controllers
         }
 
         // GET api/doctors/{id}
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetDoctorById")]
         public async Task<IActionResult> GetDoctor(string id)
         {
             var result = await _service.GetDoctorByIdAsync(id);
@@ -50,31 +50,27 @@ namespace ClinicMS.Api.Controllers
         }
 
         // GET api/doctors/bydepartment/{departmentId}
-        [HttpGet("bydepartment/{departmentId}")]
-        public async Task<IActionResult> GetByDepartment(
-            string departmentId)
+        [HttpGet("bydepartment/{departmentId}", Name = "GetDoctorsByDepartment")]
+        public async Task<IActionResult> GetByDepartment(string departmentId)
         {
-            var result = await _service
-                .GetDoctorsByDepartmentAsync(departmentId);
+            var result = await _service.GetDoctorsByDepartmentAsync(departmentId);
 
             if (!result.IsSuccess)
-                return BadRequest(
-                    ApiResponseDto<List<DoctorListItemDto>>
-                    .ErrorResponse(result.ErrorMessage));
+                return BadRequest(ApiResponseDto<List<DoctorListItemDto>>.ErrorResponse(result.ErrorMessage));
 
-            // CustomAjax cascading dropdown expects:
-            // [{Value: "id", Text: "display name"}]
             var dropdownItems = result.Data!.Select(d => new
             {
                 Value = d.Id,
                 Text = $"{d.FullName} ({d.Specialization})"
-            });
+            }).ToList();
 
-            return Ok(dropdownItems);
+            var json = System.Text.Json.JsonSerializer.Serialize(dropdownItems,
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = null });
+
+            return Content(json, "application/json");
         }
-
         // POST api/doctors
-        [HttpPost]
+        [HttpPost(Name = "CreateDoctor")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateDoctor(
             [FromBody] DoctorRequestDto dto)
@@ -97,7 +93,7 @@ namespace ClinicMS.Api.Controllers
         }
 
         // PUT api/doctors/{id}
-        [HttpPut("{id}")]
+        [HttpPut("{id}", Name = "UpdateDoctor")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateDoctor(
             string id, [FromBody] DoctorRequestDto dto)
@@ -119,7 +115,7 @@ namespace ClinicMS.Api.Controllers
         }
 
         // DELETE api/doctors/{id}
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}", Name = "DeactivateDoctor")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeactivateDoctor(string id)
         {
@@ -134,7 +130,7 @@ namespace ClinicMS.Api.Controllers
         }
 
         // PUT api/doctors/{id}/reactivate
-        [HttpPut("{id}/reactivate")]
+        [HttpPut("{id}/reactivate", Name = "ReactivateDoctor")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ReactivateDoctor(string id)
         {
