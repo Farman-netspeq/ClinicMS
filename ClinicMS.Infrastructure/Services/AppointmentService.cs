@@ -618,11 +618,10 @@ namespace ClinicMS.Infrastructure.Services
         // ── DOCTOR DASHBOARD (BR10) ─────────────────────────────
         // Returns only appointments belonging to the doctor identified by doctorUserId
         public async Task<Result<List<AppointmentListItemDto>>>
-            GetDoctorAppointmentsAsync(string doctorUserId, DateTime? date)
+     GetDoctorAppointmentsAsync(string doctorUserId, DateTime? date)
         {
             try
             {
-                // Resolve ApplicationUserId → Doctor.Id first
                 var doctor = await _context.Doctors
                     .FirstOrDefaultAsync(d => d.ApplicationUserId == doctorUserId);
 
@@ -641,14 +640,9 @@ namespace ClinicMS.Infrastructure.Services
                     // Specific date requested → just that day
                     query = query.Where(a => a.AppointmentDate.Date == date.Value.Date);
                 }
-                else
-                {
-                    // No date given → "today's and upcoming" per spec
-                    query = query.Where(a => a.AppointmentDate.Date >= DateTime.Today);
-                }
 
                 var items = await query
-                    .OrderBy(a => a.AppointmentDate)
+                    .OrderByDescending(a => a.AppointmentDate)   // most recent first
                     .ThenBy(a => a.StartTime)
                     .Select(a => new AppointmentListItemDto
                     {
