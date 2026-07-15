@@ -16,7 +16,7 @@ namespace ClinicMS.Api.Controllers
         public AppointmentsController(IAppointmentService service) => _service = service;
 
         // grid list — POST bc filter is complex obj, avoids long querystring
-        [HttpPost("list")]
+        [HttpPost("list", Name = "GetAppointmentsPaged")]
         public async Task<IActionResult> GetList([FromBody] AppointmentFilterDto filter)
         {
             var result = await _service.GetAppointmentsAsync(filter);
@@ -26,7 +26,7 @@ namespace ClinicMS.Api.Controllers
             return Ok(ApiResponseDto<PaginatedResult<AppointmentListItemDto>>.SuccessResponse(result.Data!));
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetAppointmentById")]
         public async Task<IActionResult> GetById(string id)
         {
             var result = await _service.GetAppointmentByIdAsync(id);
@@ -37,7 +37,7 @@ namespace ClinicMS.Api.Controllers
         }
 
         // cascading dropdown step 3: doctor+date picked → slots
-        [HttpGet("slots")]
+        [HttpGet("slots", Name = "GetAvailableSlots")]
         public async Task<IActionResult> GetSlots([FromQuery] string doctorId, [FromQuery] DateTime date)
         {
             var result = await _service.GetAvailableSlotsAsync(doctorId, date);
@@ -47,7 +47,7 @@ namespace ClinicMS.Api.Controllers
             return Ok(ApiResponseDto<List<AppointmentSlotDto>>.SuccessResponse(result.Data!));
         }
 
-        [HttpPost("book")]
+        [HttpPost("book", Name = "BookAppointment")]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Book([FromBody] AppointmentRequestDto dto)
         {
@@ -70,7 +70,7 @@ namespace ClinicMS.Api.Controllers
             return Ok(ApiResponseDto<string>.SuccessResponse(result.Data!, "Appointment booked successfully"));
         }
 
-        [HttpPost("{id}/cancel")]
+        [HttpPost("{id}/cancel", Name = "CancelAppointment")]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Cancel(string id, [FromBody] CancelAppointmentDto dto)
         {

@@ -6,6 +6,7 @@
 </div>
 
 <form data-sks-ajax="true" data-sks-target="#replacetarget" action="/Appointments/Save" method="post">
+    @Html.AntiForgeryToken()
     <div class="modal-body">
         <input type="hidden" asp-for="Id" />
 

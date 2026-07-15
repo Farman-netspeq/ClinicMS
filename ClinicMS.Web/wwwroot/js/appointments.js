@@ -8,7 +8,7 @@
 
         $.ajax({
             url: '/Appointments/List',
-            type: 'POST',
+            type: 'GET',
             data: data,
             success: function (html) {
                 $('#pageContent').html(html);
@@ -79,22 +79,6 @@
         });
     });
 
-    // ── Paging click (ns-page-link convention) ──
-    $(document).on('click', '.ns-page-link', function () {
-        var page = $(this).data('page');
-        var filter = $('#searchFrom').serializeArray();
-        var data = { PageNo: page };
-        filter.forEach(f => data[f.name] = f.value);
-
-        $.ajax({
-            url: '/Appointments/List',
-            type: 'POST',
-            data: data,
-            success: function (html) {
-                $('#pageContent').html(html);
-            }
-        });
-    });
 
     // ── Client-side validation before Book form submits ──
     $(document).on('click', 'form[action="/Appointments/Save"] button[type="submit"]', function (e) {

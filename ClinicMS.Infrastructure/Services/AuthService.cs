@@ -51,6 +51,7 @@ namespace ClinicMS.Infrastructure.Services
 
             var response = new LoginResponseDto
             {
+                UserId = user.Id,
                 Token = token,
                 RefreshToken = refreshToken,
                 FullName = user.FullName,

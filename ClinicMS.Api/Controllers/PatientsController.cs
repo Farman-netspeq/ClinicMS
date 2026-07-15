@@ -20,7 +20,8 @@ namespace ClinicMS.Api.Controllers
         }
 
         // GET api/patients?SearchTerm=john&IsActive=true&PageNo=1&PageSize=10
-        [HttpGet]
+        [HttpGet(Name = "GetPatientsPaged")]
+        [Authorize]
         public async Task<IActionResult> GetPatients([FromQuery] PatientFilterDto filter)
         {
             var result = await _service.GetPatientsAsync(filter);
@@ -32,7 +33,8 @@ namespace ClinicMS.Api.Controllers
         }
 
         // GET api/patients/{id}
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetPatientById")]
+        [Authorize]
         public async Task<IActionResult> GetPatient(string id)
         {
             var result = await _service.GetPatientByIdAsync(id);
@@ -44,7 +46,8 @@ namespace ClinicMS.Api.Controllers
         }
 
         // POST api/patients
-        [HttpPost]
+        [HttpPost(Name = "CreatePatient")]
+        [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> CreatePatient([FromBody] PatientRequestDto dto)
         {
             if (!ModelState.IsValid)
@@ -59,7 +62,8 @@ namespace ClinicMS.Api.Controllers
         }
 
         // PUT api/patients/{id}
-        [HttpPut("{id}")]
+        [HttpPut("{id}", Name = "UpdatePatient")]
+        [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> UpdatePatient(string id, [FromBody] PatientRequestDto dto)
         {
             dto.Id = id;   // sync route id with body, prevents mismatch/tampering
@@ -76,7 +80,8 @@ namespace ClinicMS.Api.Controllers
         }
 
         // DELETE api/patients/{id}  — soft delete (BR7)
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}", Name = "DeactivatePatient")]
+        [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> DeactivatePatient(string id)
         {
             var result = await _service.DeactivatePatientAsync(id);
@@ -88,7 +93,8 @@ namespace ClinicMS.Api.Controllers
         }
 
         // POST api/patients/{id}/reactivate
-        [HttpPost("{id}/reactivate")]
+        [HttpPost("{id}/reactivate", Name = "ReactivatePatient")]
+        [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> ReactivatePatient(string id)
         {
             var result = await _service.ReactivatePatientAsync(id);

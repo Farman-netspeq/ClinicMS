@@ -1,8 +1,12 @@
 ﻿using ClinicMS.Application.DTOs.DoctorSchedule;
 using ClinicMS.Shared.Common;
 using ClinicMS.Web.ApiClients;
+using ClinicMS.Web.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+
+[Authorize]
 public class DoctorSchedulesController : Controller
 {
     private readonly IHttpService _httpService;
@@ -47,6 +51,8 @@ public class DoctorSchedulesController : Controller
 
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Save(DoctorScheduleRequestDto dto)
     {
         try
@@ -61,28 +67,13 @@ public class DoctorSchedulesController : Controller
         }
         catch (HttpRequestException ex)
         {
-            return Json(new { success = false, message = ExtractApiMessage(ex.Message), url = "" });
+            return Json(new { success = false, message = ApiErrorHelper.ExtractApiMessage(ex.Message), url = "" });
         }
-    }
-
-    private string ExtractApiMessage(string exceptionMessage)
-    {
-        try
-        {
-            var jsonStart = exceptionMessage.IndexOf('{');
-            if (jsonStart >= 0)
-            {
-                var json = exceptionMessage.Substring(jsonStart);
-                var doc = System.Text.Json.JsonDocument.Parse(json);
-                if (doc.RootElement.TryGetProperty("message", out var msg))
-                    return msg.GetString() ?? "Save failed.";
-            }
-        }
-        catch { }
-        return "Save failed.";
     }
     [HttpPost]
-    public async Task<IActionResult> Delete(int id)
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(string id)
     {
         var result = await _httpService.DeleteAsync<ApiResponseDto<string>>($"api/doctorschedules/{id}");
         return Json(new { success = result?.Success ?? false, message = result?.Message });

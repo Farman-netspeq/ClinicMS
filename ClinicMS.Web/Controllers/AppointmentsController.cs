@@ -3,10 +3,13 @@ using ClinicMS.Application.DTOs.Department;
 using ClinicMS.Application.DTOs.Patient;
 using ClinicMS.Shared.Common;
 using ClinicMS.Web.ApiClients;
+using ClinicMS.Web.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 namespace ClinicMS.Web.Controllers
 {
+    [Authorize]
     public class AppointmentsController : Controller
     {
         private readonly IHttpService _httpService;
@@ -24,7 +27,6 @@ namespace ClinicMS.Web.Controllers
 
         // ── GRID PARTIAL (called by CustomAjax grid + paging) ──
         [HttpGet]
-        [HttpPost]
         public async Task<IActionResult> List(AppointmentFilterDto filter)
         {
             var result = await _httpService.PostAsync<ApiResponseDto<PaginatedResult<AppointmentListItemDto>>>(
@@ -34,6 +36,7 @@ namespace ClinicMS.Web.Controllers
         }
         // ── ADD/EDIT MODAL ─────────────────────────────────
         [HttpGet]
+        [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> AddEdit()
         {
             var dto = new AppointmentRequestDto();
@@ -53,6 +56,8 @@ namespace ClinicMS.Web.Controllers
         }
         // ── SAVE (book) ─────────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Save(AppointmentRequestDto dto)
         {
             try
@@ -67,12 +72,14 @@ namespace ClinicMS.Web.Controllers
             }
             catch (HttpRequestException ex)
             {
-                return Json(new { success = false, message = ExtractApiMessage(ex.Message), url = "" });
+                return Json(new { success = false, message = ApiErrorHelper.ExtractApiMessage(ex.Message) });
             }
         }
 
         // ── CANCEL ──────────────────────────────────────────
+
         [HttpPost]
+        [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Cancel(string id, string cancelReason)
         {
             var dto = new CancelAppointmentDto { CancelReason = cancelReason };
@@ -142,21 +149,6 @@ namespace ClinicMS.Web.Controllers
                 return Content("[]", "application/json");
             }
         }
-        private string ExtractApiMessage(string exceptionMessage)
-        {
-            try
-            {
-                var jsonStart = exceptionMessage.IndexOf('{');
-                if (jsonStart >= 0)
-                {
-                    var json = exceptionMessage.Substring(jsonStart);
-                    var doc = System.Text.Json.JsonDocument.Parse(json);
-                    if (doc.RootElement.TryGetProperty("message", out var msg))
-                        return msg.GetString() ?? "Save failed.";
-                }
-            }
-            catch { }
-            return "Save failed.";
-        }
+
     }
 }
