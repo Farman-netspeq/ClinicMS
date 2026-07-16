@@ -15,7 +15,7 @@ namespace ClinicMS.Api.Controllers
         private readonly IPrescriptionService _service;
         public PrescriptionsController(IPrescriptionService service) => _service = service;
 
-        [HttpGet("by-appointment/{appointmentId}")]
+        [HttpGet("by-appointment/{appointmentId}", Name = "GetPrescriptionByAppointment")]
         public async Task<IActionResult> GetByAppointment(string appointmentId)
         {
             var result = await _service.GetByAppointmentIdAsync(appointmentId);
@@ -25,7 +25,7 @@ namespace ClinicMS.Api.Controllers
             return Ok(ApiResponseDto<PrescriptionResponseDto>.SuccessResponse(result.Data!));
         }
 
-        [HttpPost]
+        [HttpPost(Name = "CreatePrescription")]
         [Authorize(Roles = "Admin,Doctor")]
         public async Task<IActionResult> Create([FromBody] PrescriptionRequestDto dto)
         {

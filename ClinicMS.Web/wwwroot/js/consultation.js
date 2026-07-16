@@ -74,6 +74,9 @@
             url: '/Consultation/SavePrescription',
             type: 'POST',
             contentType: 'application/json',
+            headers: {
+                'RequestVerificationToken': $('#prescriptionForm input[name="__RequestVerificationToken"]').val()
+            },
             data: JSON.stringify(payload),
             success: function (result) {
                 if (result.success) {
@@ -85,5 +88,5 @@
                 }
             }
         });
-    });
+    })
 });

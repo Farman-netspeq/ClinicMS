@@ -5,7 +5,7 @@ using ClinicMS.Shared.Common;
 using ClinicMS.Web.ApiClients;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
+using ClinicMS.Web.Helpers;
 namespace ClinicMS.Web.Controllers
 {
     [Authorize(Roles = "Admin,Doctor")]
@@ -79,6 +79,7 @@ namespace ClinicMS.Web.Controllers
 
         // POST: /Consultation/SaveRecord — saves vitals + diagnosis
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> SaveRecord(MedicalRecordRequestDto dto)
         {
             if (!ModelState.IsValid)
@@ -98,12 +99,13 @@ namespace ClinicMS.Web.Controllers
             }
             catch (HttpRequestException ex)
             {
-                return Json(new { success = false, message = ExtractApiMessage(ex.Message) });
+                return Json(new { success = false, message = ApiErrorHelper.ExtractApiMessage(ex.Message) });
             }
         }
 
         // POST: /Consultation/SavePrescription — saves prescription + items (master-detail)
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> SavePrescription([FromBody] PrescriptionRequestDto dto)
         {
             if (!ModelState.IsValid || dto.Items == null || dto.Items.Count == 0)
@@ -123,25 +125,9 @@ namespace ClinicMS.Web.Controllers
             }
             catch (HttpRequestException ex)
             {
-                return Json(new { success = false, message = ExtractApiMessage(ex.Message) });
+                return Json(new { success = false, message = ApiErrorHelper.ExtractApiMessage(ex.Message) });
             }
         }
 
-        private string ExtractApiMessage(string exceptionMessage)
-        {
-            try
-            {
-                var jsonStart = exceptionMessage.IndexOf('{');
-                if (jsonStart >= 0)
-                {
-                    var json = exceptionMessage.Substring(jsonStart);
-                    var doc = System.Text.Json.JsonDocument.Parse(json);
-                    if (doc.RootElement.TryGetProperty("message", out var msg))
-                        return msg.GetString() ?? "Save failed.";
-                }
-            }
-            catch { }
-            return "Save failed.";
-        }
     }
 }
