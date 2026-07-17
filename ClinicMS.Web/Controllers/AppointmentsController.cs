@@ -6,7 +6,6 @@ using ClinicMS.Web.ApiClients;
 using ClinicMS.Web.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ClinicMS.Web.Helpers;
 using System.Security.Claims;
 namespace ClinicMS.Web.Controllers
 {
@@ -184,7 +183,7 @@ namespace ClinicMS.Web.Controllers
             }
             catch (HttpRequestException ex)
             {
-                return Json(new { success = false, , message = ApiErrorHelper.ExtractApiMessage(ex.Message) });
+                return Json(new { success = false,  message = ApiErrorHelper.ExtractApiMessage(ex.Message) });
             }
         }
 
