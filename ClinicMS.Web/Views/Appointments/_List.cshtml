@@ -46,7 +46,14 @@
                         }
                         @if (a.Status.ToString() == "Completed")
                         {
-                            <a href="/Consultation/Index?appointmentId=@a.Id" class="btn btn-sm btn-info">Consultation</a>
+                            <a href="/Consultation/Index?appointmentId=@a.Id"
+                               class="btn btn-sm btn-info">Consultation</a>
+
+                            @if (User.IsInRole("Admin") || User.IsInRole("Receptionist"))
+                            {
+                                <a href="/Invoices/Generate?appointmentId=@a.Id"
+                                   class="btn btn-sm btn-warning">Generate Invoice</a>
+                            }
                         }
                     </td>
                 </tr>

@@ -1,0 +1,45 @@
+﻿@model ClinicMS.Application.DTOs.Invoice.InvoiceRequestDto
+@{
+    ViewData["Title"] = "Generate Invoice";
+    var appt = ViewBag.Appointment;
+}
+<input type="hidden" id="ErrMsgHiddenField" value="" />
+
+<h4>Generate Invoice — @appt.PatientName (@appt.AppointmentNumber)</h4>
+<p class="text-muted">@appt.AppointmentDate.ToString("dd MMM yyyy") | Dr. @appt.DoctorName</p>
+
+<div class="card">
+    <div class="card-body">
+        <form id="invoiceForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="invAppointmentId" value="@Model.AppointmentId" />
+
+            <table class="table table-bordered" id="invItemsTable">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th class="inv-col-qty">Qty</th>
+                        <th class="inv-col-price">Unit Price</th>
+                        <th class="inv-col-total">Line Total</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="invItemsBody"></tbody>
+            </table>
+
+            <button type="button" id="addInvRowBtn" class="btn btn-sm btn-outline-secondary mb-3">+ Add Line Item</button>
+
+            <h5 class="text-end">Total: ₹<span id="invTotalDisplay">0.00</span></h5>
+
+            <button type="button" id="saveInvoiceBtn" class="btn btn-success">Generate Invoice</button>
+            <span id="invStatus" class="ms-2"></span>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        window.__seedInvoiceItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Items));
+    </script>
+    <script src="~/js/invoice.js"></script>
+}

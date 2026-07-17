@@ -47,3 +47,14 @@ body {
         left: 50%;
         transform: translate(-50%, -50%);
     }
+.inv-col-qty {
+    width: 100px;
+}
+
+.inv-col-price {
+    width: 150px;
+}
+
+.inv-col-total {
+    width: 150px;
+}
