@@ -19,7 +19,7 @@ namespace ClinicMS.Api.Controllers
         }
 
         // GET api/doctors
-        [HttpGet]
+        [HttpGet(Name = "GetDoctorsPaged")]
         public async Task<IActionResult> GetDoctors(
             [FromQuery] DoctorFilterDto filter)
         {
@@ -35,7 +35,7 @@ namespace ClinicMS.Api.Controllers
         }
 
         // GET api/doctors/{id}
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetDoctorById")]
         public async Task<IActionResult> GetDoctor(string id)
         {
             var result = await _service.GetDoctorByIdAsync(id);
@@ -50,7 +50,7 @@ namespace ClinicMS.Api.Controllers
         }
 
         // GET api/doctors/bydepartment/{departmentId}
-        [HttpGet("bydepartment/{departmentId}")]
+        [HttpGet("bydepartment/{departmentId}", Name = "GetDoctorsByDepartment")]
         public async Task<IActionResult> GetByDepartment(string departmentId)
         {
             var result = await _service.GetDoctorsByDepartmentAsync(departmentId);
@@ -70,7 +70,7 @@ namespace ClinicMS.Api.Controllers
             return Content(json, "application/json");
         }
         // POST api/doctors
-        [HttpPost]
+        [HttpPost(Name = "CreateDoctor")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateDoctor(
             [FromBody] DoctorRequestDto dto)
@@ -93,7 +93,7 @@ namespace ClinicMS.Api.Controllers
         }
 
         // PUT api/doctors/{id}
-        [HttpPut("{id}")]
+        [HttpPut("{id}", Name = "UpdateDoctor")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateDoctor(
             string id, [FromBody] DoctorRequestDto dto)
@@ -115,7 +115,7 @@ namespace ClinicMS.Api.Controllers
         }
 
         // DELETE api/doctors/{id}
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}", Name = "DeactivateDoctor")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeactivateDoctor(string id)
         {
@@ -130,7 +130,7 @@ namespace ClinicMS.Api.Controllers
         }
 
         // PUT api/doctors/{id}/reactivate
-        [HttpPut("{id}/reactivate")]
+        [HttpPut("{id}/reactivate", Name = "ReactivateDoctor")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ReactivateDoctor(string id)
         {

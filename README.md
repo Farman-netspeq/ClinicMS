@@ -381,3 +381,204 @@ CorsSettings:AllowedOrigins
 ✔ Dependency Injection
 
 ✔ Swagger
+
+ClinicMS — Clinic Management System (Milestone 2)
+
+ClinicMS continues with Patient Management, allowing administrators and receptionists to efficiently manage patient records with secure validations, automatic patient number generation, search, pagination, and soft delete functionality while following the project's Clean Architecture principles.
+
+Implemented Features (Milestone 2)
+Patient Management
+
+Complete Patient CRUD operations:
+
+Add Patient
+Edit Patient
+View Patient List
+Search Patients
+Server-side Pagination
+Active / Inactive Patient Filter
+Soft Delete / Restore
+Automatic Patient Number Generation
+Duplicate Patient Validation
+Client-side & Server-side Validation
+Search & Filtering
+
+Patient list supports searching by:
+
+Patient Number
+Patient Name
+Phone Number
+
+Additional filtering:
+
+Active Patients
+Inactive Patients
+Patient Validation
+
+Implemented validations include:
+
+Required field validation
+Date of Birth validation
+Email format validation
+Phone number validation
+Duplicate patient prevention
+API Features
+RESTful APIs
+Standard API Response wrapper
+Proper HTTP Status Codes
+Global Exception Handling
+Dependency Injection
+Clean service-based architecture
+Web Features
+Responsive MVC UI
+AJAX-based CRUD operations
+Partial View integration
+Toast notifications
+Client-side validation
+API integration using IHttpService
+Database
+
+Entity Framework Core migrations included.
+
+Creates:
+
+Patients
+
+Supports:
+
+Automatic Patient Number generation
+Soft Delete functionality
+Active / Inactive patient management
+
+
+---Milestone 2 Summary
+
+✔ Patient CRUD
+
+✔ Automatic Patient Number Generation
+
+✔ Search & Pagination
+
+✔ Active / Inactive Filtering
+
+✔ Soft Delete / Restore
+
+✔ Validation
+
+✔ API & MVC Integration
+
+✔ Entity Framework Core
+
+✔ SQL Server
+
+✔ Dependency Injection
+
+✔ Clean Architecture
+
+----ClinicMS — Clinic Management System (Milestone 3)
+
+ClinicMS expands with the Appointment Management module, enabling administrators and receptionists to schedule appointments efficiently using dynamic doctor scheduling, slot generation, cascading dropdowns, and business rule validations while maintaining the project's Clean Architecture.
+
+Implemented Features (Milestone 3)
+Appointment Management
+
+Complete Appointment Management operations:
+
+Book Appointment
+View Appointment List
+Search Appointments
+Appointment Details
+Server-side Pagination
+Appointment Status Management
+Appointment Booking
+
+Dynamic appointment booking includes:
+
+Department Selection
+Doctor Selection
+Available Slot Selection
+Automatic Appointment Number Generation
+Appointment Date Validation
+Cascading Dropdowns
+
+Implemented dynamic dropdowns for:
+
+Department → Doctors
+Doctor + Appointment Date → Available Time Slots
+Business Rules
+
+Implemented appointment scheduling rules:
+
+Prevent Doctor Double Booking
+Appointment must be within Doctor Schedule
+Appointment cannot be booked in the past
+Slot Duration validation
+Automatic Appointment Number generation
+Display only available slots
+Search & Filtering
+
+Appointment list supports filtering by:
+
+Department
+Doctor
+Appointment Date
+Appointment Status
+API Features
+RESTful APIs
+Slot Availability APIs
+Department-wise Doctor APIs
+Standard API Response wrapper
+Proper HTTP Status Codes
+Global Exception Handling
+Dependency Injection
+Web Features
+Responsive MVC UI
+AJAX-based Appointment Booking
+Partial View integration
+Dynamic Cascading Dropdowns
+Client-side validation
+Toast notifications
+API integration using IHttpService
+Database
+
+Entity Framework Core migrations included.
+
+Creates:
+
+Appointments
+
+Supports:
+
+Automatic Appointment Number generation
+Doctor Schedule integration
+Slot Availability calculation
+Appointment Status management
+
+
+---Milestone 3 Summary
+
+✔ Appointment Booking
+
+✔ Appointment Number Generation
+
+✔ Dynamic Slot Generation
+
+✔ Doctor Schedule Integration
+
+✔ Cascading Dropdowns
+
+✔ Search & Pagination
+
+✔ Business Rule Validation
+
+✔ AJAX & Partial Views
+
+✔ API & MVC Integration
+
+✔ Entity Framework Core
+
+✔ SQL Server
+
+✔ Dependency Injection
+
+✔ Clean Architecture

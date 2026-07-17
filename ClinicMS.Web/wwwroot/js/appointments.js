@@ -8,7 +8,7 @@
 
         $.ajax({
             url: '/Appointments/List',
-            type: 'POST',
+            type: 'GET',
             data: data,
             success: function (html) {
                 $('#pageContent').html(html);
@@ -78,7 +78,7 @@
             }
         });
     });
-
+   
     // ── Client-side validation before Book form submits ──
     $(document).on('click', 'form[action="/Appointments/Save"] button[type="submit"]', function (e) {
         var errors = [];

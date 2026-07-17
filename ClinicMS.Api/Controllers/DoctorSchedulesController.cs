@@ -14,7 +14,7 @@ namespace ClinicMS.Api.Controllers
         private readonly IDoctorScheduleService _service;
         public DoctorSchedulesController(IDoctorScheduleService service) => _service = service;
 
-        [HttpGet("by-doctor/{doctorId}")]
+        [HttpGet("by-doctor/{doctorId}", Name = "GetSchedulesByDoctor")]
         public async Task<IActionResult> GetByDoctor(string doctorId)
         {
             var result = await _service.GetByDoctorAsync(doctorId);
@@ -24,7 +24,7 @@ namespace ClinicMS.Api.Controllers
             return Ok(ApiResponseDto<List<DoctorScheduleListItemDto>>.SuccessResponse(result.Data!));
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetScheduleById")]
         public async Task<IActionResult> GetById(string id)
         {
             var result = await _service.GetByIdAsync(id);
@@ -34,7 +34,7 @@ namespace ClinicMS.Api.Controllers
             return Ok(ApiResponseDto<DoctorScheduleResponseDto>.SuccessResponse(result.Data!));
         }
 
-        [HttpPost("save")]
+        [HttpPost("save", Name = "SaveDoctorSchedule")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Save([FromBody] DoctorScheduleRequestDto dto)
         {
@@ -48,7 +48,7 @@ namespace ClinicMS.Api.Controllers
             return Ok(ApiResponseDto<string>.SuccessResponse(result.Data!, "Schedule saved successfully"));
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}", Name = "DeleteDoctorSchedule")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(string id)
         {
