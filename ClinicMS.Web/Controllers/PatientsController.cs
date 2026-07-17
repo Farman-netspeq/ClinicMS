@@ -1,6 +1,7 @@
 ﻿using ClinicMS.Application.DTOs.Patient;
 using ClinicMS.Shared.Common;
 using ClinicMS.Web.ApiClients;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ClinicMS.Web.Controllers
@@ -64,7 +65,8 @@ namespace ClinicMS.Web.Controllers
 
         // POST: /Patients/Save
         [HttpPost]
-        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Save(PatientRequestDto dto)
         {
             if (!ModelState.IsValid)
@@ -101,6 +103,8 @@ namespace ClinicMS.Web.Controllers
 
         // POST: /Patients/Deactivate/{id}
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Deactivate(string id)
         {
             await _httpService.DeleteAsync<ApiResponseDto<string>>($"api/patients/{id}");
@@ -113,6 +117,8 @@ namespace ClinicMS.Web.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Reactivate(string id)
         {
             await _httpService.PostAsync<ApiResponseDto<string>>($"api/patients/{id}/reactivate", new { });

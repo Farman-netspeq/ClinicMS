@@ -159,6 +159,7 @@ namespace ClinicMS.Web.Controllers
         // POST /Departments/Deactivate/{id}
         // Called by CustomAjax delete confirm modal
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Deactivate(string id)
         {

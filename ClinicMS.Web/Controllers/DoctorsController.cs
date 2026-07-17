@@ -168,6 +168,7 @@ namespace ClinicMS.Web.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Deactivate(string id)
         {
@@ -183,6 +184,7 @@ namespace ClinicMS.Web.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Reactivate(string id)
         {
