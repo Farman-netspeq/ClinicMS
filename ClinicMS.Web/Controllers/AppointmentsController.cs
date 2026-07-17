@@ -72,13 +72,14 @@ namespace ClinicMS.Web.Controllers
             }
             catch (HttpRequestException ex)
             {
-                return Json(new { success = false, message = ApiErrorHelper.ExtractApiMessage(ex.Message) });
+                return Json(new { success = false, message = ApiErrorHelper.ExtractApiMessage(ex.Message), url = "" });
             }
         }
 
         // ── CANCEL ──────────────────────────────────────────
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Cancel(string id, string cancelReason)
         {
@@ -150,5 +151,69 @@ namespace ClinicMS.Web.Controllers
             }
         }
 
+        // ── CHECK-IN ────────────────────────────────────────────
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Receptionist")]
+        public async Task<IActionResult> CheckIn(string id)
+        {
+            try
+            {
+                var result = await _httpService.PostAsync<ApiResponseDto<string>>(
+                    $"api/appointments/{id}/checkin", new { });
+                return Json(new { success = result?.Success ?? false, message = result?.Message });
+            }
+            catch (HttpRequestException ex)
+            {
+                return Json(new { success = false, message = ApiErrorHelper.ExtractApiMessage(ex.Message) });
+            }
+        }
+
+        // ── NO-SHOW ────────────────────────────────────────────
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Receptionist")]
+        public async Task<IActionResult> NoShow(string id)
+        {
+            try
+            {
+                var result = await _httpService.PostAsync<ApiResponseDto<string>>(
+                    $"api/appointments/{id}/noshow", new { });
+                return Json(new { success = result?.Success ?? false, message = result?.Message });
+            }
+            catch (HttpRequestException ex)
+            {
+                return Json(new { success = false,  message = ApiErrorHelper.ExtractApiMessage(ex.Message) });
+            }
+        }
+
+        // ── COMPLETE ────────────────────────────────────────────
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Doctor")]
+        public async Task<IActionResult> Complete(string id)
+        {
+            try
+            {
+                var result = await _httpService.PostAsync<ApiResponseDto<string>>(
+                    $"api/appointments/{id}/complete", new { });
+                return Json(new { success = result?.Success ?? false, message = result?.Message });
+            }
+            catch (HttpRequestException ex)
+            {
+                return Json(new { success = false, message = ApiErrorHelper.ExtractApiMessage(ex.Message) });
+            }
+        }
+
+        // ── DOCTOR DASHBOARD ─────────────────────────────────────
+        [Authorize(Roles = "Admin,Doctor")]
+        public async Task<IActionResult> MyAppointments(DateTime? date)
+        {
+            var query = date.HasValue ? $"?date={date.Value:yyyy-MM-dd}" : "";
+            var result = await _httpService.GetAsync<ApiResponseDto<List<AppointmentListItemDto>>>(
+                $"api/appointments/my-appointments{query}");
+
+            return View(result?.Data ?? new List<AppointmentListItemDto>());
+        }
     }
 }

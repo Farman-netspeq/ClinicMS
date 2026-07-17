@@ -1,5 +1,9 @@
 ﻿$(function () {
 
+    function getToken() {
+        return $('input[name="__RequestVerificationToken"]').val();
+    }
+
     // ── Search button → reload grid via existing CustomAjax convention ──
     $('#btnSearch').on('click', function () {
         var filter = $('#searchFrom').serializeArray();
@@ -68,7 +72,7 @@
         $.ajax({
             url: '/Appointments/Cancel',
             type: 'POST',
-            data: { id: id, cancelReason: reason },
+            data: { id: id, cancelReason: reason, __RequestVerificationToken: getToken() },
             success: function (res) {
                 if (res.success) {
                     $('#btnSearch').click();
@@ -78,8 +82,7 @@
             }
         });
     });
-
-
+   
     // ── Client-side validation before Book form submits ──
     $(document).on('click', 'form[action="/Appointments/Save"] button[type="submit"]', function (e) {
         var errors = [];
@@ -97,6 +100,58 @@
             toastr.error(errors.join('<br>'));
             return false;
         }
+    });
+    // ── Check-in ─────────────────────────────────────────
+    $(document).on('click', '.btn-checkin-apt', function () {
+        var id = $(this).data('id');
+        $.ajax({
+            url: '/Appointments/CheckIn',
+            type: 'POST',
+            data: { id: id, __RequestVerificationToken: getToken() },
+            success: function (res) {
+                if (res.success) {
+                    $('#btnSearch').click();
+                } else {
+                    toastr.error(res.message || 'Check-in failed.');
+                }
+            }
+        });
+    });
+
+    // ── Complete ─────────────────────────────────────────
+    $(document).on('click', '.btn-complete-apt', function () {
+        var id = $(this).data('id');
+        $.ajax({
+            url: '/Appointments/Complete',
+            type: 'POST',
+            data: { id: id, __RequestVerificationToken: getToken() },
+            success: function (res) {
+                if (res.success) {
+                    location.reload();  // works on both grid page and dashboard page
+                } else {
+                    toastr.error(res.message || 'Complete failed.');
+                }
+            }
+        });
+    });
+
+    // ── No-show ──────────────────────────────────────────
+    $(document).on('click', '.btn-noshow-apt', function () {
+        var id = $(this).data('id');
+        if (!confirm('Mark this appointment as No-show?')) return;
+
+        $.ajax({
+            url: '/Appointments/NoShow',
+            type: 'POST',
+            data: { id: id, __RequestVerificationToken: getToken() },
+            success: function (res) {
+                if (res.success) {
+                    $('#btnSearch').click();
+                } else {
+                    toastr.error(res.message || 'No-show update failed.');
+                }
+            }
+        });
     });
 
 });

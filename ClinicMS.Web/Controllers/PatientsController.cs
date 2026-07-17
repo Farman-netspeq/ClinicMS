@@ -105,6 +105,7 @@ namespace ClinicMS.Web.Controllers
 
         // POST: /Patients/Deactivate/{id}
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Deactivate(string id)
         {
@@ -118,6 +119,7 @@ namespace ClinicMS.Web.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Reactivate(string id)
         {

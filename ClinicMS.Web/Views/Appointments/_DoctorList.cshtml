@@ -1,0 +1,35 @@
+﻿@model List<AppointmentListItemDto>
+<div id="replacetarget">
+    <table class="table table-sm table-bordered">
+        <thead>
+            <tr>
+                <th>Apt #</th>
+                <th>Patient</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Complaint</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var a in Model ?? new())
+            {
+                <tr>
+                    <td>@a.AppointmentNumber</td>
+                    <td>@a.PatientName (@a.PatientNumber)</td>
+                    <td>@a.AppointmentDate.ToString("dd-MMM-yyyy")</td>
+                    <td>@a.StartTime - @a.EndTime</td>
+                    <td>@a.Status</td>
+                    <td>@a.ChiefComplaint</td>
+                    <td>
+                        @if (a.Status.ToString() == "CheckedIn")
+                        {
+                            <a href="javascript:void(0)" class="btn-complete-apt" data-id="@a.Id">Complete</a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

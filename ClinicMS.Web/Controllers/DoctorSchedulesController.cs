@@ -70,10 +70,11 @@ public class DoctorSchedulesController : Controller
             return Json(new { success = false, message = ApiErrorHelper.ExtractApiMessage(ex.Message), url = "" });
         }
     }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Delete(string id)
+    public async Task<IActionResult> Delete(int id)
     {
         var result = await _httpService.DeleteAsync<ApiResponseDto<string>>($"api/doctorschedules/{id}");
         return Json(new { success = result?.Success ?? false, message = result?.Message });

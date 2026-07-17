@@ -9,9 +9,12 @@
         <h4>🧑‍🤝‍🧑 Patients</h4>
     </div>
     <div class="col text-end">
-        <a href="/Patients/AddEdit" data-modal class="btn btn-primary">
-            + Add Patient
-        </a>
+        @if (!User.IsInRole("Doctor"))
+        {
+            <a href="/Patients/AddEdit" data-modal class="btn btn-primary">
+                + Add Patient
+            </a>
+        }
     </div>
 </div>
 

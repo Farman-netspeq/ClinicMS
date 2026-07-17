@@ -27,9 +27,22 @@
                     <td>@a.Status</td>
                     <td>@a.ChiefComplaint</td>
                     <td>
-                        @if (a.Status.ToString() == "Scheduled" || a.Status.ToString() == "CheckedIn")
+                        @if (!User.IsInRole("Doctor"))
                         {
-                            <a href="javascript:void(0)" class="btn-cancel-apt" data-id="@a.Id">Cancel</a>
+                            @if (a.Status.ToString() == "Scheduled")
+                            {
+                                <a href="javascript:void(0)" class="btn-checkin-apt" data-id="@a.Id">Check-in</a>
+                                <text> | </text>
+                                <a href="javascript:void(0)" class="btn-cancel-apt" data-id="@a.Id">Cancel</a>
+                                <text> | </text>
+                                <a href="javascript:void(0)" class="btn-noshow-apt" data-id="@a.Id">No-show</a>
+                            }
+                            else if (a.Status.ToString() == "CheckedIn")
+                            {
+                                <a href="javascript:void(0)" class="btn-complete-apt" data-id="@a.Id">Complete</a>
+                                <text> | </text>
+                                <a href="javascript:void(0)" class="btn-cancel-apt" data-id="@a.Id">Cancel</a>
+                            }
                         }
                     </td>
                 </tr>
@@ -37,30 +50,15 @@
         </tbody>
     </table>
 
-    @if (Model.TotalPages > 1)
-    {
-        <div class="ns-grid-pager" data-sks-target="#replacetarget">
-            <nav>
-                <ul class="pagination">
-                    <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
-                        <a class="page-link ns-page-link" href="/Appointments/List?PageNo=@(Model.Page - 1)">«</a>
-                    </li>
-                    @for (int i = 1; i <= Model.TotalPages; i++)
-                    {
-                        <li class="page-item @(i == Model.Page ? "active" : "")">
-                            <a class="page-link ns-page-link" href="/Appointments/List?PageNo=@i">@i</a>
-                        </li>
-                    }
-                    <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
-                        <a class="page-link ns-page-link" href="/Appointments/List?PageNo=@(Model.Page + 1)">»</a>
-                    </li>
-                </ul>
-            </nav>
-            <small class="text-muted">
-                Showing @((Model.Page - 1) * Model.PageSize + 1)
-                - @(Math.Min(Model.Page * Model.PageSize, Model.TotalCount))
-                of @Model.TotalCount appointments
-            </small>
-        </div>
-    }
+    <div class="ns-grid-pager" data-sks-target="#replacetarget">
+        @{
+            int totalPages = (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize);
+        }
+        @for (int p = 1; p <= totalPages; p++)
+        {
+            <a class="ns-page-link @(p == Model.Page ? "active" : "")"
+               href="/Appointments/List?PageNo=@p">@p</a>
+        }
+    </div>
+
 </div>

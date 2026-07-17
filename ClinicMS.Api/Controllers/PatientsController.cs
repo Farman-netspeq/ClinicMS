@@ -32,6 +32,7 @@ namespace ClinicMS.Api.Controllers
             return Ok(ApiResponseDto<PaginatedResult<PatientListItemDto>>.SuccessResponse(result.Data!));
         }
 
+
         // GET api/patients/{id}
         [HttpGet("{id}", Name = "GetPatientById")]
         [Authorize]
@@ -44,6 +45,7 @@ namespace ClinicMS.Api.Controllers
 
             return Ok(ApiResponseDto<PatientResponseDto>.SuccessResponse(result.Data!));
         }
+
 
         // POST api/patients
         [HttpPost(Name = "CreatePatient")]
@@ -61,12 +63,13 @@ namespace ClinicMS.Api.Controllers
             return StatusCode(201, ApiResponseDto<string>.SuccessResponse(result.Data!, "Patient created successfully"));
         }
 
+
         // PUT api/patients/{id}
         [HttpPut("{id}", Name = "UpdatePatient")]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> UpdatePatient(string id, [FromBody] PatientRequestDto dto)
         {
-            dto.Id = id;   // sync route id with body, prevents mismatch/tampering
+            dto.Id = id;
 
             if (!ModelState.IsValid)
                 return BadRequest(ApiResponseDto<string>.ErrorResponse("Invalid data"));
@@ -78,6 +81,7 @@ namespace ClinicMS.Api.Controllers
 
             return Ok(ApiResponseDto<string>.SuccessResponse("Patient updated successfully"));
         }
+
 
         // DELETE api/patients/{id}  — soft delete (BR7)
         [HttpDelete("{id}", Name = "DeactivatePatient")]

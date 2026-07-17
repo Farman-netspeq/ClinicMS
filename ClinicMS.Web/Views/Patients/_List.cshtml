@@ -32,27 +32,30 @@
                         </span>
                     </td>
                     <td>
-                        <a href="/Patients/AddEdit?id=@p.Id" data-modal class="btn btn-sm btn-warning">Edit</a>
+                        @if (!User.IsInRole("Doctor"))
+                        {
+                            <a href="/Patients/AddEdit?id=@p.Id" data-modal class="btn btn-sm btn-warning">Edit</a>
 
-                        @if (p.IsActive)
-                        {
-                            <form method="post" action="/Patients/Deactivate/@p.Id"
-                                  data-sks-ajax="true" data-sks-target="#replacetarget" class="d-inline">
-                                @Html.AntiForgeryToken()
-                                <a class="delete btn btn-sm btn-danger" href="/Patients/Deactivate/@p.Id">
-                                    Deactivate
-                                </a>
-                            </form>
-                        }
-                        else
-                        {
-                            <form method="post" action="/Patients/Reactivate/@p.Id"
-                                  data-sks-ajax="true" data-sks-target="#replacetarget" class="d-inline">
-                                @Html.AntiForgeryToken()
-                                <a class="delete btn btn-sm btn-success" href="/Patients/Reactivate/@p.Id">
-                                    Reactivate
-                                </a>
-                            </form>
+                            @if (p.IsActive)
+                            {
+                                <form method="post" action="/Patients/Deactivate/@p.Id"
+                                      data-sks-ajax="true" data-sks-target="#replacetarget" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <a class="delete btn btn-sm btn-danger" href="/Patients/Deactivate/@p.Id">
+                                        Deactivate
+                                    </a>
+                                </form>
+                            }
+                            else
+                            {
+                                <form method="post" action="/Patients/Reactivate/@p.Id"
+                                      data-sks-ajax="true" data-sks-target="#replacetarget" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <a class="delete btn btn-sm btn-success" href="/Patients/Reactivate/@p.Id">
+                                        Reactivate
+                                    </a>
+                                </form>
+                            }
                         }
                     </td>
                 </tr>
