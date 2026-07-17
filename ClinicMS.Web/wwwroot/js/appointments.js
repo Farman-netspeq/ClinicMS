@@ -82,7 +82,7 @@
             }
         });
     });
-
+   
     // ── Client-side validation before Book form submits ──
     $(document).on('click', 'form[action="/Appointments/Save"] button[type="submit"]', function (e) {
         var errors = [];

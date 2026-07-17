@@ -5,6 +5,8 @@ using ClinicMS.Web.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+
+[Authorize]
 public class DoctorSchedulesController : Controller
 {
     private readonly IHttpService _httpService;

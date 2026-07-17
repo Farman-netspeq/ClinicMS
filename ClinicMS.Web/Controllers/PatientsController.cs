@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ClinicMS.Web.Controllers
 {
+    [Authorize]
     public class PatientsController : Controller
     {
         private readonly IHttpService _httpService;
@@ -40,6 +41,7 @@ namespace ClinicMS.Web.Controllers
         }
 
         // GET: /Patients/AddEdit?id=
+        [Authorize(Roles = "Admin,Receptionist")]
         [HttpGet]
         public async Task<IActionResult> AddEdit(string? id)
         {

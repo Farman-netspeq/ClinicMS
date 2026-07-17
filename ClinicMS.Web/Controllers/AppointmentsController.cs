@@ -3,12 +3,14 @@ using ClinicMS.Application.DTOs.Department;
 using ClinicMS.Application.DTOs.Patient;
 using ClinicMS.Shared.Common;
 using ClinicMS.Web.ApiClients;
+using ClinicMS.Web.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ClinicMS.Web.Helpers;
 using System.Security.Claims;
 namespace ClinicMS.Web.Controllers
 {
+    [Authorize]
     public class AppointmentsController : Controller
     {
         private readonly IHttpService _httpService;
