@@ -1,0 +1,58 @@
+﻿@using ClinicMS.Application.DTOs.MedicalRecord
+@using ClinicMS.Application.DTOs.Prescription
+@{
+    ViewData["Title"] = "Consultation Record";
+    var appt = ViewBag.Appointment;
+    var record = (MedicalRecordResponseDto)ViewBag.MedicalRecord;
+    var rx = (PrescriptionResponseDto)ViewBag.Prescription;
+}
+
+<h4>Consultation Record — @appt.PatientName (@appt.AppointmentNumber)</h4>
+<p class="text-muted">@appt.AppointmentDate.ToString("dd MMM yyyy") | Dr. @appt.DoctorName</p>
+
+<div class="card mb-4">
+    <div class="card-header">Vitals & Diagnosis</div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Blood Pressure</dt>
+            <dd class="col-sm-9">@(record.BloodPressure ?? "—")</dd>
+            <dt class="col-sm-3">Temperature</dt>
+            <dd class="col-sm-9">@(record.Temperature?.ToString("0.0") ?? "—") °C</dd>
+            <dt class="col-sm-3">Pulse</dt>
+            <dd class="col-sm-9">@(record.Pulse?.ToString() ?? "—") bpm</dd>
+            <dt class="col-sm-3">Weight</dt>
+            <dd class="col-sm-9">@(record.Weight?.ToString("0.0") ?? "—") kg</dd>
+            <dt class="col-sm-3">Height</dt>
+            <dd class="col-sm-9">@(record.Height?.ToString("0.0") ?? "—") cm</dd>
+            <dt class="col-sm-3">Diagnosis</dt>
+            <dd class="col-sm-9">@record.Diagnosis</dd>
+            <dt class="col-sm-3">Notes</dt>
+            <dd class="col-sm-9">@(record.Notes ?? "—")</dd>
+        </dl>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">Prescription — Issued @rx.IssuedOn.ToString("dd MMM yyyy")</div>
+    <div class="card-body">
+        <table class="table table-bordered">
+            <thead><tr><th>Medication</th><th>Dosage</th><th>Frequency</th><th>Duration</th><th>Instructions</th></tr></thead>
+            <tbody>
+                @foreach (var item in rx.Items)
+                {
+                    <tr>
+                        <td>@item.MedicationName</td>
+                        <td>@(item.Dosage ?? "—")</td>
+                        <td>@(item.Frequency ?? "—")</td>
+                        <td>@(item.DurationDays?.ToString() + " days" ?? "—")</td>
+                        <td>@(item.Instructions ?? "—")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (!string.IsNullOrEmpty(rx.Notes))
+        {
+            <p><strong>Notes:</strong> @rx.Notes</p>
+        }
+    </div>
+</div>
