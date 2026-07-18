@@ -12,7 +12,11 @@
                     <td>@s.SlotDurationMinutes</td>
                     <td>
                         <a href="/DoctorSchedules/AddEdit?id=@s.Id&doctorId=@ViewBag.DoctorId" data-modal>Edit</a> |
-                        <a href="/DoctorSchedules/Delete/@s.Id" class="delete" data-sks-target="#replacetarget">Delete</a>
+                        <form method="post" action="/DoctorSchedules/Delete/@s.Id"
+                              data-sks-ajax="true" data-sks-target="#replacetarget" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <a class="delete" href="/DoctorSchedules/Delete/@s.Id">Delete</a>
+                        </form>
                     </td>
                 </tr>
             }

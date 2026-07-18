@@ -1,5 +1,9 @@
 ﻿$(function () {
 
+    function getToken() {
+        return $('input[name="__RequestVerificationToken"]').val();
+    }
+
     // ── Search button → reload grid via existing CustomAjax convention ──
     $('#btnSearch').on('click', function () {
         var filter = $('#searchFrom').serializeArray();
@@ -8,7 +12,7 @@
 
         $.ajax({
             url: '/Appointments/List',
-            type: 'POST',
+            type: 'GET',
             data: data,
             success: function (html) {
                 $('#pageContent').html(html);
@@ -68,7 +72,7 @@
         $.ajax({
             url: '/Appointments/Cancel',
             type: 'POST',
-            data: { id: id, cancelReason: reason },
+            data: { id: id, cancelReason: reason, __RequestVerificationToken: getToken() },
             success: function (res) {
                 if (res.success) {
                     $('#btnSearch').click();
@@ -78,7 +82,7 @@
             }
         });
     });
-
+   
     // ── Client-side validation before Book form submits ──
     $(document).on('click', 'form[action="/Appointments/Save"] button[type="submit"]', function (e) {
         var errors = [];
@@ -103,7 +107,7 @@
         $.ajax({
             url: '/Appointments/CheckIn',
             type: 'POST',
-            data: { id: id },
+            data: { id: id, __RequestVerificationToken: getToken() },
             success: function (res) {
                 if (res.success) {
                     $('#btnSearch').click();
@@ -120,7 +124,7 @@
         $.ajax({
             url: '/Appointments/Complete',
             type: 'POST',
-            data: { id: id },
+            data: { id: id, __RequestVerificationToken: getToken() },
             success: function (res) {
                 if (res.success) {
                     location.reload();  // works on both grid page and dashboard page
@@ -139,7 +143,7 @@
         $.ajax({
             url: '/Appointments/NoShow',
             type: 'POST',
-            data: { id: id },
+            data: { id: id, __RequestVerificationToken: getToken() },
             success: function (res) {
                 if (res.success) {
                     $('#btnSearch').click();

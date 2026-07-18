@@ -19,8 +19,9 @@ namespace ClinicMS.Api.Controllers
             _service = service;
         }
 
-        // GET api/patients — any authenticated role can read (Doctor needs view access)
-        [HttpGet]
+        // GET api/patients?SearchTerm=john&IsActive=true&PageNo=1&PageSize=10
+        [HttpGet(Name = "GetPatientsPaged")]
+        [Authorize]
         public async Task<IActionResult> GetPatients([FromQuery] PatientFilterDto filter)
         {
             var result = await _service.GetPatientsAsync(filter);
@@ -31,8 +32,10 @@ namespace ClinicMS.Api.Controllers
             return Ok(ApiResponseDto<PaginatedResult<PatientListItemDto>>.SuccessResponse(result.Data!));
         }
 
-        // GET api/patients/{id} — any authenticated role can read
-        [HttpGet("{id}")]
+
+        // GET api/patients/{id}
+        [HttpGet("{id}", Name = "GetPatientById")]
+        [Authorize]
         public async Task<IActionResult> GetPatient(string id)
         {
             var result = await _service.GetPatientByIdAsync(id);
@@ -43,8 +46,9 @@ namespace ClinicMS.Api.Controllers
             return Ok(ApiResponseDto<PatientResponseDto>.SuccessResponse(result.Data!));
         }
 
-        // POST api/patients — write, Admin/Receptionist only
-        [HttpPost]
+
+        // POST api/patients
+        [HttpPost(Name = "CreatePatient")]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> CreatePatient([FromBody] PatientRequestDto dto)
         {
@@ -59,8 +63,9 @@ namespace ClinicMS.Api.Controllers
             return StatusCode(201, ApiResponseDto<string>.SuccessResponse(result.Data!, "Patient created successfully"));
         }
 
-        // PUT api/patients/{id} — write, Admin/Receptionist only
-        [HttpPut("{id}")]
+
+        // PUT api/patients/{id}
+        [HttpPut("{id}", Name = "UpdatePatient")]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> UpdatePatient(string id, [FromBody] PatientRequestDto dto)
         {
@@ -77,8 +82,9 @@ namespace ClinicMS.Api.Controllers
             return Ok(ApiResponseDto<string>.SuccessResponse("Patient updated successfully"));
         }
 
-        // DELETE api/patients/{id} — soft delete (BR7), Admin/Receptionist only
-        [HttpDelete("{id}")]
+
+        // DELETE api/patients/{id}  — soft delete (BR7)
+        [HttpDelete("{id}", Name = "DeactivatePatient")]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> DeactivatePatient(string id)
         {
@@ -90,8 +96,8 @@ namespace ClinicMS.Api.Controllers
             return Ok(ApiResponseDto<string>.SuccessResponse("Patient deactivated successfully"));
         }
 
-        // POST api/patients/{id}/reactivate — Admin/Receptionist only
-        [HttpPost("{id}/reactivate")]
+        // POST api/patients/{id}/reactivate
+        [HttpPost("{id}/reactivate", Name = "ReactivatePatient")]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> ReactivatePatient(string id)
         {

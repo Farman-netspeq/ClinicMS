@@ -3,6 +3,8 @@ using ClinicMS.Application.DTOs.Department;
 using ClinicMS.Application.DTOs.Patient;
 using ClinicMS.Shared.Common;
 using ClinicMS.Web.ApiClients;
+using ClinicMS.Web.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using ClinicMS.Web.Helpers;
@@ -77,7 +79,9 @@ namespace ClinicMS.Web.Controllers
         }
 
         // ── CANCEL ──────────────────────────────────────────
+
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Cancel(string id, string cancelReason)
         {
@@ -148,8 +152,10 @@ namespace ClinicMS.Web.Controllers
                 return Content("[]", "application/json");
             }
         }
+
         // ── CHECK-IN ────────────────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> CheckIn(string id)
         {
@@ -167,6 +173,7 @@ namespace ClinicMS.Web.Controllers
 
         // ── NO-SHOW ────────────────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> NoShow(string id)
         {
@@ -178,12 +185,14 @@ namespace ClinicMS.Web.Controllers
             }
             catch (HttpRequestException ex)
             {
-                return Json(new { success = false, message = ApiErrorHelper.ExtractApiMessage(ex.Message) });
+
+                return Json(new { success = false,  message = ApiErrorHelper.ExtractApiMessage(ex.Message) });
             }
         }
 
         // ── COMPLETE ────────────────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Doctor")]
         public async Task<IActionResult> Complete(string id)
         {
