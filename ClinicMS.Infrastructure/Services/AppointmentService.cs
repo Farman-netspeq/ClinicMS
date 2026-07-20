@@ -502,6 +502,7 @@ namespace ClinicMS.Infrastructure.Services
                 Status = a.Status,
                 ChiefComplaint = a.ChiefComplaint,
                 CancelReason = a.CancelReason,
+                ConsultationFee = a.Doctor?.ConsultationFee ?? 0,
                 CreatedOn = a.CreatedOn
             };
         }

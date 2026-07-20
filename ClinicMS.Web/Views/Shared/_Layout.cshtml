@@ -26,11 +26,19 @@
                     <a class="nav-link text-white" href="/Patients/Index">Patients</a>
                     @if (User.IsInRole("Doctor"))
                     {
-                        <a class="nav-link text-white" href="/Appointments/MyAppointments">My Appointments</a>
+                        <a class="nav-link text-white"
+                           href="/Appointments/MyAppointments">My Appointments</a>
                     }
                     else
                     {
-                        <a class="nav-link text-white" href="/Appointments/Index">Appointments</a>
+                        <a class="nav-link text-white"
+                           href="/Appointments/Index">Appointments</a>
+
+                        @if (User.IsInRole("Admin") || User.IsInRole("Receptionist"))
+                        {
+                            <a class="nav-link text-white"
+                               href="/Invoices/Index">Invoices</a>
+                        }
                     }
                 </div>
             }

@@ -1,0 +1,66 @@
+﻿@model ClinicMS.Shared.Common.PaginatedResult<ClinicMS.Application.DTOs.Invoice.InvoiceListItemDto>
+
+<div id="replacetarget">
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Invoice #</th>
+                <th>Patient</th>
+                <th>Issued</th>
+                <th>Status</th>
+                <th>Amount</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Items.Any())
+            {
+                <tr><td colspan="6" class="text-center text-muted">No invoices found</td></tr>
+            }
+            @foreach (var inv in Model.Items)
+            {
+                <tr>
+                    <td>@inv.InvoiceNumber</td>
+                    <td>@inv.PatientName (@inv.PatientNumber)</td>
+                    <td>@inv.IssuedOn.ToString("dd-MMM-yyyy")</td>
+                    <td>
+                        <span class="badge @(inv.Status == "Paid" ? "badge-success" : inv.Status == "Cancelled" ? "badge-secondary" : "badge-warning")">
+                            @inv.Status
+                        </span>
+                    </td>
+                    <td>₹@inv.TotalAmount.ToString("N2")</td>
+                    <td>
+                        <a href="/Invoices/Details/@inv.Id" class="btn btn-sm btn-info">View</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (Model.TotalPages > 1)
+    {
+        <div class="ns-grid-pager" data-sks-target="#replacetarget">
+            <nav>
+                <ul class="pagination">
+                    <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                        <a class="page-link ns-page-link" href="/Invoices/List?PageNo=@(Model.Page - 1)">«</a>
+                    </li>
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.Page ? "active" : "")">
+                            <a class="page-link ns-page-link" href="/Invoices/List?PageNo=@i">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                        <a class="page-link ns-page-link" href="/Invoices/List?PageNo=@(Model.Page + 1)">»</a>
+                    </li>
+                </ul>
+            </nav>
+            <small class="text-muted">
+                Showing @((Model.Page - 1) * Model.PageSize + 1)
+                - @(Math.Min(Model.Page * Model.PageSize, Model.TotalCount))
+                of @Model.TotalCount invoices
+            </small>
+        </div>
+    }
+</div>

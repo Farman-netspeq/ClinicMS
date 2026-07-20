@@ -38,6 +38,7 @@ namespace ClinicMS.Application.DTOs.Appointment
 
         public string ChiefComplaint { get; set; } = string.Empty;
         public string? CancelReason { get; set; }
+        public decimal ConsultationFee { get; set; }
         public DateTime CreatedOn { get; set; }
     }
 }

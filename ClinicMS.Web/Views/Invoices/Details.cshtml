@@ -1,0 +1,67 @@
+﻿@model ClinicMS.Application.DTOs.Invoice.InvoiceResponseDto
+@{
+    ViewData["Title"] = "Invoice Details";
+}
+<input type="hidden" id="ErrMsgHiddenField" value="" />
+
+<h4>Invoice @Model.InvoiceNumber</h4>
+<p class="text-muted">@Model.PatientName | Issued @Model.IssuedOn.ToString("dd MMM yyyy")</p>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <table class="table table-bordered">
+            <thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Line Total</th></tr></thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@item.Description</td>
+                        <td>@item.Quantity</td>
+                        <td>₹@item.UnitPrice.ToString("N2")</td>
+                        <td>₹@((item.Quantity * item.UnitPrice).ToString("N2"))</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <h5 class="text-end">Total: ₹@Model.TotalAmount.ToString("N2")</h5>
+
+        <div class="mb-2">
+            Status:
+            <span class="badge @(Model.Status.ToString() == "Paid" ? "badge-success" : "badge-warning")">
+                @Model.Status
+            </span>
+        </div>
+
+        @if (Model.Status.ToString() == "Paid")
+        {
+            <p class="text-success">
+                Paid on @Model.PaidOn?.ToString("dd MMM yyyy") via @Model.PaymentMethod
+            </p>
+        }
+        else if (Model.Status.ToString() == "Pending")
+        {
+            <form id="payForm">
+                @Html.AntiForgeryToken()
+                <div class="row align-items-end">
+                    <div class="col-md-4">
+                        <label>Payment Method</label>
+                        <select id="ddlPaymentMethod" class="form-control">
+                            <option value="1">Cash</option>
+                            <option value="2">Card</option>
+                            <option value="3">Insurance</option>
+                            <option value="4">Online</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" id="btnPay" class="btn btn-success" data-id="@Model.Id">Mark as Paid</button>
+                    </div>
+                </div>
+                <span id="payStatus" class="ms-2"></span>
+            </form>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/invoice.js"></script>
+}
