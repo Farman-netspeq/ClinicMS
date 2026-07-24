@@ -1,9 +1,10 @@
-﻿using ClinicMS.Application.DTOs.Invoice;
+﻿using System.Data;
+using System.Text.Json;
+using ClinicMS.Application.DTOs.Invoice;
 using ClinicMS.Application.Interfaces;
-using ClinicMS.Domain.Entities;
-using ClinicMS.Domain.Enums;
 using ClinicMS.Infrastructure.Data;
 using ClinicMS.Shared.Common;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -24,43 +25,29 @@ namespace ClinicMS.Infrastructure.Services
         {
             try
             {
-                var query = _context.Invoices
-                    .Include(i => i.Patient)
-                    .AsQueryable();
+                var searchTermParam = new SqlParameter("@SearchTerm", (object?)filter.SearchTerm ?? DBNull.Value);
+                var statusParam = new SqlParameter("@Status", (object?)(int?)filter.Status ?? DBNull.Value);
+                var fromDateParam = new SqlParameter("@FromDate", (object?)filter.FromDate ?? DBNull.Value);
+                var toDateParam = new SqlParameter("@ToDate", (object?)filter.ToDate ?? DBNull.Value);
+                var pageNoParam = new SqlParameter("@PageNo", filter.PageNo);
+                var pageSizeParam = new SqlParameter("@PageSize", filter.PageSize);
 
-                if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
-                    query = query.Where(i =>
-                        i.InvoiceNumber.Contains(filter.SearchTerm) ||
-                        i.Patient!.FirstName.Contains(filter.SearchTerm) ||
-                        i.Patient!.LastName.Contains(filter.SearchTerm) ||
-                        i.Patient!.PatientNumber.Contains(filter.SearchTerm));
-
-                if (filter.Status.HasValue)
-                    query = query.Where(i => i.Status == filter.Status.Value);
-
-                if (filter.FromDate.HasValue)
-                    query = query.Where(i => i.IssuedOn >= filter.FromDate.Value);
-
-                if (filter.ToDate.HasValue)
-                    query = query.Where(i => i.IssuedOn <= filter.ToDate.Value);
-
-                var totalCount = await query.CountAsync();
-
-                var items = await query
-                    .OrderByDescending(i => i.IssuedOn)
-                    .Skip((filter.PageNo - 1) * filter.PageSize)
-                    .Take(filter.PageSize)
-                    .Select(i => new InvoiceListItemDto
-                    {
-                        Id = i.Id,
-                        InvoiceNumber = i.InvoiceNumber,
-                        PatientName = i.Patient!.FirstName + " " + i.Patient.LastName,
-                        PatientNumber = i.Patient.PatientNumber,
-                        IssuedOn = i.IssuedOn,
-                        Status = i.Status.ToString(),
-                        TotalAmount = i.TotalAmount
-                    })
+                var items = await _context.InvoiceListItems
+                    .FromSqlRaw("EXEC udspInvoicesPaged @SearchTerm, @Status, @FromDate, @ToDate, @PageNo, @PageSize",
+                        searchTermParam, statusParam, fromDateParam, toDateParam, pageNoParam, pageSizeParam)
                     .ToListAsync();
+
+                var countSearchTermParam = new SqlParameter("@SearchTerm", (object?)filter.SearchTerm ?? DBNull.Value);
+                var countStatusParam = new SqlParameter("@Status", (object?)(int?)filter.Status ?? DBNull.Value);
+                var countFromDateParam = new SqlParameter("@FromDate", (object?)filter.FromDate ?? DBNull.Value);
+                var countToDateParam = new SqlParameter("@ToDate", (object?)filter.ToDate ?? DBNull.Value);
+
+                var countResult = (await _context.InvoiceCounts
+      .FromSqlRaw("EXEC udspInvoicesPagedCount @SearchTerm, @Status, @FromDate, @ToDate",
+          countSearchTermParam, countStatusParam, countFromDateParam, countToDateParam)
+      .ToListAsync())
+      .FirstOrDefault();
+                var totalCount = countResult?.TotalCount ?? 0;
 
                 return Result<PaginatedResult<InvoiceListItemDto>>.Ok(new PaginatedResult<InvoiceListItemDto>
                 {
@@ -81,34 +68,22 @@ namespace ClinicMS.Infrastructure.Services
         {
             try
             {
-                var invoice = await _context.Invoices
-                    .Include(i => i.Patient)
-                    .Include(i => i.Items)
-                    .FirstOrDefaultAsync(i => i.Id == id);
+                var idParam = new SqlParameter("@Id", id);
 
-                if (invoice == null)
+                var header = (await _context.InvoiceHeaders
+                    .FromSqlRaw("EXEC udspInvoicesGetById @Id", idParam)
+                    .ToListAsync())
+                    .FirstOrDefault();
+                if (header == null)
                     return Result<InvoiceResponseDto>.Fail("Invoice not found");
 
-                return Result<InvoiceResponseDto>.Ok(new InvoiceResponseDto
-                {
-                    Id = invoice.Id,
-                    InvoiceNumber = invoice.InvoiceNumber,
-                    PatientId = invoice.PatientId,
-                    PatientName = $"{invoice.Patient?.FirstName} {invoice.Patient?.LastName}",
-                    AppointmentId = invoice.AppointmentId,
-                    IssuedOn = invoice.IssuedOn,
-                    Status = invoice.Status,
-                    TotalAmount = invoice.TotalAmount,
-                    PaidOn = invoice.PaidOn,
-                    PaymentMethod = invoice.PaymentMethod,
-                    Items = invoice.Items.Select(it => new InvoiceItemDto
-                    {
-                        Id = it.Id,
-                        Description = it.Description,
-                        Quantity = it.Quantity,
-                        UnitPrice = it.UnitPrice
-                    }).ToList()
-                });
+                var invoiceIdParam = new SqlParameter("@InvoiceId", header.Id);
+
+                var items = await _context.InvoiceItemResults
+                    .FromSqlRaw("EXEC udspInvoiceItemsGetByInvoiceId @InvoiceId", invoiceIdParam)
+                    .ToListAsync();
+
+                return Result<InvoiceResponseDto>.Ok(MapToResponse(header, items));
             }
             catch (Exception ex)
             {
@@ -121,34 +96,23 @@ namespace ClinicMS.Infrastructure.Services
         {
             try
             {
-                var invoice = await _context.Invoices
-                    .Include(i => i.Patient)
-                    .Include(i => i.Items)
-                    .FirstOrDefaultAsync(i => i.AppointmentId == appointmentId);
+                var appointmentIdParam = new SqlParameter("@AppointmentId", appointmentId);
 
-                if (invoice == null)
+                var header = (await _context.InvoiceHeaders
+     .FromSqlRaw("EXEC udspInvoicesGetByAppointmentId @AppointmentId", appointmentIdParam)
+     .ToListAsync())
+     .FirstOrDefault();
+
+                if (header == null)
                     return Result<InvoiceResponseDto>.Fail("No invoice exists for this appointment");
 
-                return Result<InvoiceResponseDto>.Ok(new InvoiceResponseDto
-                {
-                    Id = invoice.Id,
-                    InvoiceNumber = invoice.InvoiceNumber,
-                    PatientId = invoice.PatientId,
-                    PatientName = $"{invoice.Patient?.FirstName} {invoice.Patient?.LastName}",
-                    AppointmentId = invoice.AppointmentId,
-                    IssuedOn = invoice.IssuedOn,
-                    Status = invoice.Status,
-                    TotalAmount = invoice.TotalAmount,
-                    PaidOn = invoice.PaidOn,
-                    PaymentMethod = invoice.PaymentMethod,
-                    Items = invoice.Items.Select(it => new InvoiceItemDto
-                    {
-                        Id = it.Id,
-                        Description = it.Description,
-                        Quantity = it.Quantity,
-                        UnitPrice = it.UnitPrice
-                    }).ToList()
-                });
+                var invoiceIdParam = new SqlParameter("@InvoiceId", header.Id);
+
+                var items = await _context.InvoiceItemResults
+                    .FromSqlRaw("EXEC udspInvoiceItemsGetByInvoiceId @InvoiceId", invoiceIdParam)
+                    .ToListAsync();
+
+                return Result<InvoiceResponseDto>.Ok(MapToResponse(header, items));
             }
             catch (Exception ex)
             {
@@ -157,61 +121,45 @@ namespace ClinicMS.Infrastructure.Services
             }
         }
 
-        // ── BR6: generate only from Completed appointment, once per appointment ──
         public async Task<Result<string>> GenerateAsync(InvoiceRequestDto dto)
         {
             try
             {
-                var appointment = await _context.Appointments
-                    .Include(a => a.Doctor)
-                    .FirstOrDefaultAsync(a => a.Id == dto.AppointmentId);
+                var id = Guid.NewGuid().ToString();
+                var itemsJson = JsonSerializer.Serialize(dto.Items);
 
-                if (appointment == null)
-                    return Result<string>.Fail("Appointment not found");
-
-                if (appointment.Status != AppointmentStatus.Completed)
-                    return Result<string>.Fail("Invoice can only be generated for a completed appointment");
-
-                var exists = await _context.Invoices.AnyAsync(i => i.AppointmentId == dto.AppointmentId);
-                if (exists)
-                    return Result<string>.Fail("An invoice already exists for this appointment");
-
-                if (dto.Items == null || dto.Items.Count == 0)
-                    return Result<string>.Fail("At least one line item is required");
-
-                // BR1: auto invoice number
-                var invoiceNumber = await GenerateInvoiceNumberAsync();
-
-                var items = dto.Items.Select(i => new InvoiceItem
+                var idParam = new SqlParameter("@Id", id);
+                var appointmentIdParam = new SqlParameter("@AppointmentId", dto.AppointmentId);
+                var itemsJsonParam = new SqlParameter("@ItemsJson", itemsJson);
+                var newInvoiceNumberParam = new SqlParameter
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    Description = i.Description.Trim(),
-                    Quantity = i.Quantity,
-                    UnitPrice = i.UnitPrice,
-                    LineTotal = i.Quantity * i.UnitPrice   // computed server-side
-                }).ToList();
-
-                var totalAmount = items.Sum(i => i.LineTotal);
-
-                var invoice = new Invoice
+                    ParameterName = "@NewInvoiceNumber",
+                    SqlDbType = SqlDbType.NVarChar,
+                    Size = 20,
+                    Direction = ParameterDirection.Output
+                };
+                var resultParam = new SqlParameter
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    InvoiceNumber = invoiceNumber,
-                    PatientId = appointment.PatientId,
-                    AppointmentId = appointment.Id,
-                    IssuedOn = DateTime.UtcNow,
-                    Status = InvoiceStatus.Pending,
-                    TotalAmount = totalAmount,
-                    Items = items
+                    ParameterName = "@Result",
+                    SqlDbType = SqlDbType.NVarChar,
+                    Size = 200,
+                    Direction = ParameterDirection.Output
                 };
 
-                _context.Invoices.Add(invoice);
-                await _context.SaveChangesAsync();
+                await _context.Database.ExecuteSqlRawAsync(
+                    "EXEC udspInvoicesGenerate @Id, @AppointmentId, @ItemsJson, @NewInvoiceNumber OUTPUT, @Result OUTPUT",
+                    idParam, appointmentIdParam, itemsJsonParam, newInvoiceNumberParam, resultParam);
 
-                _logger.LogInformation("Invoice generated: {Id} - {Number} for appointment {AppointmentId}, total {Total}",
-                    invoice.Id, invoiceNumber, appointment.Id, totalAmount);
+                var errorMessage = resultParam.Value?.ToString() ?? string.Empty;
+                if (!string.IsNullOrEmpty(errorMessage))
+                    return Result<string>.Fail(errorMessage);
 
-                return Result<string>.Ok(invoice.Id);
+                var invoiceNumber = newInvoiceNumberParam.Value?.ToString() ?? string.Empty;
+
+                _logger.LogInformation("Invoice generated: {Id} - {Number} for appointment {AppointmentId}",
+                    id, invoiceNumber, dto.AppointmentId);
+
+                return Result<string>.Ok(id);
             }
             catch (Exception ex)
             {
@@ -220,26 +168,27 @@ namespace ClinicMS.Infrastructure.Services
             }
         }
 
-        // ── BR6: pay + immutability ──
         public async Task<Result> PayAsync(string id, InvoicePayDto dto)
         {
             try
             {
-                var invoice = await _context.Invoices.FindAsync(id);
-                if (invoice == null)
-                    return Result.Fail("Invoice not found");
+                var idParam = new SqlParameter("@Id", id);
+                var paymentMethodParam = new SqlParameter("@PaymentMethod", (int)dto.PaymentMethod);
+                var resultParam = new SqlParameter
+                {
+                    ParameterName = "@Result",
+                    SqlDbType = SqlDbType.NVarChar,
+                    Size = 200,
+                    Direction = ParameterDirection.Output
+                };
 
-                if (invoice.Status == InvoiceStatus.Paid)
-                    return Result.Fail("Invoice is already paid");
+                await _context.Database.ExecuteSqlRawAsync(
+                    "EXEC udspInvoicesPay @Id, @PaymentMethod, @Result OUTPUT",
+                    idParam, paymentMethodParam, resultParam);
 
-                if (invoice.Status == InvoiceStatus.Cancelled)
-                    return Result.Fail("Cannot pay a cancelled invoice");
-
-                invoice.Status = InvoiceStatus.Paid;
-                invoice.PaidOn = DateTime.UtcNow;
-                invoice.PaymentMethod = dto.PaymentMethod;
-
-                await _context.SaveChangesAsync();
+                var errorMessage = resultParam.Value?.ToString() ?? string.Empty;
+                if (!string.IsNullOrEmpty(errorMessage))
+                    return Result.Fail(errorMessage);
 
                 _logger.LogInformation("Invoice paid: {Id} via {Method}", id, dto.PaymentMethod);
                 return Result.Ok();
@@ -251,22 +200,22 @@ namespace ClinicMS.Infrastructure.Services
             }
         }
 
-        // ── BR1 helper ──
-        private async Task<string> GenerateInvoiceNumberAsync()
+        private static InvoiceResponseDto MapToResponse(InvoiceHeaderDto header, List<InvoiceItemDto> items)
         {
-            var last = await _context.Invoices
-                .OrderByDescending(i => i.InvoiceNumber)
-                .Select(i => i.InvoiceNumber)
-                .FirstOrDefaultAsync();
-
-            int nextNumber = 1;
-            if (!string.IsNullOrEmpty(last))
+            return new InvoiceResponseDto
             {
-                var parts = last.Split('-');
-                if (parts.Length == 2 && int.TryParse(parts[1], out int lastNumber))
-                    nextNumber = lastNumber + 1;
-            }
-            return $"INV-{nextNumber:D6}";
+                Id = header.Id,
+                InvoiceNumber = header.InvoiceNumber,
+                PatientId = header.PatientId,
+                PatientName = header.PatientName,
+                AppointmentId = header.AppointmentId,
+                IssuedOn = header.IssuedOn,
+                Status = header.Status,
+                TotalAmount = header.TotalAmount,
+                PaidOn = header.PaidOn,
+                PaymentMethod = header.PaymentMethod,
+                Items = items
+            };
         }
     }
 }

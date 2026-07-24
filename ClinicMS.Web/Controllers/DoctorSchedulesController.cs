@@ -74,9 +74,13 @@ public class DoctorSchedulesController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(string id, string doctorId)
     {
-        var result = await _httpService.DeleteAsync<ApiResponseDto<string>>($"api/doctorschedules/{id}");
-        return Json(new { success = result?.Success ?? false, message = result?.Message });
+        await _httpService.DeleteAsync<ApiResponseDto<string>>($"api/doctorschedules/{id}");
+
+        var result = await _httpService.GetAsync<ApiResponseDto<List<DoctorScheduleListItemDto>>>(
+            $"api/doctorschedules/by-doctor/{doctorId}");
+        ViewBag.DoctorId = doctorId;
+        return PartialView("_List", result?.Data ?? new List<DoctorScheduleListItemDto>());
     }
 }

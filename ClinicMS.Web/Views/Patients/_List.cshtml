@@ -1,6 +1,6 @@
 ﻿@model ClinicMS.Shared.Common.PaginatedResult<ClinicMS.Application.DTOs.Patient.PatientListItemDto>
 
-<div id="replacetarget">
+<div id="pageContent">
     <table class="table table-bordered table-hover">
         <thead class="table-dark">
             <tr>
@@ -39,7 +39,7 @@
                             @if (p.IsActive)
                             {
                                 <form method="post" action="/Patients/Deactivate/@p.Id"
-                                      data-sks-ajax="true" data-sks-target="#replacetarget" class="d-inline">
+                                      data-sks-ajax="true" data-sks-target="#pageContent" class="d-inline">
                                     @Html.AntiForgeryToken()
                                     <a class="delete btn btn-sm btn-danger" href="/Patients/Deactivate/@p.Id">
                                         Deactivate
@@ -49,7 +49,7 @@
                             else
                             {
                                 <form method="post" action="/Patients/Reactivate/@p.Id"
-                                      data-sks-ajax="true" data-sks-target="#replacetarget" class="d-inline">
+                                      data-sks-ajax="true" data-sks-target="#pageContent" class="d-inline">
                                     @Html.AntiForgeryToken()
                                     <a class="delete btn btn-sm btn-success" href="/Patients/Reactivate/@p.Id">
                                         Reactivate
@@ -65,7 +65,7 @@
 
     @if (Model.TotalPages > 1)
     {
-        <div class="ns-grid-pager" data-sks-target="#replacetarget">
+        <div class="ns-grid-pager" data-sks-target="#pageContent">
             <nav>
                 <ul class="pagination">
                     <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">

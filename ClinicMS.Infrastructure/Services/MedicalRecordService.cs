@@ -4,8 +4,10 @@ using ClinicMS.Domain.Entities;
 using ClinicMS.Domain.Enums;
 using ClinicMS.Infrastructure.Data;
 using ClinicMS.Shared.Common;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Data;
 
 namespace ClinicMS.Infrastructure.Services
 {
@@ -24,25 +26,17 @@ namespace ClinicMS.Infrastructure.Services
         {
             try
             {
-                var record = await _context.MedicalRecords
-                    .FirstOrDefaultAsync(m => m.AppointmentId == appointmentId);
+                var appointmentIdParam = new SqlParameter("@AppointmentId", appointmentId);
 
-                if (record == null)
+                var results = await _context.MedicalRecordResponses
+                    .FromSqlRaw("EXEC udspMedicalRecordsGetByAppointmentId @AppointmentId", appointmentIdParam)
+                    .ToListAsync();
+
+                var dto = results.FirstOrDefault();
+                if (dto == null)
                     return Result<MedicalRecordResponseDto>.Fail("Medical record not found");
 
-                return Result<MedicalRecordResponseDto>.Ok(new MedicalRecordResponseDto
-                {
-                    Id = record.Id,
-                    AppointmentId = record.AppointmentId,
-                    BloodPressure = record.BloodPressure,
-                    Temperature = record.Temperature,
-                    Pulse = record.Pulse,
-                    Weight = record.Weight,
-                    Height = record.Height,
-                    Diagnosis = record.Diagnosis,
-                    Notes = record.Notes,
-                    CreatedOn = record.CreatedOn
-                });
+                return Result<MedicalRecordResponseDto>.Ok(dto);
             }
             catch (Exception ex)
             {
@@ -55,53 +49,38 @@ namespace ClinicMS.Infrastructure.Services
         {
             try
             {
-                var appointment = await _context.Appointments
-                    .FirstOrDefaultAsync(a => a.Id == dto.AppointmentId);
+                var id = Guid.NewGuid().ToString();
 
-                if (appointment == null)
-                    return Result<string>.Fail("Appointment not found");
-
-                // BR5 — status gate
-                if (appointment.Status != AppointmentStatus.Completed)
-                    return Result<string>.Fail("Medical record can only be created for a completed appointment");
-
-                // BR5 — ownership gate (skip check entirely if Admin)
-                if (!isAdmin)
+                var idParam = new SqlParameter("@Id", id);
+                var appointmentIdParam = new SqlParameter("@AppointmentId", dto.AppointmentId);
+                var bpParam = new SqlParameter("@BloodPressure", (object?)dto.BloodPressure ?? DBNull.Value);
+                var tempParam = new SqlParameter("@Temperature", (object?)dto.Temperature ?? DBNull.Value);
+                var pulseParam = new SqlParameter("@Pulse", (object?)dto.Pulse ?? DBNull.Value);
+                var weightParam = new SqlParameter("@Weight", (object?)dto.Weight ?? DBNull.Value);
+                var heightParam = new SqlParameter("@Height", (object?)dto.Height ?? DBNull.Value);
+                var diagnosisParam = new SqlParameter("@Diagnosis", dto.Diagnosis.Trim());
+                var notesParam = new SqlParameter("@Notes", (object?)dto.Notes?.Trim() ?? DBNull.Value);
+                var createdByParam = new SqlParameter("@CreatedById", doctorUserId);
+                var isAdminParam = new SqlParameter("@IsAdmin", isAdmin);
+                var resultParam = new SqlParameter
                 {
-                    var doctor = await _context.Doctors
-                        .FirstOrDefaultAsync(d => d.ApplicationUserId == doctorUserId);
-
-                    if (doctor == null || doctor.Id != appointment.DoctorId)
-                        return Result<string>.Fail("You are not authorized to record this consultation");
-                }
-
-                // BR5 — one record per appointment (also enforced by unique index, this is the friendly message)
-                var exists = await _context.MedicalRecords
-                    .AnyAsync(m => m.AppointmentId == dto.AppointmentId);
-
-                if (exists)
-                    return Result<string>.Fail("A medical record already exists for this appointment");
-
-                var record = new MedicalRecord
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    AppointmentId = dto.AppointmentId,
-                    BloodPressure = dto.BloodPressure,
-                    Temperature = dto.Temperature,
-                    Pulse = dto.Pulse,
-                    Weight = dto.Weight,
-                    Height = dto.Height,
-                    Diagnosis = dto.Diagnosis,
-                    Notes = dto.Notes,
-                    CreatedOn = DateTime.UtcNow,
-                    CreatedById = doctorUserId
+                    ParameterName = "@Result",
+                    SqlDbType = SqlDbType.NVarChar,
+                    Size = 200,
+                    Direction = ParameterDirection.Output
                 };
 
-                _context.MedicalRecords.Add(record);
-                await _context.SaveChangesAsync();
+                await _context.Database.ExecuteSqlRawAsync(
+                    "EXEC udspMedicalRecordsSave @Id, @AppointmentId, @BloodPressure, @Temperature, @Pulse, @Weight, @Height, @Diagnosis, @Notes, @CreatedById, @IsAdmin, @Result OUTPUT",
+                    idParam, appointmentIdParam, bpParam, tempParam, pulseParam, weightParam, heightParam,
+                    diagnosisParam, notesParam, createdByParam, isAdminParam, resultParam);
 
-                _logger.LogInformation("Medical record created: {Id} for appointment {AppointmentId}", record.Id, record.AppointmentId);
-                return Result<string>.Ok(record.Id);
+                var errorMessage = resultParam.Value?.ToString() ?? string.Empty;
+                if (!string.IsNullOrEmpty(errorMessage))
+                    return Result<string>.Fail(errorMessage);
+
+                _logger.LogInformation("Medical record created: {Id} for appointment {AppointmentId}", id, dto.AppointmentId);
+                return Result<string>.Ok(id);
             }
             catch (Exception ex)
             {

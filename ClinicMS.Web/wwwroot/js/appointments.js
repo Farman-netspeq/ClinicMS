@@ -19,7 +19,31 @@
             }
         });
     });
+    $(document).on('change', '#ddlDepartment', function () {
+        var deptId = $(this).val();
+        var $doctor = $('#ddlDoctor');
 
+        $doctor.html('<option value="">-- Select Doctor --</option>');
+
+        if (!deptId) return;
+
+        $.ajax({
+            url: '/Appointments/GetDoctorsByDepartment/' + deptId,
+            type: 'GET',
+            success: function (doctors) {
+                if (!doctors || doctors.length === 0) {
+                    $doctor.append('<option value="">No doctors in this department</option>');
+                    return;
+                }
+                doctors.forEach(function (d) {
+                    $doctor.append('<option value="' + d.Value + '">' + d.Text + '</option>');
+                });
+            },
+            error: function () {
+                $doctor.append('<option value="">Error loading doctors</option>');
+            }
+        });
+    });
     // ── Slot fetch: fires when EITHER Doctor or Date changes ──
     $(document).on('change', '#ddlDoctor, #txtDate', function () {
         var doctorId = $('#ddlDoctor').val();

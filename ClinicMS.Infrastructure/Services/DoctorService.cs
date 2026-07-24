@@ -6,6 +6,8 @@ using ClinicMS.Shared.Common;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Data.SqlClient;
+using System.Data;
 
 namespace ClinicMS.Infrastructure.Services
 {
@@ -13,7 +15,6 @@ namespace ClinicMS.Infrastructure.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-        // UserManager = Identity service for creating users
         private readonly ILogger<DoctorService> _logger;
 
         public DoctorService(
@@ -32,126 +33,89 @@ namespace ClinicMS.Infrastructure.Services
         {
             try
             {
-                var query = _context.Doctors
-                    .Include(d => d.Department)
-                    // Include Department → get dept name for grid
-                    .AsQueryable();
+                var searchTermParam = new SqlParameter("@SearchTerm", (object?)filter.SearchTerm ?? DBNull.Value);
+                var departmentIdParam = new SqlParameter("@DepartmentId", (object?)filter.DepartmentId ?? DBNull.Value);
+                var isActiveParam = new SqlParameter("@IsActive", (object?)filter.IsActive ?? DBNull.Value);
+                var pageNoParam = new SqlParameter("@PageNo", filter.PageNo);
+                var pageSizeParam = new SqlParameter("@PageSize", filter.PageSize);
 
-                if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
-                    query = query.Where(d =>
-                        d.FullName.Contains(filter.SearchTerm) ||
-                        d.LicenseNumber.Contains(filter.SearchTerm) ||
-                        d.Specialization.Contains(filter.SearchTerm));
-
-                if (!string.IsNullOrWhiteSpace(filter.DepartmentId))
-                    query = query.Where(d =>
-                        d.DepartmentId == filter.DepartmentId);
-
-                if (filter.IsActive.HasValue)
-                    query = query.Where(d =>
-                        d.IsActive == filter.IsActive.Value);
-
-                var totalCount = await query.CountAsync();
-
-                var items = await query
-                    .OrderBy(d => d.FullName)
-                    .Skip((filter.PageNo - 1) * filter.PageSize)
-                    .Take(filter.PageSize)
-                    .Select(d => new DoctorListItemDto
-                    {
-                        Id = d.Id,
-                        FullName = d.FullName,
-                        DepartmentName = d.Department != null
-                            ? d.Department.Name : "N/A",
-                        Specialization = d.Specialization,
-                        LicenseNumber = d.LicenseNumber,
-                        ConsultationFee = d.ConsultationFee,
-                        IsActive = d.IsActive
-                    })
+                var items = await _context.DoctorListItems
+                    .FromSqlRaw(
+                        "EXEC udspDoctorsPaged @SearchTerm, @DepartmentId, @IsActive, @PageNo, @PageSize",
+                        searchTermParam, departmentIdParam, isActiveParam, pageNoParam, pageSizeParam)
                     .ToListAsync();
 
-                return Result<PaginatedResult<DoctorListItemDto>>.Ok(
-                    new PaginatedResult<DoctorListItemDto>
-                    {
-                        Items = items,
-                        TotalCount = totalCount,
-                        Page = filter.PageNo,
-                        PageSize = filter.PageSize
-                    });
+                // fresh params for count — same SqlParameter instance can't run in two EXEC calls
+                var countSearchTermParam = new SqlParameter("@SearchTerm", (object?)filter.SearchTerm ?? DBNull.Value);
+                var countDepartmentIdParam = new SqlParameter("@DepartmentId", (object?)filter.DepartmentId ?? DBNull.Value);
+                var countIsActiveParam = new SqlParameter("@IsActive", (object?)filter.IsActive ?? DBNull.Value);
+
+                var countResult = await _context.DoctorCounts
+                    .FromSqlRaw(
+                        "EXEC udspDoctorsPagedCount @SearchTerm, @DepartmentId, @IsActive",
+                        countSearchTermParam, countDepartmentIdParam, countIsActiveParam)
+                    .ToListAsync();
+
+                var totalCount = countResult.FirstOrDefault()?.TotalCount ?? 0;
+
+                var result = new PaginatedResult<DoctorListItemDto>
+                {
+                    Items = items,
+                    TotalCount = totalCount,
+                    Page = filter.PageNo,
+                    PageSize = filter.PageSize
+                };
+
+                return Result<PaginatedResult<DoctorListItemDto>>.Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error fetching doctors");
-                return Result<PaginatedResult<DoctorListItemDto>>
-                    .Fail("Failed to fetch doctors");
+                _logger.LogError(ex, "Error fetching doctors. Filter: {@Filter}", filter);
+                return Result<PaginatedResult<DoctorListItemDto>>.Fail("Failed to fetch doctors");
             }
         }
 
-        // ── GET BY ID ─────────────────────────────────────────
+        // ── GET SINGLE BY ID ──────────────────────────────────
         public async Task<Result<DoctorResponseDto>>
             GetDoctorByIdAsync(string id)
         {
             try
             {
-                var doctor = await _context.Doctors
-                    .Include(d => d.Department)
-                    .Include(d => d.ApplicationUser)
-                    .FirstOrDefaultAsync(d => d.Id == id);
+                var idParam = new SqlParameter("@Id", id);
 
-                if (doctor == null)
-                    return Result<DoctorResponseDto>
-                        .Fail("Doctor not found");
+                var results = await _context.DoctorResponses
+                    .FromSqlRaw("EXEC udspDoctorsGetById @Id", idParam)
+                    .ToListAsync();
 
-                return Result<DoctorResponseDto>.Ok(
-                    new DoctorResponseDto
-                    {
-                        Id = doctor.Id,
-                        FullName = doctor.FullName,
-                        DepartmentId = doctor.DepartmentId,
-                        DepartmentName = doctor.Department?.Name
-                            ?? "N/A",
-                        Specialization = doctor.Specialization,
-                        LicenseNumber = doctor.LicenseNumber,
-                        ConsultationFee = doctor.ConsultationFee,
-                        Email = doctor.ApplicationUser?.Email
-                            ?? string.Empty,
-                        IsActive = doctor.IsActive,
-                        ApplicationUserId = doctor.ApplicationUserId
-                    });
+                var dto = results.FirstOrDefault();
+
+                if (dto == null)
+                    return Result<DoctorResponseDto>.Fail("Doctor not found");
+
+                return Result<DoctorResponseDto>.Ok(dto);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,
-                    "Error fetching doctor {DoctorId}", id);
-                return Result<DoctorResponseDto>
-                    .Fail("Failed to fetch doctor");
+                _logger.LogError(ex, "Error fetching doctor {DoctorId}", id);
+                return Result<DoctorResponseDto>.Fail("Failed to fetch doctor");
             }
         }
 
         // ── CREATE ────────────────────────────────────────────
-        // 1. ApplicationUser (login account)
-        // 2. Doctor entity (medical profile)
         public async Task<Result<string>>
             CreateDoctorAsync(DoctorRequestDto dto)
         {
             try
             {
-                // Validate required create fields
                 if (string.IsNullOrEmpty(dto.Email))
-                    return Result<string>
-                        .Fail("Email is required for doctor login");
+                    return Result<string>.Fail("Email is required for doctor login");
                 if (string.IsNullOrEmpty(dto.Password))
-                    return Result<string>
-                        .Fail("Password is required for doctor login");
+                    return Result<string>.Fail("Password is required for doctor login");
 
-                // license must be unique
-                var licenseExists = await EnsureUniqueLicenseAsync(
-                    dto.LicenseNumber, excludeId: null);
+                var licenseExists = await EnsureUniqueLicenseAsync(dto.LicenseNumber, excludeId: null);
                 if (licenseExists)
-                    return Result<string>
-                        .Fail($"License '{dto.LicenseNumber}' already exists");
+                    return Result<string>.Fail($"License '{dto.LicenseNumber}' already exists");
 
-                // Create ApplicationUser (login account)
                 var user = new ApplicationUser
                 {
                     UserName = dto.Email,
@@ -161,172 +125,152 @@ namespace ClinicMS.Infrastructure.Services
                     EmailConfirmed = true
                 };
 
-                var userResult = await _userManager
-                    .CreateAsync(user, dto.Password);
-                // CreateAsync = hashes password + saves to AspNetUsers
+                var userResult = await _userManager.CreateAsync(user, dto.Password);
 
                 if (!userResult.Succeeded)
                 {
-                    var errors = string.Join(", ",
-                        userResult.Errors.Select(e => e.Description));
+                    var errors = string.Join(", ", userResult.Errors.Select(e => e.Description));
                     return Result<string>.Fail(errors);
                 }
 
-                // Step 2: Assign Doctor role to the user
                 await _userManager.AddToRoleAsync(user, "Doctor");
 
-                // Step 3: Create Doctor entity linking to user
-                var doctor = new Doctor
+                var userIdParam = new SqlParameter("@ApplicationUserId", user.Id);
+                var fullNameParam = new SqlParameter("@FullName", dto.FullName.Trim());
+                var departmentIdParam = new SqlParameter("@DepartmentId", dto.DepartmentId);
+                var specializationParam = new SqlParameter("@Specialization", dto.Specialization.Trim());
+                var licenseNumberParam = new SqlParameter("@LicenseNumber", dto.LicenseNumber.Trim());
+                var feeParam = new SqlParameter("@ConsultationFee", dto.ConsultationFee);
+
+                var newIdParam = new SqlParameter
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    ApplicationUserId = user.Id,
-                    // Links doctor profile to login account
-                    FullName = dto.FullName.Trim(),
-                    DepartmentId = dto.DepartmentId,
-                    Specialization = dto.Specialization.Trim(),
-                    LicenseNumber = dto.LicenseNumber.Trim(),
-                    ConsultationFee = dto.ConsultationFee,
-                    IsActive = true
+                    ParameterName = "@NewId",
+                    SqlDbType = SqlDbType.NVarChar,
+                    Size = 36,
+                    Direction = ParameterDirection.Output
                 };
 
-                _context.Doctors.Add(doctor);
-                await _context.SaveChangesAsync();
+                await _context.Database.ExecuteSqlRawAsync(
+                    "EXEC udspDoctorsSave @ApplicationUserId, @FullName, @DepartmentId, @Specialization, @LicenseNumber, @ConsultationFee, @NewId OUTPUT",
+                    userIdParam, fullNameParam, departmentIdParam, specializationParam, licenseNumberParam, feeParam, newIdParam);
 
-                _logger.LogInformation(
-                    "Doctor created: {DoctorId} - {Name} with user {UserId}",
-                    doctor.Id, doctor.FullName, user.Id);
+                var newId = newIdParam.Value?.ToString() ?? string.Empty;
 
-                return Result<string>.Ok(doctor.Id);
+                _logger.LogInformation("Doctor created: {DoctorId} - {Name} with user {UserId}", newId, dto.FullName, user.Id);
+
+                return Result<string>.Ok(newId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,
-                    "Error creating doctor: {@Dto}", dto);
-                return Result<string>
-                    .Fail("Failed to create doctor");
+                _logger.LogError(ex, "Error creating doctor: {@Dto}", dto);
+                return Result<string>.Fail("Failed to create doctor");
             }
         }
 
         // ── UPDATE ────────────────────────────────────────────
-        // Updates Doctor entity only
-        public async Task<Result> UpdateDoctorAsync(DoctorRequestDto dto)
+        public async Task<Result>
+            UpdateDoctorAsync(DoctorRequestDto dto)
         {
             try
             {
                 if (string.IsNullOrEmpty(dto.Id))
-                    return Result.Fail("Doctor Id required");
+                    return Result.Fail("Doctor Id is required");
 
-                var doctor = await _context.Doctors
-                    .FindAsync(dto.Id);
-
-                if (doctor == null)
-                    return Result.Fail("Doctor not found");
-
-                var licenseExists = await EnsureUniqueLicenseAsync(
-                    dto.LicenseNumber, excludeId: dto.Id);
+                var licenseExists = await EnsureUniqueLicenseAsync(dto.LicenseNumber, excludeId: dto.Id);
                 if (licenseExists)
-                    return Result.Fail(
-                        $"License '{dto.LicenseNumber}' already exists");
+                    return Result.Fail($"License '{dto.LicenseNumber}' already exists");
 
-                // Update doctor fields
-                doctor.FullName = dto.FullName.Trim();
-                doctor.DepartmentId = dto.DepartmentId;
-                doctor.Specialization = dto.Specialization.Trim();
-                doctor.LicenseNumber = dto.LicenseNumber.Trim();
-                doctor.ConsultationFee = dto.ConsultationFee;
+                var idParam = new SqlParameter("@Id", dto.Id);
+                var fullNameParam = new SqlParameter("@FullName", dto.FullName.Trim());
+                var departmentIdParam = new SqlParameter("@DepartmentId", dto.DepartmentId);
+                var specializationParam = new SqlParameter("@Specialization", dto.Specialization.Trim());
+                var licenseNumberParam = new SqlParameter("@LicenseNumber", dto.LicenseNumber.Trim());
+                var feeParam = new SqlParameter("@ConsultationFee", dto.ConsultationFee);
 
-                // Also update FullName in ApplicationUser
-                // So navbar shows correct name after edit
-                var user = await _userManager
-                    .FindByIdAsync(doctor.ApplicationUserId);
-                if (user != null)
+                var userIdParam = new SqlParameter
                 {
-                    user.FullName = dto.FullName.Trim();
-                    await _userManager.UpdateAsync(user);
+                    ParameterName = "@ApplicationUserId",
+                    SqlDbType = SqlDbType.NVarChar,
+                    Size = 450,
+                    Direction = ParameterDirection.Output
+                };
+
+                await _context.Database.ExecuteSqlRawAsync(
+                    "EXEC udspDoctorsUpdate @Id, @FullName, @DepartmentId, @Specialization, @LicenseNumber, @ConsultationFee, @ApplicationUserId OUTPUT",
+                    idParam, fullNameParam, departmentIdParam, specializationParam, licenseNumberParam, feeParam, userIdParam);
+
+                // keep navbar name synced with ApplicationUser
+                var userId = userIdParam.Value?.ToString();
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    var user = await _userManager.FindByIdAsync(userId);
+                    if (user != null)
+                    {
+                        user.FullName = dto.FullName.Trim();
+                        await _userManager.UpdateAsync(user);
+                    }
                 }
 
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation(
-                    "Doctor updated: {DoctorId}", dto.Id);
+                _logger.LogInformation("Doctor updated: {DoctorId}", dto.Id);
 
                 return Result.Ok();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,
-                    "Error updating doctor {DoctorId}", dto.Id);
+                _logger.LogError(ex, "Error updating doctor {DoctorId}", dto.Id);
                 return Result.Fail("Failed to update doctor");
             }
         }
 
         // ── DEACTIVATE ────────────────────────────────────────
-        public async Task<Result> DeactivateDoctorAsync(string id)
-        {
-            try
-            {
-                var doctor = await _context.Doctors
-                    .FindAsync(id);
-
-                if (doctor == null)
-                    return Result.Fail("Doctor not found");
-
-                // Deactivate both doctor profile AND login account
-                doctor.IsActive = false;
-
-                var user = await _userManager
-                    .FindByIdAsync(doctor.ApplicationUserId);
-                if (user != null)
-                {
-                    user.IsActive = false;
-                    await _userManager.UpdateAsync(user);
-                }
-
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation(
-                    "Doctor deactivated: {DoctorId}", id);
-
-                return Result.Ok();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex,
-                    "Error deactivating doctor {DoctorId}", id);
-                return Result.Fail("Failed to deactivate doctor");
-            }
-        }
+        public async Task<Result>
+            DeactivateDoctorAsync(string id)
+            => await SetActiveAsync(id, isActive: false);
 
         // ── REACTIVATE ────────────────────────────────────────
-        public async Task<Result> ReactivateDoctorAsync(string id)
+        public async Task<Result>
+            ReactivateDoctorAsync(string id)
+            => await SetActiveAsync(id, isActive: true);
+
+        private async Task<Result>
+            SetActiveAsync(string id, bool isActive)
         {
             try
             {
-                var doctor = await _context.Doctors
-                    .FindAsync(id);
+                var idParam = new SqlParameter("@Id", id);
+                var isActiveParam = new SqlParameter("@IsActive", isActive);
 
-                if (doctor == null)
+                var userIdParam = new SqlParameter
+                {
+                    ParameterName = "@ApplicationUserId",
+                    SqlDbType = SqlDbType.NVarChar,
+                    Size = 450,
+                    Direction = ParameterDirection.Output
+                };
+
+                await _context.Database.ExecuteSqlRawAsync(
+                    "EXEC udspDoctorsSetActive @Id, @IsActive, @ApplicationUserId OUTPUT",
+                    idParam, isActiveParam, userIdParam);
+
+                var userId = userIdParam.Value?.ToString();
+                if (string.IsNullOrEmpty(userId))
                     return Result.Fail("Doctor not found");
 
-                doctor.IsActive = true;
-
-                var user = await _userManager
-                    .FindByIdAsync(doctor.ApplicationUserId);
+                var user = await _userManager.FindByIdAsync(userId);
                 if (user != null)
                 {
-                    user.IsActive = true;
+                    user.IsActive = isActive;
                     await _userManager.UpdateAsync(user);
                 }
 
-                await _context.SaveChangesAsync();
+                _logger.LogInformation("Doctor {State}: {DoctorId}", isActive ? "reactivated" : "deactivated", id);
 
                 return Result.Ok();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,
-                    "Error reactivating doctor {DoctorId}", id);
-                return Result.Fail("Failed to reactivate doctor");
+                _logger.LogError(ex, "Error setting doctor active state {DoctorId}", id);
+                return Result.Fail("Failed to update doctor status");
             }
         }
 
@@ -336,40 +280,43 @@ namespace ClinicMS.Infrastructure.Services
         {
             try
             {
-                var doctors = await _context.Doctors
-                    .Where(d => d.DepartmentId == departmentId
-                        && d.IsActive)
-                    .OrderBy(d => d.FullName)
-                    .Select(d => new DoctorListItemDto
-                    {
-                        Id = d.Id,
-                        FullName = d.FullName,
-                        Specialization = d.Specialization,
-                        IsActive = d.IsActive
-                    })
+                var departmentIdParam = new SqlParameter("@DepartmentId", SqlDbType.UniqueIdentifier)
+                {
+                    Value = Guid.Parse(departmentId)
+                };
+
+                var doctors = await _context.DoctorListItems
+                    .FromSqlRaw("EXEC udspDoctorsByDepartment @DepartmentId", departmentIdParam)
                     .ToListAsync();
 
                 return Result<List<DoctorListItemDto>>.Ok(doctors);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,
-                    "Error fetching doctors for dept {DeptId}",
-                    departmentId);
-                return Result<List<DoctorListItemDto>>
-                    .Fail("Failed to fetch doctors");
+                _logger.LogError(ex, "Error fetching doctors for dept {DeptId}", departmentId);
+                return Result<List<DoctorListItemDto>>.Fail("Failed to fetch doctors");
             }
         }
 
         // ── PRIVATE HELPERS ───────────────────────────────────
-        private async Task<bool> EnsureUniqueLicenseAsync(
-            string licenseNumber, string? excludeId)
+        private async Task<bool>
+            EnsureUniqueLicenseAsync(string licenseNumber, string? excludeId)
         {
-            return await _context.Doctors
-                .AnyAsync(d =>
-                    d.LicenseNumber.ToLower()
-                        == licenseNumber.ToLower() &&
-                    d.Id != excludeId);
+            var licenseNumberParam = new SqlParameter("@LicenseNumber", licenseNumber);
+            var excludeIdParam = new SqlParameter("@ExcludeId", (object?)excludeId ?? DBNull.Value);
+
+            var existsParam = new SqlParameter
+            {
+                ParameterName = "@Exists",
+                SqlDbType = SqlDbType.Bit,
+                Direction = ParameterDirection.Output
+            };
+
+            await _context.Database.ExecuteSqlRawAsync(
+                "EXEC udspDoctorsCheckLicense @LicenseNumber, @ExcludeId, @Exists OUTPUT",
+                licenseNumberParam, excludeIdParam, existsParam);
+
+            return (bool)(existsParam.Value ?? false);
         }
     }
 }
