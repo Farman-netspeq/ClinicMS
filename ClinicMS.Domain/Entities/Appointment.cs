@@ -24,10 +24,8 @@ namespace ClinicMS.Domain.Entities
         public string ChiefComplaint { get; set; } = string.Empty;
 
         public string? CancelReason { get; set; }
-
-        public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
-        public string CreatedById { get; set; } = string.Empty;
-
+        public DateTime TransDate { get; set; } = DateTime.UtcNow;
+        public string LastUpdatedBy { get; set; } = string.Empty;
         // ── Navigation properties ──────────────────────────
         // EF fills these with .Include() — not DB columns
         public Patient? Patient { get; set; }

@@ -39,10 +39,14 @@
                             }
                             else if (a.Status.ToString() == "CheckedIn")
                             {
-                                <a href="javascript:void(0)" class="btn-complete-apt" data-id="@a.Id">Complete</a>
-                                <text> | </text>
+                                @if (User.IsInRole("Admin") || User.IsInRole("Doctor"))
+                                {
+                                    <a href="javascript:void(0)" class="btn-complete-apt" data-id="@a.Id">Complete</a>
+                                    <text> | </text>
+                                }
                                 <a href="javascript:void(0)" class="btn-cancel-apt" data-id="@a.Id">Cancel</a>
                             }
+                        
                         }
                         @if (a.Status.ToString() == "Completed")
                         {

@@ -28,7 +28,7 @@ namespace ClinicMS.Infrastructure.Services
             {
                 var appointmentIdParam = new SqlParameter("@AppointmentId", appointmentId);
 
-                var results = await _context.MedicalRecordResponses
+                var results = await _context.Set<MedicalRecordResponseDto>()
                     .FromSqlRaw("EXEC udspMedicalRecordsGetByAppointmentId @AppointmentId", appointmentIdParam)
                     .ToListAsync();
 
@@ -60,7 +60,7 @@ namespace ClinicMS.Infrastructure.Services
                 var heightParam = new SqlParameter("@Height", (object?)dto.Height ?? DBNull.Value);
                 var diagnosisParam = new SqlParameter("@Diagnosis", dto.Diagnosis.Trim());
                 var notesParam = new SqlParameter("@Notes", (object?)dto.Notes?.Trim() ?? DBNull.Value);
-                var createdByParam = new SqlParameter("@CreatedById", doctorUserId);
+                var lastUpdatedByParam = new SqlParameter("@LastUpdatedBy", doctorUserId);
                 var isAdminParam = new SqlParameter("@IsAdmin", isAdmin);
                 var resultParam = new SqlParameter
                 {
@@ -71,9 +71,9 @@ namespace ClinicMS.Infrastructure.Services
                 };
 
                 await _context.Database.ExecuteSqlRawAsync(
-                    "EXEC udspMedicalRecordsSave @Id, @AppointmentId, @BloodPressure, @Temperature, @Pulse, @Weight, @Height, @Diagnosis, @Notes, @CreatedById, @IsAdmin, @Result OUTPUT",
+                    "EXEC udspMedicalRecordsSave @Id, @AppointmentId, @BloodPressure, @Temperature, @Pulse, @Weight, @Height, @Diagnosis, @Notes, @LastUpdatedBy, @IsAdmin, @Result OUTPUT",
                     idParam, appointmentIdParam, bpParam, tempParam, pulseParam, weightParam, heightParam,
-                    diagnosisParam, notesParam, createdByParam, isAdminParam, resultParam);
+                    diagnosisParam, notesParam, lastUpdatedByParam, isAdminParam, resultParam);
 
                 var errorMessage = resultParam.Value?.ToString() ?? string.Empty;
                 if (!string.IsNullOrEmpty(errorMessage))

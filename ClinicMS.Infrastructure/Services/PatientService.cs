@@ -30,7 +30,7 @@ namespace ClinicMS.Infrastructure.Services
                 var pageNoParam = new SqlParameter("@PageNo", filter.PageNo);
                 var pageSizeParam = new SqlParameter("@PageSize", filter.PageSize);
 
-                var items = await _context.PatientListItems
+                var items = await _context.Set<PatientListItemDto>()
                 .FromSqlRaw("EXEC udspPatientsPaged @SearchTerm, @IsActive, @PageNo, @PageSize",
                      searchTermParam, isActiveParam, pageNoParam, pageSizeParam)
                     .AsNoTracking()
@@ -39,7 +39,7 @@ namespace ClinicMS.Infrastructure.Services
                 var countSearchTermParam = new SqlParameter("@SearchTerm", (object?)filter.SearchTerm ?? DBNull.Value);
                 var countIsActiveParam = new SqlParameter("@IsActive", (object?)filter.IsActive ?? DBNull.Value);
 
-                var countResult = (await _context.PatientCounts
+                var countResult = (await _context.Set<PatientCountResultDto>()
                .FromSqlRaw("EXEC udspPatientsPagedCount @SearchTerm, @IsActive", countSearchTermParam, countIsActiveParam)
                .ToListAsync())
                 .FirstOrDefault();
@@ -70,7 +70,7 @@ namespace ClinicMS.Infrastructure.Services
             {
                 var idParam = new SqlParameter("@Id", id);
 
-                var results = await _context.PatientResponses
+                var results = await _context.Set<PatientResponseDto>()
                     .FromSqlRaw("EXEC udspPatientsGetById @Id", idParam)
                     .ToListAsync();
 

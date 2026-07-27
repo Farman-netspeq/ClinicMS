@@ -26,7 +26,7 @@ namespace ClinicMS.Infrastructure.Services
             try
             {
                 var appointmentIdParam = new SqlParameter("@AppointmentId", appointmentId);
-                var header = (await _context.PrescriptionHeaders
+                var header = (await _context.Set<PrescriptionHeaderDto>()
                     .FromSqlRaw("EXEC udspPrescriptionsGetByAppointmentId @AppointmentId", appointmentIdParam)
                     .ToListAsync())
                     .FirstOrDefault();
@@ -35,7 +35,7 @@ namespace ClinicMS.Infrastructure.Services
                     return Result<PrescriptionResponseDto>.Fail("Prescription not found");
 
                 var prescriptionIdParam = new SqlParameter("@PrescriptionId", header.Id);
-                var items = await _context.PrescriptionItemResults
+                var items = await _context.Set<PrescriptionItemDto>()
                     .FromSqlRaw("EXEC udspPrescriptionItemsGetByPrescriptionId @PrescriptionId", prescriptionIdParam)
                     .ToListAsync();
 

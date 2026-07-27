@@ -37,7 +37,7 @@ namespace ClinicMS.Infrastructure.Services
                 var pageNoParam = new SqlParameter("@PageNo", filter.PageNo);
                 var pageSizeParam = new SqlParameter("@PageSize", filter.PageSize);
 
-                var items = await _context.AppointmentListItems
+                var items = await _context.Set<AppointmentListItemDto>()
                     .FromSqlRaw(
                         "EXEC udspApptPaged @SearchTerm, @DoctorId, @DepartmentId, @Status, @FromDate, @ToDate, @PageNo, @PageSize",
                         searchTermParam, doctorIdParam, departmentIdParam, statusParam, fromDateParam, toDateParam, pageNoParam, pageSizeParam)
@@ -50,7 +50,7 @@ namespace ClinicMS.Infrastructure.Services
                 var countFromDateParam = new SqlParameter("@FromDate", (object?)filter.FromDate ?? DBNull.Value);
                 var countToDateParam = new SqlParameter("@ToDate", (object?)filter.ToDate ?? DBNull.Value);
 
-                var countResult = await _context.AppointmentCounts
+                var countResult = await _context.Set<AppointmentCountResultDto>()
                     .FromSqlRaw(
                         "EXEC udspApptPagedCount @SearchTerm, @DoctorId, @DepartmentId, @Status, @FromDate, @ToDate",
                         countSearchTermParam, countDoctorIdParam, countDepartmentIdParam, countStatusParam, countFromDateParam, countToDateParam)
@@ -82,7 +82,7 @@ namespace ClinicMS.Infrastructure.Services
             {
                 var idParam = new SqlParameter("@Id", id);
 
-                var results = await _context.AppointmentResponses
+                var results = await _context.Set<AppointmentResponseDto>()
                     .FromSqlRaw("EXEC udspApptGetById @Id", idParam)
                     .ToListAsync();
 
@@ -183,7 +183,7 @@ namespace ClinicMS.Infrastructure.Services
                 var saveStartParam = new SqlParameter("@StartTime", startTime);
                 var saveEndParam = new SqlParameter("@EndTime", endTime);
                 var saveComplaintParam = new SqlParameter("@ChiefComplaint", dto.ChiefComplaint.Trim());
-                var saveCreatedByParam = new SqlParameter("@CreatedById", createdByUserId);
+                var saveCreatedByParam = new SqlParameter("@LastUpdatedBy", createdByUserId);
                 var newIdParam = new SqlParameter
                 {
                     ParameterName = "@NewId",
@@ -193,7 +193,7 @@ namespace ClinicMS.Infrastructure.Services
                 };
 
                 await _context.Database.ExecuteSqlRawAsync(
-                    "EXEC udspApptSave @AppointmentNumber, @PatientId, @DoctorId, @DepartmentId, @AppointmentDate, @StartTime, @EndTime, @ChiefComplaint, @CreatedById, @NewId OUTPUT",
+                    "EXEC udspApptSave @AppointmentNumber, @PatientId, @DoctorId, @DepartmentId, @AppointmentDate, @StartTime, @EndTime, @ChiefComplaint, @LastUpdatedBy, @NewId OUTPUT",
                     saveNumberParam, savePatientIdParam, saveDoctorIdParam, saveDepartmentIdParam, saveDateParam,
                     saveStartParam, saveEndParam, saveComplaintParam, saveCreatedByParam, newIdParam);
 
@@ -379,7 +379,7 @@ namespace ClinicMS.Infrastructure.Services
                 var listDoctorIdParam = new SqlParameter("@DoctorId", doctorId);
                 var dateParam = new SqlParameter("@Date", (object?)date?.Date ?? DBNull.Value);
 
-                var items = await _context.AppointmentListItems
+                var items = await _context.Set<AppointmentListItemDto>()
                     .FromSqlRaw("EXEC udspApptByDoctor @DoctorId, @Date", listDoctorIdParam, dateParam)
                     .ToListAsync();
 

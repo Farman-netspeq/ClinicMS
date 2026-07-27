@@ -31,13 +31,13 @@ namespace ClinicMS.Infrastructure.Services
                 var pageNoParam = new SqlParameter("@PageNo", filter.PageNo);
                 var pageSizeParam = new SqlParameter("@PageSize", filter.PageSize);
 
-                var items = await _context.DepartmentListItems
+                var items = await _context.Set<DepartmentListItemDto>()
                     .FromSqlRaw(
                         "EXEC udspDeptPaged @SearchTerm, @IsActive, @PageNo, @PageSize",
                         searchTermParam, isActiveParam, pageNoParam, pageSizeParam)
                     .ToListAsync();
 
-                var countResult = await _context.DepartmentCounts
+                var countResult = await _context.Set<DepartmentCountResultDto>()
                     .FromSqlRaw(
                         "EXEC udspDeptPagedCount @SearchTerm, @IsActive",
                         searchTermParam, isActiveParam)
@@ -70,7 +70,7 @@ namespace ClinicMS.Infrastructure.Services
             {
                 var idParam = new SqlParameter("@Id", id);
 
-                var results = await _context.DepartmentResponses
+                var results = await _context.Set<DepartmentResponseDto>()
                     .FromSqlRaw("EXEC udspDeptGetById @Id", idParam)
                     .ToListAsync();
 
@@ -214,7 +214,7 @@ namespace ClinicMS.Infrastructure.Services
         {
             try
             {
-                var departments = await _context.DepartmentListItems
+                var departments = await _context.Set<DepartmentListItemDto>()
                     .FromSqlRaw("EXEC udspDeptActiveList")
                     .ToListAsync();
 

@@ -32,7 +32,7 @@ namespace ClinicMS.Infrastructure.Services
                 var pageNoParam = new SqlParameter("@PageNo", filter.PageNo);
                 var pageSizeParam = new SqlParameter("@PageSize", filter.PageSize);
 
-                var items = await _context.InvoiceListItems
+                var items = await _context.Set<InvoiceListItemDto>()
                     .FromSqlRaw("EXEC udspInvoicesPaged @SearchTerm, @Status, @FromDate, @ToDate, @PageNo, @PageSize",
                         searchTermParam, statusParam, fromDateParam, toDateParam, pageNoParam, pageSizeParam)
                     .ToListAsync();
@@ -42,7 +42,7 @@ namespace ClinicMS.Infrastructure.Services
                 var countFromDateParam = new SqlParameter("@FromDate", (object?)filter.FromDate ?? DBNull.Value);
                 var countToDateParam = new SqlParameter("@ToDate", (object?)filter.ToDate ?? DBNull.Value);
 
-                var countResult = (await _context.InvoiceCounts
+                var countResult = (await _context.Set<InvoiceCountResultDto>()
       .FromSqlRaw("EXEC udspInvoicesPagedCount @SearchTerm, @Status, @FromDate, @ToDate",
           countSearchTermParam, countStatusParam, countFromDateParam, countToDateParam)
       .ToListAsync())
@@ -70,7 +70,7 @@ namespace ClinicMS.Infrastructure.Services
             {
                 var idParam = new SqlParameter("@Id", id);
 
-                var header = (await _context.InvoiceHeaders
+                var header = (await _context.Set<InvoiceHeaderDto>()
                     .FromSqlRaw("EXEC udspInvoicesGetById @Id", idParam)
                     .ToListAsync())
                     .FirstOrDefault();
@@ -79,7 +79,7 @@ namespace ClinicMS.Infrastructure.Services
 
                 var invoiceIdParam = new SqlParameter("@InvoiceId", header.Id);
 
-                var items = await _context.InvoiceItemResults
+                var items = await _context.Set<InvoiceItemDto>()
                     .FromSqlRaw("EXEC udspInvoiceItemsGetByInvoiceId @InvoiceId", invoiceIdParam)
                     .ToListAsync();
 
@@ -98,7 +98,7 @@ namespace ClinicMS.Infrastructure.Services
             {
                 var appointmentIdParam = new SqlParameter("@AppointmentId", appointmentId);
 
-                var header = (await _context.InvoiceHeaders
+                var header = (await _context.Set<InvoiceHeaderDto>()
      .FromSqlRaw("EXEC udspInvoicesGetByAppointmentId @AppointmentId", appointmentIdParam)
      .ToListAsync())
      .FirstOrDefault();
@@ -108,7 +108,7 @@ namespace ClinicMS.Infrastructure.Services
 
                 var invoiceIdParam = new SqlParameter("@InvoiceId", header.Id);
 
-                var items = await _context.InvoiceItemResults
+                var items = await _context.Set<InvoiceItemDto>()
                     .FromSqlRaw("EXEC udspInvoiceItemsGetByInvoiceId @InvoiceId", invoiceIdParam)
                     .ToListAsync();
 

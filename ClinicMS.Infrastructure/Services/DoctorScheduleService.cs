@@ -28,7 +28,7 @@ namespace ClinicMS.Infrastructure.Services
             {
                 var doctorIdParam = new SqlParameter("@DoctorId", doctorId);
 
-                var list = await _context.DoctorScheduleListItems
+                var list = await _context.Set<DoctorScheduleListItemDto>()
                     .FromSqlRaw("EXEC udspDoctorSchedulesByDoctor @DoctorId", doctorIdParam)
                     .ToListAsync();
 
@@ -49,7 +49,7 @@ namespace ClinicMS.Infrastructure.Services
             {
                 var idParam = new SqlParameter("@Id", id);
 
-                var results = await _context.DoctorScheduleResponses
+                var results = await _context.Set<DoctorScheduleResponseDto>()
                     .FromSqlRaw("EXEC udspDoctorSchedulesGetById @Id", idParam)
                     .ToListAsync();
 

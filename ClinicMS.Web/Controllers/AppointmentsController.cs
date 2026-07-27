@@ -6,9 +6,6 @@ using ClinicMS.Web.ApiClients;
 using ClinicMS.Web.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-using ClinicMS.Web.Helpers;
-using Microsoft.AspNetCore.Authorization;
 namespace ClinicMS.Web.Controllers
 {
     [Authorize]

@@ -18,7 +18,7 @@ namespace ClinicMS.Infrastructure.Data.Configurations
             builder.Property(e => e.Height).HasColumnType("decimal(5,2)");
             builder.Property(e => e.Diagnosis).IsRequired().HasMaxLength(1000);
             builder.Property(e => e.Notes).HasMaxLength(2000);
-            builder.Property(e => e.CreatedById).HasMaxLength(450);
+            builder.Property(e => e.LastUpdatedBy).HasMaxLength(450);
 
             builder.HasIndex(e => e.AppointmentId).IsUnique();   // 1:1 enforcement
 

@@ -1,8 +1,7 @@
-﻿public class AppointmentCountResult { public int TotalCount { get; set; } }
-
-public class AppointmentScheduleResultDto
+﻿namespace ClinicMS.Application.DTOs.Appointment
 {
-    public TimeSpan StartTime { get; set; }
-    public TimeSpan EndTime { get; set; }
-    public int SlotDurationMinutes { get; set; }
+    public class AppointmentCountResultDto
+    {
+        public int TotalCount { get; set; }
+    }
 }

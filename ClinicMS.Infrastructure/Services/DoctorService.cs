@@ -39,7 +39,7 @@ namespace ClinicMS.Infrastructure.Services
                 var pageNoParam = new SqlParameter("@PageNo", filter.PageNo);
                 var pageSizeParam = new SqlParameter("@PageSize", filter.PageSize);
 
-                var items = await _context.DoctorListItems
+                var items = await _context.Set<DoctorListItemDto>()
                     .FromSqlRaw(
                         "EXEC udspDoctorsPaged @SearchTerm, @DepartmentId, @IsActive, @PageNo, @PageSize",
                         searchTermParam, departmentIdParam, isActiveParam, pageNoParam, pageSizeParam)
@@ -50,7 +50,7 @@ namespace ClinicMS.Infrastructure.Services
                 var countDepartmentIdParam = new SqlParameter("@DepartmentId", (object?)filter.DepartmentId ?? DBNull.Value);
                 var countIsActiveParam = new SqlParameter("@IsActive", (object?)filter.IsActive ?? DBNull.Value);
 
-                var countResult = await _context.DoctorCounts
+                var countResult = await _context.Set<DoctorCountResultDto>()
                     .FromSqlRaw(
                         "EXEC udspDoctorsPagedCount @SearchTerm, @DepartmentId, @IsActive",
                         countSearchTermParam, countDepartmentIdParam, countIsActiveParam)
@@ -83,7 +83,7 @@ namespace ClinicMS.Infrastructure.Services
             {
                 var idParam = new SqlParameter("@Id", id);
 
-                var results = await _context.DoctorResponses
+                var results = await _context.Set<DoctorResponseDto>()
                     .FromSqlRaw("EXEC udspDoctorsGetById @Id", idParam)
                     .ToListAsync();
 
@@ -285,7 +285,7 @@ namespace ClinicMS.Infrastructure.Services
                     Value = Guid.Parse(departmentId)
                 };
 
-                var doctors = await _context.DoctorListItems
+                var doctors = await _context.Set<DoctorListItemDto>()
                     .FromSqlRaw("EXEC udspDoctorsByDepartment @DepartmentId", departmentIdParam)
                     .ToListAsync();
 

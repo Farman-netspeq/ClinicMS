@@ -14,6 +14,6 @@ namespace ClinicMS.Domain.Entities
         public bool IsActive { get; set; } = true;
 
         // When was this account created
-        public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
+        public DateTime TransDate { get; set; } = DateTime.UtcNow;
     }
 }
