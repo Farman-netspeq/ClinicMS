@@ -104,9 +104,9 @@ namespace ClinicMS.Infrastructure.Services
                 Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
                 UserId = userId,
                 ExpiresAt = DateTime.UtcNow.AddDays(7),
-                IsRevoked = false
+                IsRevoked = false,
+                TransDate = DateTime.UtcNow
             };
-
             _context.RefreshTokens.Add(refreshToken);
             await _context.SaveChangesAsync();
 

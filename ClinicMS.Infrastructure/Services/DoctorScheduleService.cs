@@ -1,10 +1,11 @@
 ﻿using ClinicMS.Application.DTOs.DoctorSchedule;
 using ClinicMS.Application.Interfaces;
-using ClinicMS.Domain.Entities;
 using ClinicMS.Infrastructure.Data;
 using ClinicMS.Shared.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Data.SqlClient;
+using System.Data;
 
 namespace ClinicMS.Infrastructure.Services
 {
@@ -19,22 +20,17 @@ namespace ClinicMS.Infrastructure.Services
             _logger = logger;
         }
 
-        public async Task<Result<List<DoctorScheduleListItemDto>>> GetByDoctorAsync(string doctorId)
+        // ── GET BY DOCTOR ──────────────────────────────────────
+        public async Task<Result<List<DoctorScheduleListItemDto>>>
+            GetByDoctorAsync(string doctorId)
         {
             try
             {
-                var list = await _context.DoctorSchedules
-                    .Where(s => s.DoctorId == doctorId)
-                    .OrderBy(s => s.DayOfWeek)
-                    .Select(s => new DoctorScheduleListItemDto
-                    {
-                        Id = s.Id,
-                        DayOfWeek = s.DayOfWeek.ToString(),
-                        StartTime = s.StartTime.ToString(@"hh\:mm"),
-                        EndTime = s.EndTime.ToString(@"hh\:mm"),
-                        SlotDurationMinutes = s.SlotDurationMinutes,
-                        IsActive = s.IsActive
-                    }).ToListAsync();
+                var doctorIdParam = new SqlParameter("@DoctorId", doctorId);
+
+                var list = await _context.Set<DoctorScheduleListItemDto>()
+                    .FromSqlRaw("EXEC udspDoctorSchedulesByDoctor @DoctorId", doctorIdParam)
+                    .ToListAsync();
 
                 return Result<List<DoctorScheduleListItemDto>>.Ok(list);
             }
@@ -45,24 +41,21 @@ namespace ClinicMS.Infrastructure.Services
             }
         }
 
-        public async Task<Result<DoctorScheduleResponseDto>> GetByIdAsync(string id)
+        // ── GET BY ID ───────────────────────────────────────────
+        public async Task<Result<DoctorScheduleResponseDto>>
+            GetByIdAsync(string id)
         {
             try
             {
-                var s = await _context.DoctorSchedules.FindAsync(id);
-                if (s == null)
-                    return Result<DoctorScheduleResponseDto>.Fail("Schedule not found");
+                var idParam = new SqlParameter("@Id", id);
 
-                var dto = new DoctorScheduleResponseDto
-                {
-                    Id = s.Id,
-                    DoctorId = s.DoctorId,
-                    DayOfWeek = s.DayOfWeek,
-                    StartTime = s.StartTime,
-                    EndTime = s.EndTime,
-                    SlotDurationMinutes = s.SlotDurationMinutes,
-                    IsActive = s.IsActive
-                };
+                var results = await _context.Set<DoctorScheduleResponseDto>()
+                    .FromSqlRaw("EXEC udspDoctorSchedulesGetById @Id", idParam)
+                    .ToListAsync();
+
+                var dto = results.FirstOrDefault();
+                if (dto == null)
+                    return Result<DoctorScheduleResponseDto>.Fail("Schedule not found");
 
                 return Result<DoctorScheduleResponseDto>.Ok(dto);
             }
@@ -73,57 +66,113 @@ namespace ClinicMS.Infrastructure.Services
             }
         }
 
-        public async Task<Result<string>> SaveAsync(DoctorScheduleRequestDto dto)
+        // ── SAVE (create or update) ──────────────────────────────
+        public async Task<Result<string>>
+            SaveAsync(DoctorScheduleRequestDto dto)
         {
-            if (dto.EndTime <= dto.StartTime)
-                return Result<string>.Fail("End time must be after start time");
-
-            var overlap = await _context.DoctorSchedules.AnyAsync(s =>
-                s.DoctorId == dto.DoctorId &&
-                s.DayOfWeek == dto.DayOfWeek &&
-                s.Id != dto.Id &&
-                dto.StartTime < s.EndTime && dto.EndTime > s.StartTime);
-
-            if (overlap)
-                return Result<string>.Fail("Schedule overlaps an existing block for this day");
-
-            if (string.IsNullOrEmpty(dto.Id))
+            try
             {
-                var entity = new DoctorSchedule
+                if (dto.EndTime <= dto.StartTime)
+                    return Result<string>.Fail("End time must be after start time");
+
+                var overlap = await CheckOverlapAsync(dto.DoctorId, dto.DayOfWeek, dto.StartTime, dto.EndTime, dto.Id);
+                if (overlap)
+                    return Result<string>.Fail("Schedule overlaps an existing block for this day");
+
+                if (string.IsNullOrEmpty(dto.Id))
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    DoctorId = dto.DoctorId,
-                    DayOfWeek = dto.DayOfWeek,
-                    StartTime = dto.StartTime,
-                    EndTime = dto.EndTime,
-                    SlotDurationMinutes = dto.SlotDurationMinutes,
-                    IsActive = true
-                };
-                _context.DoctorSchedules.Add(entity);
-                await _context.SaveChangesAsync();
-                return Result<string>.Ok(entity.Id);
-            }
-            else
-            {
-                var entity = await _context.DoctorSchedules.FindAsync(dto.Id);
-                if (entity == null) return Result<string>.Fail("Schedule not found");
+                    var doctorIdParam = new SqlParameter("@DoctorId", dto.DoctorId);
+                    var dayOfWeekParam = new SqlParameter("@DayOfWeek", (int)dto.DayOfWeek);
+                    var startTimeParam = new SqlParameter("@StartTime", dto.StartTime);
+                    var endTimeParam = new SqlParameter("@EndTime", dto.EndTime);
+                    var slotDurationParam = new SqlParameter("@SlotDurationMinutes", dto.SlotDurationMinutes);
 
-                entity.DayOfWeek = dto.DayOfWeek;
-                entity.StartTime = dto.StartTime;
-                entity.EndTime = dto.EndTime;
-                entity.SlotDurationMinutes = dto.SlotDurationMinutes;
-                await _context.SaveChangesAsync();
-                return Result<string>.Ok(entity.Id);
+                    var newIdParam = new SqlParameter
+                    {
+                        ParameterName = "@NewId",
+                        SqlDbType = SqlDbType.NVarChar,
+                        Size = 36,
+                        Direction = ParameterDirection.Output
+                    };
+
+                    await _context.Database.ExecuteSqlRawAsync(
+                        "EXEC udspDoctorSchedulesSave @DoctorId, @DayOfWeek, @StartTime, @EndTime, @SlotDurationMinutes, @NewId OUTPUT",
+                        doctorIdParam, dayOfWeekParam, startTimeParam, endTimeParam, slotDurationParam, newIdParam);
+
+                    var newId = newIdParam.Value?.ToString() ?? string.Empty;
+
+                    _logger.LogInformation("Schedule created: {Id} for doctor {DoctorId}", newId, dto.DoctorId);
+
+                    return Result<string>.Ok(newId);
+                }
+                else
+                {
+                    var idParam = new SqlParameter("@Id", dto.Id);
+                    var dayOfWeekParam = new SqlParameter("@DayOfWeek", (int)dto.DayOfWeek);
+                    var startTimeParam = new SqlParameter("@StartTime", dto.StartTime);
+                    var endTimeParam = new SqlParameter("@EndTime", dto.EndTime);
+                    var slotDurationParam = new SqlParameter("@SlotDurationMinutes", dto.SlotDurationMinutes);
+
+                    await _context.Database.ExecuteSqlRawAsync(
+                        "EXEC udspDoctorSchedulesUpdate @Id, @DayOfWeek, @StartTime, @EndTime, @SlotDurationMinutes",
+                        idParam, dayOfWeekParam, startTimeParam, endTimeParam, slotDurationParam);
+
+                    _logger.LogInformation("Schedule updated: {Id}", dto.Id);
+
+                    return Result<string>.Ok(dto.Id);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving schedule: {@Dto}", dto);
+                return Result<string>.Fail("Failed to save schedule");
             }
         }
 
-        public async Task<Result> DeleteAsync(string id)
+        // ── DELETE ────────────────────────────────────────────
+        public async Task<Result>
+            DeleteAsync(string id)
         {
-            var entity = await _context.DoctorSchedules.FindAsync(id);
-            if (entity == null) return Result.Fail("Schedule not found");
-            _context.DoctorSchedules.Remove(entity);
-            await _context.SaveChangesAsync();
-            return Result.Ok();
+            try
+            {
+                var idParam = new SqlParameter("@Id", id);
+
+                await _context.Database.ExecuteSqlRawAsync(
+                    "EXEC udspDoctorSchedulesDelete @Id", idParam);
+
+                _logger.LogInformation("Schedule deleted: {Id}", id);
+
+                return Result.Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting schedule {Id}", id);
+                return Result.Fail("Failed to delete schedule");
+            }
+        }
+
+        // ── PRIVATE HELPERS ───────────────────────────────────
+        private async Task<bool>
+            CheckOverlapAsync(string doctorId, DayOfWeek dayOfWeek, TimeSpan startTime, TimeSpan endTime, string? excludeId)
+        {
+            var doctorIdParam = new SqlParameter("@DoctorId", doctorId);
+            var dayOfWeekParam = new SqlParameter("@DayOfWeek", (int)dayOfWeek);
+            var startTimeParam = new SqlParameter("@StartTime", startTime);
+            var endTimeParam = new SqlParameter("@EndTime", endTime);
+            var excludeIdParam = new SqlParameter("@ExcludeId", (object?)excludeId ?? DBNull.Value);
+
+            var overlapParam = new SqlParameter
+            {
+                ParameterName = "@HasOverlap",
+                SqlDbType = SqlDbType.Bit,
+                Direction = ParameterDirection.Output
+            };
+
+            await _context.Database.ExecuteSqlRawAsync(
+                "EXEC udspDoctorSchedulesCheckOverlap @DoctorId, @DayOfWeek, @StartTime, @EndTime, @ExcludeId, @HasOverlap OUTPUT",
+                doctorIdParam, dayOfWeekParam, startTimeParam, endTimeParam, excludeIdParam, overlapParam);
+
+            return (bool)(overlapParam.Value ?? false);
         }
     }
 }

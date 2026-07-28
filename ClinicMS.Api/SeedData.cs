@@ -41,6 +41,28 @@ namespace ClinicMS.Api
                     await userManager.AddToRoleAsync(adminUser, "Admin");
                 }
             }
+            // ── Seed Receptionist User ────────────────────────
+            const string receptionistEmail = "receptionist@clinicms.com";
+            const string receptionistPassword = "Reception@123";
+
+            var receptionistUser = await userManager.FindByEmailAsync(receptionistEmail);
+            if (receptionistUser == null)
+            {
+                receptionistUser = new ApplicationUser
+                {
+                    UserName = receptionistEmail,
+                    Email = receptionistEmail,
+                    FullName = "Front Desk Receptionist",
+                    IsActive = true,
+                    EmailConfirmed = true
+                };
+
+                var result = await userManager.CreateAsync(receptionistUser, receptionistPassword);
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(receptionistUser, "Receptionist");
+                }
+            }
         }
 
         // Private helper — checks if role exists, creates if not

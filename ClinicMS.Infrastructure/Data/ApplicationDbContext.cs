@@ -1,4 +1,12 @@
-﻿using ClinicMS.Domain.Entities;
+﻿using ClinicMS.Application.DTOs.Appointment;
+using ClinicMS.Application.DTOs.Department;
+using ClinicMS.Application.DTOs.Doctor;
+using ClinicMS.Application.DTOs.DoctorSchedule;
+using ClinicMS.Application.DTOs.Invoice;
+using ClinicMS.Application.DTOs.MedicalRecord;
+using ClinicMS.Application.DTOs.Patient;
+using ClinicMS.Application.DTOs.Prescription;
+using ClinicMS.Domain.Entities;
 using ClinicMS.Infrastructure.Data.Configurations;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +30,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<PrescriptionItem> PrescriptionItems { get; set; }
     public DbSet<Invoice> Invoices { get; set; }
     public DbSet<InvoiceItem> InvoiceItems { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -37,5 +46,26 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.ApplyConfiguration(new PrescriptionItemConfiguration());
         modelBuilder.ApplyConfiguration(new InvoiceConfiguration());
         modelBuilder.ApplyConfiguration(new InvoiceItemConfiguration());
+        modelBuilder.Entity<DepartmentListItemDto>().HasNoKey();
+        modelBuilder.Entity<DepartmentCountResultDto>().HasNoKey();
+        modelBuilder.Entity<DepartmentResponseDto>().HasNoKey();
+        modelBuilder.Entity<DoctorListItemDto>().HasNoKey();
+        modelBuilder.Entity<DoctorCountResultDto>().HasNoKey();
+        modelBuilder.Entity<DoctorResponseDto>().HasNoKey();
+        modelBuilder.Entity<DoctorScheduleListItemDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<DoctorScheduleResponseDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<AppointmentListItemDto>().HasNoKey();
+        modelBuilder.Entity<AppointmentCountResultDto>().HasNoKey();
+        modelBuilder.Entity<AppointmentResponseDto>().HasNoKey();
+        modelBuilder.Entity<PatientListItemDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<PatientResponseDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<PatientCountResultDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<MedicalRecordResponseDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<InvoiceListItemDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<InvoiceCountResultDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<InvoiceHeaderDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<InvoiceItemDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<PrescriptionHeaderDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<PrescriptionItemDto>().HasNoKey().ToView(null);
     }
 }

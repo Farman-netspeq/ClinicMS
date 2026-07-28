@@ -27,8 +27,7 @@ public partial class Patient
     public string? Address { get; set; }
 
     public bool IsActive { get; set; }
+    public DateTime TransDate { get; set; }
 
-    public DateTime CreatedOn { get; set; }
-
-    public string? CreatedById { get; set; }
+    public string? LastUpdatedBy { get; set; }
 }

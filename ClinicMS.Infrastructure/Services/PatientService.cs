@@ -1,10 +1,11 @@
 ﻿using ClinicMS.Application.DTOs.Patient;
 using ClinicMS.Application.Interfaces;
-using ClinicMS.Domain.Entities;
 using ClinicMS.Infrastructure.Data;
 using ClinicMS.Shared.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Data.SqlClient;
+using System.Data;
 
 namespace ClinicMS.Infrastructure.Services
 {
@@ -19,44 +20,31 @@ namespace ClinicMS.Infrastructure.Services
             _logger = logger;
         }
 
-        // ── GET PAGED LIST (search by name/phone/patient number) ──
+        // ── GET PAGED LIST ──
         public async Task<Result<PaginatedResult<PatientListItemDto>>> GetPatientsAsync(PatientFilterDto filter)
         {
             try
             {
-                var query = _context.Patients.AsQueryable();
+                var searchTermParam = new SqlParameter("@SearchTerm", (object?)filter.SearchTerm ?? DBNull.Value);
+                var isActiveParam = new SqlParameter("@IsActive", (object?)filter.IsActive ?? DBNull.Value);
+                var pageNoParam = new SqlParameter("@PageNo", filter.PageNo);
+                var pageSizeParam = new SqlParameter("@PageSize", filter.PageSize);
 
-                if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
-                {
-                    var term = filter.SearchTerm.Trim();
-                    query = query.Where(p =>
-                        p.FirstName.Contains(term) ||
-                        p.LastName.Contains(term) ||
-                        p.Phone.Contains(term) ||
-                        p.PatientNumber.Contains(term));
-                }
+                var items = await _context.Set<PatientListItemDto>()
+                .FromSqlRaw("EXEC udspPatientsPaged @SearchTerm, @IsActive, @PageNo, @PageSize",
+                     searchTermParam, isActiveParam, pageNoParam, pageSizeParam)
+                    .AsNoTracking()
+                     .ToListAsync();
 
-                if (filter.IsActive.HasValue)
-                    query = query.Where(p => p.IsActive == filter.IsActive.Value);
+                var countSearchTermParam = new SqlParameter("@SearchTerm", (object?)filter.SearchTerm ?? DBNull.Value);
+                var countIsActiveParam = new SqlParameter("@IsActive", (object?)filter.IsActive ?? DBNull.Value);
 
-                var totalCount = await query.CountAsync();
+                var countResult = (await _context.Set<PatientCountResultDto>()
+               .FromSqlRaw("EXEC udspPatientsPagedCount @SearchTerm, @IsActive", countSearchTermParam, countIsActiveParam)
+               .ToListAsync())
+                .FirstOrDefault();
 
-                var items = await query
-                    .OrderBy(p => p.FirstName).ThenBy(p => p.LastName)
-                    .Skip((filter.PageNo - 1) * filter.PageSize)
-                    .Take(filter.PageSize)
-                    .Select(p => new PatientListItemDto
-                    {
-                        Id = p.Id,
-                        PatientNumber = p.PatientNumber,
-                        FullName = p.FirstName + " " + p.LastName,
-                        Age = DateTime.Today.Year - p.DateOfBirth.Year -
-                              (DateTime.Today.DayOfYear < p.DateOfBirth.DayOfYear ? 1 : 0),
-                        Gender = p.Gender.ToString(),
-                        Phone = p.Phone,
-                        IsActive = p.IsActive
-                    })
-                    .ToListAsync();
+                var totalCount = countResult?.TotalCount ?? 0;
 
                 var result = new PaginatedResult<PatientListItemDto>
                 {
@@ -74,28 +62,22 @@ namespace ClinicMS.Infrastructure.Services
                 return Result<PaginatedResult<PatientListItemDto>>.Fail("Failed to fetch patients");
             }
         }
+
         // ── GET SINGLE BY ID ──
         public async Task<Result<PatientResponseDto>> GetPatientByIdAsync(string id)
         {
             try
             {
-                var p = await _context.Patients.FindAsync(id);
-                if (p == null) return Result<PatientResponseDto>.Fail("Patient not found");
+                var idParam = new SqlParameter("@Id", id);
 
-                var dto = new PatientResponseDto
-                {
-                    Id = p.Id,
-                    PatientNumber = p.PatientNumber,
-                    FirstName = p.FirstName,
-                    LastName = p.LastName,
-                    DateOfBirth = p.DateOfBirth,
-                    Gender = p.Gender,
-                    BloodGroup = p.BloodGroup,
-                    Phone = p.Phone,
-                    Email = p.Email,
-                    Address = p.Address,
-                    IsActive = p.IsActive
-                };
+                var results = await _context.Set<PatientResponseDto>()
+                    .FromSqlRaw("EXEC udspPatientsGetById @Id", idParam)
+                    .ToListAsync();
+
+                var dto = results.FirstOrDefault();
+                if (dto == null)
+                    return Result<PatientResponseDto>.Fail("Patient not found");
+
                 return Result<PatientResponseDto>.Ok(dto);
             }
             catch (Exception ex)
@@ -105,7 +87,7 @@ namespace ClinicMS.Infrastructure.Services
             }
         }
 
-        // ── CREATE──
+        // ── CREATE (BR1 handled inside SP) ──
         public async Task<Result<string>> CreatePatientAsync(PatientRequestDto dto)
         {
             try
@@ -113,29 +95,34 @@ namespace ClinicMS.Infrastructure.Services
                 if (dto.DateOfBirth > DateTime.Today)
                     return Result<string>.Fail("Date of birth cannot be in the future");
 
-                var patientNumber = await GeneratePatientNumberAsync();
+                var id = Guid.NewGuid().ToString();
 
-                var patient = new Patient
+                var idParam = new SqlParameter("@Id", id);
+                var firstNameParam = new SqlParameter("@FirstName", dto.FirstName.Trim());
+                var lastNameParam = new SqlParameter("@LastName", dto.LastName.Trim());
+                var dobParam = new SqlParameter("@DateOfBirth", dto.DateOfBirth);
+                var genderParam = new SqlParameter("@Gender", (int)dto.Gender);
+                var bloodGroupParam = new SqlParameter("@BloodGroup", (int)dto.BloodGroup);
+                var phoneParam = new SqlParameter("@Phone", dto.Phone.Trim());
+                var emailParam = new SqlParameter("@Email", (object?)dto.Email?.Trim() ?? DBNull.Value);
+                var addressParam = new SqlParameter("@Address", (object?)dto.Address?.Trim() ?? DBNull.Value);
+                var newPatientNumberParam = new SqlParameter
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    PatientNumber = patientNumber,
-                    FirstName = dto.FirstName.Trim(),
-                    LastName = dto.LastName.Trim(),
-                    DateOfBirth = dto.DateOfBirth,
-                    Gender = dto.Gender,
-                    BloodGroup = dto.BloodGroup,
-                    Phone = dto.Phone.Trim(),
-                    Email = dto.Email?.Trim(),
-                    Address = dto.Address?.Trim(),
-                    IsActive = true,
-                    CreatedOn = DateTime.UtcNow
+                    ParameterName = "@NewPatientNumber",
+                    SqlDbType = SqlDbType.NVarChar,
+                    Size = 20,
+                    Direction = ParameterDirection.Output
                 };
 
-                _context.Patients.Add(patient);
-                await _context.SaveChangesAsync();
+                await _context.Database.ExecuteSqlRawAsync(
+                    "EXEC udspPatientsSave @Id, @FirstName, @LastName, @DateOfBirth, @Gender, @BloodGroup, @Phone, @Email, @Address, @NewPatientNumber OUTPUT",
+                    idParam, firstNameParam, lastNameParam, dobParam, genderParam, bloodGroupParam,
+                    phoneParam, emailParam, addressParam, newPatientNumberParam);
 
-                _logger.LogInformation("Patient created: {Id} - {PatientNumber}", patient.Id, patient.PatientNumber);
-                return Result<string>.Ok(patient.Id);
+                var patientNumber = newPatientNumberParam.Value?.ToString() ?? string.Empty;
+
+                _logger.LogInformation("Patient created: {Id} - {PatientNumber}", id, patientNumber);
+                return Result<string>.Ok(id);
             }
             catch (Exception ex)
             {
@@ -144,23 +131,6 @@ namespace ClinicMS.Infrastructure.Services
             }
         }
 
-        // ── PatientNumber generator (BR1) ──
-        private async Task<string> GeneratePatientNumberAsync()
-        {
-            var lastPatient = await _context.Patients
-                .OrderByDescending(p => p.PatientNumber)
-                .FirstOrDefaultAsync();
-
-            int nextNumber = 1;
-            if (lastPatient != null)
-            {
-                var numericPart = lastPatient.PatientNumber.Replace("PAT-", "");
-                if (int.TryParse(numericPart, out int lastNumber))
-                    nextNumber = lastNumber + 1;
-            }
-
-            return $"PAT-{nextNumber:D6}";
-        }
         // ── UPDATE ──
         public async Task<Result> UpdatePatientAsync(PatientRequestDto dto)
         {
@@ -172,20 +142,24 @@ namespace ClinicMS.Infrastructure.Services
                 if (dto.DateOfBirth > DateTime.Today)
                     return Result.Fail("Date of birth cannot be in the future");
 
-                var patient = await _context.Patients.FindAsync(dto.Id);
-                if (patient == null) return Result.Fail("Patient not found");
+                var idParam = new SqlParameter("@Id", dto.Id);
+                var firstNameParam = new SqlParameter("@FirstName", dto.FirstName.Trim());
+                var lastNameParam = new SqlParameter("@LastName", dto.LastName.Trim());
+                var dobParam = new SqlParameter("@DateOfBirth", dto.DateOfBirth);
+                var genderParam = new SqlParameter("@Gender", (int)dto.Gender);
+                var bloodGroupParam = new SqlParameter("@BloodGroup", (int)dto.BloodGroup);
+                var phoneParam = new SqlParameter("@Phone", dto.Phone.Trim());
+                var emailParam = new SqlParameter("@Email", (object?)dto.Email?.Trim() ?? DBNull.Value);
+                var addressParam = new SqlParameter("@Address", (object?)dto.Address?.Trim() ?? DBNull.Value);
 
-                // PatientNumber never updated — immutable once assigned
-                patient.FirstName = dto.FirstName.Trim();
-                patient.LastName = dto.LastName.Trim();
-                patient.DateOfBirth = dto.DateOfBirth;
-                patient.Gender = dto.Gender;
-                patient.BloodGroup = dto.BloodGroup;
-                patient.Phone = dto.Phone.Trim();
-                patient.Email = dto.Email?.Trim();
-                patient.Address = dto.Address?.Trim();
+                var rows = await _context.Database.ExecuteSqlRawAsync(
+                    "EXEC udspPatientsUpdate @Id, @FirstName, @LastName, @DateOfBirth, @Gender, @BloodGroup, @Phone, @Email, @Address",
+                    idParam, firstNameParam, lastNameParam, dobParam, genderParam, bloodGroupParam,
+                    phoneParam, emailParam, addressParam);
 
-                await _context.SaveChangesAsync();
+                if (rows == 0)
+                    return Result.Fail("Patient not found");
+
                 _logger.LogInformation("Patient updated: {Id}", dto.Id);
                 return Result.Ok();
             }
@@ -199,47 +173,45 @@ namespace ClinicMS.Infrastructure.Services
         // ── SOFT DELETE (BR7) ──
         public async Task<Result> DeactivatePatientAsync(string id)
         {
-            try
-            {
-                var patient = await _context.Patients.FindAsync(id);
-                if (patient == null) return Result.Fail("Patient not found");
-
-                if (!patient.IsActive)
-                    return Result.Fail("Patient is already inactive");
-
-                patient.IsActive = false;
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation("Patient deactivated: {Id}", id);
-                return Result.Ok();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deactivating patient {Id}", id);
-                return Result.Fail("Failed to deactivate patient");
-            }
+            return await SetActiveAsync(id, false, "deactivat");
         }
 
+        // ── REACTIVATE ──
         public async Task<Result> ReactivatePatientAsync(string id)
+        {
+            return await SetActiveAsync(id, true, "reactivat");
+        }
+
+        // ── PRIVATE HELPER — shared by Deactivate/Reactivate ──
+        private async Task<Result> SetActiveAsync(string id, bool isActive, string actionVerb)
         {
             try
             {
-                var patient = await _context.Patients.FindAsync(id);
-                if (patient == null) return Result.Fail("Patient not found");
+                var idParam = new SqlParameter("@Id", id);
+                var isActiveParam = new SqlParameter("@IsActive", isActive);
+                var resultParam = new SqlParameter
+                {
+                    ParameterName = "@Result",
+                    SqlDbType = SqlDbType.NVarChar,
+                    Size = 200,
+                    Direction = ParameterDirection.Output
+                };
 
-                if (patient.IsActive)
-                    return Result.Fail("Patient is already active");
+                await _context.Database.ExecuteSqlRawAsync(
+                    "EXEC udspPatientsSetActive @Id, @IsActive, @Result OUTPUT",
+                    idParam, isActiveParam, resultParam);
 
-                patient.IsActive = true;
-                await _context.SaveChangesAsync();
+                var errorMessage = resultParam.Value?.ToString() ?? string.Empty;
+                if (!string.IsNullOrEmpty(errorMessage))
+                    return Result.Fail(errorMessage);
 
-                _logger.LogInformation("Patient reactivated: {Id}", id);
+                _logger.LogInformation("Patient {Verb}ed: {Id}", actionVerb, id);
                 return Result.Ok();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error reactivating patient {Id}", id);
-                return Result.Fail("Failed to reactivate patient");
+                _logger.LogError(ex, "Error {Verb}ing patient {Id}", actionVerb, id);
+                return Result.Fail($"Failed to {actionVerb}e patient");
             }
         }
     }

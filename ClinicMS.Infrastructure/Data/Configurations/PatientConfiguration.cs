@@ -15,7 +15,7 @@ namespace ClinicMS.Infrastructure.Data.Configurations
             builder.HasIndex(e => e.Phone, "IX_utblCMSPatients_Phone");
 
             builder.Property(e => e.Address).HasMaxLength(500);
-            builder.Property(e => e.CreatedById).HasMaxLength(450);
+            builder.Property(e => e.LastUpdatedBy).HasMaxLength(450);
             builder.Property(e => e.Email).HasMaxLength(150);
             builder.Property(e => e.FirstName).HasMaxLength(100);
             builder.Property(e => e.IsActive).HasDefaultValue(true);

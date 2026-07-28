@@ -11,6 +11,6 @@
         public decimal? Height { get; set; }
         public string Diagnosis { get; set; } = string.Empty;
         public string? Notes { get; set; }
-        public DateTime CreatedOn { get; set; }
+        public DateTime TransDate { get; set; }
     }
 }

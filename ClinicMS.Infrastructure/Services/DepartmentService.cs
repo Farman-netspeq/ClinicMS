@@ -1,10 +1,11 @@
 ﻿using ClinicMS.Application.DTOs.Department;
 using ClinicMS.Application.Interfaces;
-using ClinicMS.Domain.Entities;
 using ClinicMS.Infrastructure.Data;
 using ClinicMS.Shared.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Data.SqlClient;
+using System.Data;
 
 namespace ClinicMS.Infrastructure.Services
 {
@@ -12,16 +13,11 @@ namespace ClinicMS.Infrastructure.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<DepartmentService> _logger;
-        // ILogger = built-in .NET logging
-        // Logs errors with context so you can debug issues
 
-        public DepartmentService(
-            ApplicationDbContext context,
-            ILogger<DepartmentService> logger)
+        public DepartmentService(ApplicationDbContext context, ILogger<DepartmentService> logger)
         {
             _context = context;
             _logger = logger;
-            // Both injected by DI automatically
         }
 
         // ── GET PAGED LIST ────────────────────────────────────
@@ -30,44 +26,24 @@ namespace ClinicMS.Infrastructure.Services
         {
             try
             {
-                // Just builds the SQL, doesn't hit DB yet
-                var query = _context.Departments.AsQueryable();
+                var searchTermParam = new SqlParameter("@SearchTerm", (object?)filter.SearchTerm ?? DBNull.Value);
+                var isActiveParam = new SqlParameter("@IsActive", (object?)filter.IsActive ?? DBNull.Value);
+                var pageNoParam = new SqlParameter("@PageNo", filter.PageNo);
+                var pageSizeParam = new SqlParameter("@PageSize", filter.PageSize);
 
-                // Apply search filter if provided
-                // EF translates this to: WHERE Name LIKE '%cardio%'
-                if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
-                {
-                    query = query.Where(d =>
-                        d.Name.Contains(filter.SearchTerm));
-                }
-
-                // Apply active/inactive filter if provided
-                if (filter.IsActive.HasValue)
-                {
-                    query = query.Where(d =>
-                        d.IsActive == filter.IsActive.Value);
-                }
-
-                // Count BEFORE paging — gives total for "50 results"
-                // This hits DB: SELECT COUNT(*) WHERE filters
-                var totalCount = await query.CountAsync();
-
-                // Apply paging — SKIP rows before current page
-                // Take only PageSize rows
-                // Page 1: Skip(0).Take(10) = rows 1-10
-                var items = await query
-                    .OrderBy(d => d.Name)
-                    .Skip((filter.PageNo - 1) * filter.PageSize)
-                    .Take(filter.PageSize)
-                    .Select(d => new DepartmentListItemDto
-                    // Select = manual mapping Entity → DTO
-                    {
-                        Id = d.Id,
-                        Name = d.Name,
-                        Description = d.Description,
-                        IsActive = d.IsActive
-                    })
+                var items = await _context.Set<DepartmentListItemDto>()
+                    .FromSqlRaw(
+                        "EXEC udspDeptPaged @SearchTerm, @IsActive, @PageNo, @PageSize",
+                        searchTermParam, isActiveParam, pageNoParam, pageSizeParam)
                     .ToListAsync();
+
+                var countResult = await _context.Set<DepartmentCountResultDto>()
+                    .FromSqlRaw(
+                        "EXEC udspDeptPagedCount @SearchTerm, @IsActive",
+                        searchTermParam, isActiveParam)
+                    .ToListAsync();
+
+                var totalCount = countResult.FirstOrDefault()?.TotalCount ?? 0;
 
                 var result = new PaginatedResult<DepartmentListItemDto>
                 {
@@ -77,16 +53,12 @@ namespace ClinicMS.Infrastructure.Services
                     PageSize = filter.PageSize
                 };
 
-                return Result<PaginatedResult<DepartmentListItemDto>>
-                    .Ok(result);
+                return Result<PaginatedResult<DepartmentListItemDto>>.Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,
-                    "Error fetching departments. Filter: {@Filter}",
-                    filter);
-                return Result<PaginatedResult<DepartmentListItemDto>>
-                    .Fail("Failed to fetch departments");
+                _logger.LogError(ex, "Error fetching departments. Filter: {@Filter}", filter);
+                return Result<PaginatedResult<DepartmentListItemDto>>.Fail("Failed to fetch departments");
             }
         }
 
@@ -96,34 +68,23 @@ namespace ClinicMS.Infrastructure.Services
         {
             try
             {
-                var department = await _context.Departments
-                    .Include(d => d.Doctors)
-                    // Include = JOIN with Doctors table
-                    .FirstOrDefaultAsync(d => d.Id == id);
+                var idParam = new SqlParameter("@Id", id);
 
-                if (department == null)
-                    return Result<DepartmentResponseDto>
-                        .Fail("Department not found");
+                var results = await _context.Set<DepartmentResponseDto>()
+                    .FromSqlRaw("EXEC udspDeptGetById @Id", idParam)
+                    .ToListAsync();
 
-                // Manual mapping — entity → ResponseDto
-                var dto = new DepartmentResponseDto
-                {
-                    Id = department.Id,
-                    Name = department.Name,
-                    Description = department.Description,
-                    IsActive = department.IsActive,
-                    DoctorCount = department.Doctors
-                        .Count(d => d.IsActive)
-                };
+                var dto = results.FirstOrDefault();
+
+                if (dto == null)
+                    return Result<DepartmentResponseDto>.Fail("Department not found");
 
                 return Result<DepartmentResponseDto>.Ok(dto);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,
-                    "Error fetching department {DepartmentId}", id);
-                return Result<DepartmentResponseDto>
-                    .Fail("Failed to fetch department");
+                _logger.LogError(ex, "Error fetching department {DepartmentId}", id);
+                return Result<DepartmentResponseDto>.Fail("Failed to fetch department");
             }
         }
 
@@ -133,40 +94,42 @@ namespace ClinicMS.Infrastructure.Services
         {
             try
             {
-                // Business rule: Name must be unique
-                var nameExists = await EnsureUniqueNameAsync(
-                    dto.Name, excludeId: null);
-                if (nameExists)
-                    return Result<string>
-                        .Fail($"Department '{dto.Name}' already exists");
+                var nameParam = new SqlParameter("@Name", dto.Name.Trim());
+                var descParam = new SqlParameter("@Description", (object?)dto.Description?.Trim() ?? DBNull.Value);
 
-                // Manual mapping — DTO → Entity
-                var department = new Department
+                var newIdParam = new SqlParameter
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    Name = dto.Name.Trim(),
-                    Description = dto.Description?.Trim()
-                        ?? string.Empty,
-                    IsActive = true
+                    ParameterName = "@NewId",
+                    SqlDbType = SqlDbType.NVarChar,
+                    Size = 450,
+                    Direction = ParameterDirection.Output
                 };
 
-                _context.Departments.Add(department);
+                var nameExistsParam = new SqlParameter
+                {
+                    ParameterName = "@NameExists",
+                    SqlDbType = SqlDbType.Bit,
+                    Direction = ParameterDirection.Output
+                };
 
-                await _context.SaveChangesAsync();
-                // NOW saves to DB — INSERT SQL runs here
+                await _context.Database.ExecuteSqlRawAsync(
+                    "EXEC udspDeptSave @Name, @Description, @NewId OUTPUT, @NameExists OUTPUT",
+                    nameParam, descParam, newIdParam, nameExistsParam);
 
-                _logger.LogInformation(
-                    "Department created: {DepartmentId} - {Name}",
-                    department.Id, department.Name);
+                var nameExists = (bool)(nameExistsParam.Value ?? false);
+                if (nameExists)
+                    return Result<string>.Fail($"Department '{dto.Name}' already exists");
 
-                return Result<string>.Ok(department.Id);
+                var newId = newIdParam.Value?.ToString() ?? string.Empty;
+
+                _logger.LogInformation("Department created: {DepartmentId} - {Name}", newId, dto.Name);
+
+                return Result<string>.Ok(newId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,
-                    "Error creating department: {@Dto}", dto);
-                return Result<string>
-                    .Fail("Failed to create department");
+                _logger.LogError(ex, "Error creating department: {@Dto}", dto);
+                return Result<string>.Fail("Failed to create department");
             }
         }
 
@@ -179,37 +142,32 @@ namespace ClinicMS.Infrastructure.Services
                 if (string.IsNullOrEmpty(dto.Id))
                     return Result.Fail("Department Id is required");
 
-                // Find existing entity
-                var department = await _context.Departments
-                    .FindAsync(dto.Id);
+                var idParam = new SqlParameter("@Id", dto.Id);
+                var nameParam = new SqlParameter("@Name", dto.Name.Trim());
+                var descParam = new SqlParameter("@Description", (object?)dto.Description?.Trim() ?? DBNull.Value);
 
-                if (department == null)
-                    return Result.Fail("Department not found");
+                var nameExistsParam = new SqlParameter
+                {
+                    ParameterName = "@NameExists",
+                    SqlDbType = SqlDbType.Bit,
+                    Direction = ParameterDirection.Output
+                };
 
-                // Business rule: new name must still be unique
-                // excludeId = this dept's own Id so it doesn't
-                var nameExists = await EnsureUniqueNameAsync(
-                    dto.Name, excludeId: dto.Id);
+                await _context.Database.ExecuteSqlRawAsync(
+                    "EXEC udspDeptUpdate @Id, @Name, @Description, @NameExists OUTPUT",
+                    idParam, nameParam, descParam, nameExistsParam);
+
+                var nameExists = (bool)(nameExistsParam.Value ?? false);
                 if (nameExists)
-                    return Result.Fail(
-                        $"Department '{dto.Name}' already exists");
+                    return Result.Fail($"Department '{dto.Name}' already exists");
 
-                // Update only changed fields — manual mapping
-                department.Name = dto.Name.Trim();
-                department.Description = dto.Description?.Trim()
-                    ?? string.Empty;
-
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation(
-                    "Department updated: {DepartmentId}", dto.Id);
+                _logger.LogInformation("Department updated: {DepartmentId}", dto.Id);
 
                 return Result.Ok();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,
-                    "Error updating department {DepartmentId}", dto.Id);
+                _logger.LogError(ex, "Error updating department {DepartmentId}", dto.Id);
                 return Result.Fail("Failed to update department");
             }
         }
@@ -220,31 +178,32 @@ namespace ClinicMS.Infrastructure.Services
         {
             try
             {
-                var department = await _context.Departments
-                    .Include(d => d.Doctors)
-                    .FirstOrDefaultAsync(d => d.Id == id);
+                var idParam = new SqlParameter("@Id", id);
 
-                if (department == null)
-                    return Result.Fail("Department not found");
-                var hasActiveDoctors = department.Doctors
-                    .Any(d => d.IsActive);
+                var hasActiveDoctorsParam = new SqlParameter
+                {
+                    ParameterName = "@HasActiveDoctors",
+                    SqlDbType = SqlDbType.Bit,
+                    Direction = ParameterDirection.Output
+                };
+
+                await _context.Database.ExecuteSqlRawAsync(
+                    "EXEC udspDeptDeactivate @Id, @HasActiveDoctors OUTPUT",
+                    idParam, hasActiveDoctorsParam);
+
+                var hasActiveDoctors = (bool)(hasActiveDoctorsParam.Value ?? false);
                 if (hasActiveDoctors)
                     return Result.Fail(
                         "Cannot deactivate department with active doctors. " +
                         "Please reassign or deactivate doctors first.");
 
-                department.IsActive = false;
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation(
-                    "Department deactivated: {DepartmentId}", id);
+                _logger.LogInformation("Department deactivated: {DepartmentId}", id);
 
                 return Result.Ok();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,
-                    "Error deactivating department {DepartmentId}", id);
+                _logger.LogError(ex, "Error deactivating department {DepartmentId}", id);
                 return Result.Fail("Failed to deactivate department");
             }
         }
@@ -255,43 +214,17 @@ namespace ClinicMS.Infrastructure.Services
         {
             try
             {
-                var departments = await _context.Departments
-                    .Where(d => d.IsActive)
-                    .OrderBy(d => d.Name)
-                    .Select(d => new DepartmentListItemDto
-                    {
-                        Id = d.Id,
-                        Name = d.Name,
-                        Description = d.Description,
-                        IsActive = d.IsActive
-                    })
+                var departments = await _context.Set<DepartmentListItemDto>()
+                    .FromSqlRaw("EXEC udspDeptActiveList")
                     .ToListAsync();
 
-                return Result<List<DepartmentListItemDto>>
-                    .Ok(departments);
+                return Result<List<DepartmentListItemDto>>.Ok(departments);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,
-                    "Error fetching active departments");
-                return Result<List<DepartmentListItemDto>>
-                    .Fail("Failed to fetch departments");
+                _logger.LogError(ex, "Error fetching active departments");
+                return Result<List<DepartmentListItemDto>>.Fail("Failed to fetch departments");
             }
-        }
-
-        // ── PRIVATE HELPERS ───────────────────────────────────
-        // Small named method = business rule obvious in code=
-        private async Task<bool> EnsureUniqueNameAsync(
-            string name, string? excludeId)
-        {
-            // Check if any OTHER department has same name
-            // excludeId = skip checking against itself (for update)
-            return await _context.Departments
-                .AnyAsync(d =>
-                    d.Name.ToLower() == name.ToLower() &&
-                    d.Id != excludeId);
-            // ToLower comparison = case-insensitive
-            // "cardiology" == "Cardiology" == "CARDIOLOGY"
         }
     }
 }

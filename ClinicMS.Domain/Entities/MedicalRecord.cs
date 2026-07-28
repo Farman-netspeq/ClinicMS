@@ -11,8 +11,8 @@
         public decimal? Height { get; set; }
         public string Diagnosis { get; set; } = string.Empty;
         public string? Notes { get; set; }
-        public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
-        public string? CreatedById { get; set; }
+        public DateTime TransDate { get; set; } = DateTime.UtcNow;
+        public string? LastUpdatedBy { get; set; }
 
         public Appointment? Appointment { get; set; }
     }

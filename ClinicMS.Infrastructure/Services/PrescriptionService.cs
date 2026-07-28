@@ -1,9 +1,10 @@
-﻿using ClinicMS.Application.DTOs.Prescription;
+﻿using System.Data;
+using System.Text.Json;
+using ClinicMS.Application.DTOs.Prescription;
 using ClinicMS.Application.Interfaces;
-using ClinicMS.Domain.Entities;
-using ClinicMS.Domain.Enums;
 using ClinicMS.Infrastructure.Data;
 using ClinicMS.Shared.Common;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -24,34 +25,31 @@ namespace ClinicMS.Infrastructure.Services
         {
             try
             {
-                var prescription = await _context.Prescriptions
-                    .Include(p => p.Patient)
-                    .Include(p => p.Doctor)
-                    .Include(p => p.Items)
-                    .FirstOrDefaultAsync(p => p.AppointmentId == appointmentId);
+                var appointmentIdParam = new SqlParameter("@AppointmentId", appointmentId);
+                var header = (await _context.Set<PrescriptionHeaderDto>()
+                    .FromSqlRaw("EXEC udspPrescriptionsGetByAppointmentId @AppointmentId", appointmentIdParam)
+                    .ToListAsync())
+                    .FirstOrDefault();
 
-                if (prescription == null)
+                if (header == null)
                     return Result<PrescriptionResponseDto>.Fail("Prescription not found");
+
+                var prescriptionIdParam = new SqlParameter("@PrescriptionId", header.Id);
+                var items = await _context.Set<PrescriptionItemDto>()
+                    .FromSqlRaw("EXEC udspPrescriptionItemsGetByPrescriptionId @PrescriptionId", prescriptionIdParam)
+                    .ToListAsync();
 
                 return Result<PrescriptionResponseDto>.Ok(new PrescriptionResponseDto
                 {
-                    Id = prescription.Id,
-                    AppointmentId = prescription.AppointmentId,
-                    PatientId = prescription.PatientId,
-                    PatientName = $"{prescription.Patient?.FirstName} {prescription.Patient?.LastName}",
-                    DoctorId = prescription.DoctorId,
-                    DoctorName = prescription.Doctor?.FullName ?? string.Empty,
-                    IssuedOn = prescription.IssuedOn,
-                    Notes = prescription.Notes,
-                    Items = prescription.Items.Select(i => new PrescriptionItemDto
-                    {
-                        Id = i.Id,
-                        MedicationName = i.MedicationName,
-                        Dosage = i.Dosage,
-                        Frequency = i.Frequency,
-                        DurationDays = i.DurationDays,
-                        Instructions = i.Instructions
-                    }).ToList()
+                    Id = header.Id,
+                    AppointmentId = header.AppointmentId,
+                    PatientId = header.PatientId,
+                    PatientName = header.PatientName,
+                    DoctorId = header.DoctorId,
+                    DoctorName = header.DoctorName,
+                    IssuedOn = header.IssuedOn,
+                    Notes = header.Notes,
+                    Items = items
                 });
             }
             catch (Exception ex)
@@ -65,66 +63,35 @@ namespace ClinicMS.Infrastructure.Services
         {
             try
             {
-                var appointment = await _context.Appointments
-                    .FirstOrDefaultAsync(a => a.Id == dto.AppointmentId);
+                var id = Guid.NewGuid().ToString();
+                var itemsJson = JsonSerializer.Serialize(dto.Items);
 
-                if (appointment == null)
-                    return Result<string>.Fail("Appointment not found");
-
-                if (appointment.Status != AppointmentStatus.Completed)
-                    return Result<string>.Fail("Prescription can only be created for a completed appointment");
-
-                string effectiveDoctorId;
-                if (!isAdmin)
+                var idParam = new SqlParameter("@Id", id);
+                var appointmentIdParam = new SqlParameter("@AppointmentId", dto.AppointmentId);
+                var notesParam = new SqlParameter("@Notes", (object?)dto.Notes?.Trim() ?? DBNull.Value);
+                var doctorUserIdParam = new SqlParameter("@DoctorUserId", doctorUserId);
+                var isAdminParam = new SqlParameter("@IsAdmin", isAdmin);
+                var itemsJsonParam = new SqlParameter("@ItemsJson", itemsJson);
+                var resultParam = new SqlParameter
                 {
-                    var doctor = await _context.Doctors
-                        .FirstOrDefaultAsync(d => d.ApplicationUserId == doctorUserId);
-
-                    if (doctor == null || doctor.Id != appointment.DoctorId)
-                        return Result<string>.Fail("You are not authorized to prescribe for this consultation");
-
-                    effectiveDoctorId = doctor.Id;
-                }
-                else
-                {
-                    effectiveDoctorId = appointment.DoctorId;   // Admin acts on behalf of the assigned doctor
-                }
-
-                var exists = await _context.Prescriptions
-                    .AnyAsync(p => p.AppointmentId == dto.AppointmentId);
-
-                if (exists)
-                    return Result<string>.Fail("A prescription already exists for this appointment");
-
-                if (dto.Items == null || dto.Items.Count == 0)
-                    return Result<string>.Fail("At least one medication is required");
-
-                var prescription = new Prescription
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    AppointmentId = dto.AppointmentId,
-                    PatientId = appointment.PatientId,
-                    DoctorId = effectiveDoctorId,
-                    IssuedOn = DateTime.UtcNow,
-                    Notes = dto.Notes,
-                    Items = dto.Items.Select(i => new PrescriptionItem
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        MedicationName = i.MedicationName,
-                        Dosage = i.Dosage,
-                        Frequency = i.Frequency,
-                        DurationDays = i.DurationDays,
-                        Instructions = i.Instructions
-                    }).ToList()
+                    ParameterName = "@Result",
+                    SqlDbType = SqlDbType.NVarChar,
+                    Size = 200,
+                    Direction = ParameterDirection.Output
                 };
 
-                _context.Prescriptions.Add(prescription);
-                await _context.SaveChangesAsync();
+                await _context.Database.ExecuteSqlRawAsync(
+                    "EXEC udspPrescriptionsSave @Id, @AppointmentId, @Notes, @DoctorUserId, @IsAdmin, @ItemsJson, @Result OUTPUT",
+                    idParam, appointmentIdParam, notesParam, doctorUserIdParam, isAdminParam, itemsJsonParam, resultParam);
+
+                var errorMessage = resultParam.Value?.ToString() ?? string.Empty;
+                if (!string.IsNullOrEmpty(errorMessage))
+                    return Result<string>.Fail(errorMessage);
 
                 _logger.LogInformation("Prescription created: {Id} for appointment {AppointmentId} with {Count} items",
-                    prescription.Id, prescription.AppointmentId, prescription.Items.Count);
+                    id, dto.AppointmentId, dto.Items.Count);
 
-                return Result<string>.Ok(prescription.Id);
+                return Result<string>.Ok(id);
             }
             catch (Exception ex)
             {

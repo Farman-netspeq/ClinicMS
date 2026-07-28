@@ -59,10 +59,10 @@ namespace ClinicMS.Infrastructure.Data.Configurations
             builder.Property(a => a.CancelReason)
                 .HasMaxLength(500);
 
-            builder.Property(a => a.CreatedOn)
-                .IsRequired();
+            builder.Property(a => a.TransDate)
+      .IsRequired();
 
-            builder.Property(a => a.CreatedById)
+            builder.Property(a => a.LastUpdatedBy)
                 .IsRequired()
                 .HasMaxLength(450);
 
@@ -89,9 +89,9 @@ namespace ClinicMS.Infrastructure.Data.Configurations
 
             // Appointment → CreatedBy (ApplicationUser)
             builder.HasOne(a => a.CreatedBy)
-                .WithMany()
-                .HasForeignKey(a => a.CreatedById)
-                .OnDelete(DeleteBehavior.Restrict);
+    .WithMany()
+    .HasForeignKey(a => a.LastUpdatedBy)
+    .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

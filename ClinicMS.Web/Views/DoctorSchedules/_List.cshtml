@@ -15,7 +15,11 @@
                         <form method="post" action="/DoctorSchedules/Delete/@s.Id"
                               data-sks-ajax="true" data-sks-target="#replacetarget" class="d-inline">
                             @Html.AntiForgeryToken()
-                            <a class="delete" href="/DoctorSchedules/Delete/@s.Id">Delete</a>
+                            <input type="hidden" name="doctorId" value="@ViewBag.DoctorId" />
+                            <button type="submit" class="btn btn-link p-0"
+                                    onclick="return confirm('Are you sure you want to delete the record..?');">
+                                Delete
+                            </button>
                         </form>
                     </td>
                 </tr>
