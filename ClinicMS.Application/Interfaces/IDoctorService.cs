@@ -24,5 +24,6 @@ namespace ClinicMS.Application.Interfaces
         // Department selected → load doctors in that dept
         Task<Result<List<DoctorListItemDto>>> GetDoctorsByDepartmentAsync(
             string departmentId);
+        Task<Result<string>> GetDoctorIdByUserIdAsync(string userId);
     }
 }

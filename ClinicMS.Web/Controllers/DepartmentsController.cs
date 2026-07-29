@@ -19,9 +19,11 @@ namespace ClinicMS.Web.Controllers
 
         // GET /Departments
         // Returns full page (Index.cshtml)
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var result = await _httpService.GetAsync<ApiResponseDto<PaginatedResult<DepartmentListItemDto>>>(
+                "/api/departments?PageNo=1&PageSize=10");
+            return View(result?.Data ?? new PaginatedResult<DepartmentListItemDto>());
         }
 
         // GET /Departments/List

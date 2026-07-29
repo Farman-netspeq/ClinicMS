@@ -15,7 +15,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/">🏥 ClinicMS</a>
+            <a class="navbar-brand" href="/Dashboard/Index">🏥 ClinicMS</a>
             @if (User.Identity?.IsAuthenticated == true)
             {
                 <div class="navbar-nav mr-auto">
@@ -39,6 +39,11 @@
                             <a class="nav-link text-white"
                                href="/Invoices/Index">Invoices</a>
                         }
+                    }
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a class="nav-link text-white"
+                           href="/AuditLogs/Index">Audit Log</a>
                     }
                 </div>
             }

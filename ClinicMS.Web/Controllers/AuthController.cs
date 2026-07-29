@@ -23,7 +23,7 @@ namespace ClinicMS.Web.Controllers
         {
             // If already logged in → go to dashboard
             if (User.Identity?.IsAuthenticated == true)
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Dashboard");
 
             return View();
         }
@@ -75,7 +75,7 @@ namespace ClinicMS.Web.Controllers
                     ExpiresUtc = loginData.Expiry
                 });
 
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index", "Dashboard");
         }
 
         // GET /Auth/Logout

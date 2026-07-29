@@ -1,0 +1,13 @@
+﻿@model CancelAppointmentDto
+<div class="modal-header"><h5>Cancel Appointment</h5></div>
+<form data-sks-ajax="true" data-sks-target="#replacetarget" action="/Appointments/Cancel" method="post">
+    @Html.AntiForgeryToken()
+    <div class="modal-body">
+        <input type="hidden" asp-for="Id" />
+        <label>Reason <span class="text-danger">*</span></label>
+        <textarea name="cancelReason" class="form-control" required></textarea>
+    </div>
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-danger">Confirm Cancel</button>
+    </div>
+</form>

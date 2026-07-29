@@ -95,7 +95,9 @@
         return false;
     };
     $("body").on("click", "a.ns-page-link", getPage);
-
+    $("body").on("change", "#searchFrom select, #searchFrom input[type='date']", function () {
+        $(this).closest("#searchFrom").find("a.ns-page-link").first().trigger("click");
+    });
     var getPageForDDL = function () {
         var TargetURL = $(this).parent().attr("data-sks-actionlink");
         if (TargetURL.indexOf("?") > -1) {

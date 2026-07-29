@@ -1,41 +1,28 @@
-﻿@{
+﻿@model PaginatedResult<DoctorListItemDto>
+@{
     ViewData["Title"] = "Doctors";
 }
-<input type="hidden" id="ErrMsgHiddenField" value="" />
+
 <div class="row mb-3">
-    <div class="col">
-        <h4>👨‍⚕️ Doctors</h4>
-    </div>
+    <div class="col"><h4>👨‍⚕️ Doctors</h4></div>
     @if (User.IsInRole("Admin"))
     {
-        <div class="col text-end">
-            <a href="/Doctors/Add"
-               data-modal
-               class="btn btn-primary">
-                + Add Doctor
-            </a>
-        </div>
+        <div class="col text-end"><a href="/Doctors/Add" data-modal class="btn btn-primary">+ Add Doctor</a></div>
     }
 </div>
 
-<form id="searchFrom" method="get">
+<form id="searchFrom">
     <div class="row mb-3">
         <div class="col-md-3">
-            <input type="text"
-                   name="SearchTerm"
-                   class="form-control"
-                   placeholder="Search by name, license..." />
+            <input type="text" name="SearchTerm" class="form-control" placeholder="Search by name, license..." />
         </div>
         <div class="col-md-3">
-            @*
-               Department filter dropdown
-               Options loaded by doctors.js on page load
-               via AJAX call to /api/departments/active
-            *@
-            <select name="DepartmentId"
-                    id="deptFilter"
-                    class="form-control">
+            <select name="DepartmentId" class="form-control">
                 <option value="">All Departments</option>
+                @foreach (var d in ViewBag.Departments as List<DepartmentListItemDto> ?? new())
+                {
+                    <option value="@d.Id">@d.Name</option>
+                }
             </select>
         </div>
         <div class="col-md-2">
@@ -46,15 +33,11 @@
             </select>
         </div>
         <div class="col-md-2">
-            <button type="submit" class="btn btn-secondary">
-                Search
-            </button>
+            <div class="ns-grid-pager" data-sks-target="#replacetarget">
+                <a class="ns-page-link btn btn-secondary w-100" href="/Doctors/List?PageNo=1">Search</a>
+            </div>
         </div>
     </div>
 </form>
 
-<div id="pageContent"></div>
-
-@section Scripts {
-    <script src="~/js/doctors.js"></script>
-}
+@await Html.PartialAsync("_List", Model)

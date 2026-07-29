@@ -25,7 +25,11 @@
                     <td>
                         @if (a.Status.ToString() == "CheckedIn")
                         {
-                            <a href="javascript:void(0)" class="btn-complete-apt" data-id="@a.Id">Complete</a>
+                            <form action="/Appointments/Complete" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@a.Id" />
+                                <button type="submit" class="btn btn-sm btn-link p-0">Complete</button>
+                            </form>
                         }
                         @if (a.Status.ToString() == "Completed")
                         {

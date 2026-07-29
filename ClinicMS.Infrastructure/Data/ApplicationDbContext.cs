@@ -1,4 +1,6 @@
 ﻿using ClinicMS.Application.DTOs.Appointment;
+using ClinicMS.Application.DTOs.Audit;
+using ClinicMS.Application.DTOs.Dashboard;
 using ClinicMS.Application.DTOs.Department;
 using ClinicMS.Application.DTOs.Doctor;
 using ClinicMS.Application.DTOs.DoctorSchedule;
@@ -30,7 +32,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<PrescriptionItem> PrescriptionItems { get; set; }
     public DbSet<Invoice> Invoices { get; set; }
     public DbSet<InvoiceItem> InvoiceItems { get; set; }
-
+    public DbSet<AuditLog> AuditLogs { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -46,6 +48,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.ApplyConfiguration(new PrescriptionItemConfiguration());
         modelBuilder.ApplyConfiguration(new InvoiceConfiguration());
         modelBuilder.ApplyConfiguration(new InvoiceItemConfiguration());
+        modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
         modelBuilder.Entity<DepartmentListItemDto>().HasNoKey();
         modelBuilder.Entity<DepartmentCountResultDto>().HasNoKey();
         modelBuilder.Entity<DepartmentResponseDto>().HasNoKey();
@@ -67,5 +70,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<InvoiceItemDto>().HasNoKey().ToView(null);
         modelBuilder.Entity<PrescriptionHeaderDto>().HasNoKey().ToView(null);
         modelBuilder.Entity<PrescriptionItemDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<AuditLogListItemDto>().HasNoKey();
+        modelBuilder.Entity<AuditLogCountResultDto>().HasNoKey();
+        modelBuilder.Entity<DashboardSummaryDto>().HasNoKey();
     }
 }
