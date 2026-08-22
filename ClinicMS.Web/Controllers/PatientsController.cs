@@ -3,6 +3,7 @@ using ClinicMS.Shared.Common;
 using ClinicMS.Web.ApiClients;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using static System.Net.WebRequestMethods;
 
 namespace ClinicMS.Web.Controllers
 {
@@ -17,14 +18,19 @@ namespace ClinicMS.Web.Controllers
         }
 
         // GET: /Patients
-        public async Task<IActionResult> Index()
-        {
-            var filter = new PatientFilterDto();
-            var result = await _httpService.GetAsync<ApiResponseDto<PaginatedResult<PatientListItemDto>>>(
-                $"api/patients?PageNo={filter.PageNo}&PageSize={filter.PageSize}");
-
-            return View(result?.Data ?? new PaginatedResult<PatientListItemDto>());
-        }
+        //public async Task<IActionResult> Index()
+        //{
+        //    var filter = new PatientFilterDto();
+        //    var result = await _httpService.GetAsync<ApiResponseDto<PaginatedResult<PatientListItemDto>>>(
+        //        $"api/patients?PageNo={filter.PageNo}&PageSize={filter.PageSize}");
+        //    bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+        //    if (isAjax)
+        //    {
+        //        return PartialView("_List", result?.Data ?? new PaginatedResult<PatientListItemDto>());
+        //    }
+           
+        //    return View(result?.Data ?? new PaginatedResult<PatientListItemDto>());
+        //}
 
         // GET: /Patients/List?SearchTerm=x&IsActive=true&PageNo=2
         [HttpGet]
@@ -37,7 +43,13 @@ namespace ClinicMS.Web.Controllers
                 query += $"&IsActive={filter.IsActive.Value}";
 
             var result = await _httpService.GetAsync<ApiResponseDto<PaginatedResult<PatientListItemDto>>>(query);
-            return PartialView("_List", result?.Data ?? new PaginatedResult<PatientListItemDto>());
+            bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+            if (isAjax)
+            {
+                return PartialView("_List", result?.Data ?? new PaginatedResult<PatientListItemDto>());
+            }
+
+            return View(result?.Data ?? new PaginatedResult<PatientListItemDto>());
         }
 
         // GET: /Patients/AddEdit?id=
@@ -89,7 +101,7 @@ namespace ClinicMS.Web.Controllers
                     ModelState.AddModelError("", result?.Message ?? "Failed to save patient");
                     return PartialView("_AddEdit", dto);
                 }
-
+               
                 return Json(new { success = true, url = Url.Action("List") });
             }
             catch (HttpRequestException ex) when (ex.Message.Contains("Unauthorized"))

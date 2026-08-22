@@ -8,21 +8,22 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 namespace ClinicMS.Web.Controllers
 {
-    [Authorize]
+    [Authorize(Roles ="Admin,Doctor,Receptionist")]
     public class AppointmentsController : Controller
     {
         private readonly IHttpService _httpService;
-        public AppointmentsController(IHttpService httpService) => _httpService = httpService;
+        public AppointmentsController(IHttpService httpService) 
+        { 
+            _httpService = httpService; 
+        }
 
         // ── INDEX ──────────────────────────────────────────
+        [Authorize(Roles ="Admin,Receptionist")]
         public async Task<IActionResult> Index()
         {
-            if (User.IsInRole("Doctor") && !User.IsInRole("Admin"))
-                return RedirectToAction("MyAppointments");
             var filter = new AppointmentFilterDto();
             var result = await _httpService.PostAsync<ApiResponseDto<PaginatedResult<AppointmentListItemDto>>>(
                 "api/appointments/list", filter);
-
             return View(result?.Data ?? new PaginatedResult<AppointmentListItemDto>());
         }
 
@@ -30,8 +31,9 @@ namespace ClinicMS.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> List(AppointmentFilterDto filter)
         {
-            if (User.IsInRole("Doctor") && !User.IsInRole("Admin") && !User.IsInRole("Receptionist"))
-                return Forbid();
+            //if (User.IsInRole("Doctor") && !User.IsInRole("Admin") && !User.IsInRole("Receptionist")) { 
+            //    return Forbid();
+            //}
 
             var result = await _httpService.PostAsync<ApiResponseDto<PaginatedResult<AppointmentListItemDto>>>(
                 "api/appointments/list", filter);

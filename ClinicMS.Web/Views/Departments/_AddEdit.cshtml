@@ -6,24 +6,20 @@
             ? "Add Department"
             : "Edit Department")
     </h5>
-    <button type="button" class="close" data-dismiss="modal">
-        <span>&times;</span>
-    </button>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
 
-<form method="post"
+<form method="post" data-sks-ajax="true" data-sks-target="#replacetarget"
       action="@(string.IsNullOrEmpty(Model.Id)
-                            ? "/Departments/Add"
-                            : $"/Departments/Edit/{Model.Id}")">
+                                  ? "/Departments/Add"
+                                  : $"/Departments/Edit/{Model.Id}")">
 
     @Html.AntiForgeryToken()
 
-    @* Hidden Id field — empty for Add, has value for Edit *@
     <input type="hidden" asp-for="Id" />
 
     <div class="modal-body">
 
-        @* Shows model-level errors (from service failures) *@
         <div asp-validation-summary="ModelOnly"
              class="text-danger mb-3"></div>
 
@@ -54,7 +50,7 @@
     </div>
 
     <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
             Cancel
         </button>
         <button type="submit" class="btn btn-primary">
@@ -64,6 +60,3 @@
 
 </form>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}

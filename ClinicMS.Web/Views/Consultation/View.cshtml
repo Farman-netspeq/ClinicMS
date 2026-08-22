@@ -35,21 +35,23 @@
 <div class="card">
     <div class="card-header">Prescription — Issued @rx.IssuedOn.ToString("dd MMM yyyy")</div>
     <div class="card-body">
-        <table class="table table-bordered">
-            <thead><tr><th>Medication</th><th>Dosage</th><th>Frequency</th><th>Duration</th><th>Instructions</th></tr></thead>
-            <tbody>
-                @foreach (var item in rx.Items)
-                {
-                    <tr>
-                        <td>@item.MedicationName</td>
-                        <td>@(item.Dosage ?? "—")</td>
-                        <td>@(item.Frequency ?? "—")</td>
-                        <td>@(item.DurationDays?.ToString() + " days" ?? "—")</td>
-                        <td>@(item.Instructions ?? "—")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead><tr><th>Medication</th><th>Dosage</th><th>Frequency</th><th>Duration</th><th>Instructions</th></tr></thead>
+                <tbody>
+                    @foreach (var item in rx.Items)
+                    {
+                        <tr>
+                            <td>@item.MedicationName</td>
+                            <td>@(item.Dosage ?? "—")</td>
+                            <td>@(item.Frequency ?? "—")</td>
+                            <td>@(item.DurationDays?.ToString() + " days" ?? "—")</td>
+                            <td>@(item.Instructions ?? "—")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
         @if (!string.IsNullOrEmpty(rx.Notes))
         {
             <p><strong>Notes:</strong> @rx.Notes</p>

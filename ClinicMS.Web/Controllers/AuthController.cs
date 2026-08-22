@@ -36,12 +36,19 @@ namespace ClinicMS.Web.Controllers
             if (!ModelState.IsValid)
                 return View(dto);
 
-            // Call Api login endpoint via HttpService
-            var result = await _httpService
-                .PostAsync<ApiResponseDto<LoginResponseDto>>(
-                    "/api/auth/login", dto);
+            ApiResponseDto<LoginResponseDto>? result;
+            try
+            {
+                result = await _httpService
+                    .PostAsync<ApiResponseDto<LoginResponseDto>>(
+                        "/api/auth/login", dto);
+            }
+            catch (HttpRequestException)
+            {
+                ModelState.AddModelError("", "Invalid email or password.");
+                return View(dto);
+            }
 
-            // Api unreachable or returned error
             if (result == null || !result.Success)
             {
                 ModelState.AddModelError("",
@@ -65,7 +72,6 @@ namespace ClinicMS.Web.Controllers
                 claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
 
-            // Sign in = write encrypted cookie to browser
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 principal,
@@ -77,7 +83,6 @@ namespace ClinicMS.Web.Controllers
 
             return RedirectToAction("Index", "Dashboard");
         }
-
         // GET /Auth/Logout
         public async Task<IActionResult> Logout()
         {

@@ -8,27 +8,27 @@
     <h4>Invoices</h4>
 </div>
 
-<form id="searchFrom">
+<form id="searchFrom" method="get" action="/Invoices/List" data-sks-ajax="true" data-sks-target="#pageContent">
     <div class="row mb-3">
         <div class="col-md-3">
             <input type="text" name="SearchTerm" class="form-control" placeholder="Search invoice/patient..." />
         </div>
-        <div class="col-md-2">
-            <select name="Status" class="form-control">
+        <div class="col-md-2 mobile-my-2">
+            <select name="Status" class="form-control" onchange="$('#searchFrom').submit()">
                 <option value="">All Status</option>
                 <option value="1">Pending</option>
                 <option value="2">Paid</option>
                 <option value="3">Cancelled</option>
             </select>
         </div>
-        <div class="col-md-2">
-            <input type="date" name="FromDate" class="form-control" />
+        <div class="col-md-2 mobile-my-2">
+            <input type="date" name="FromDate" class="form-control" onchange="$('#searchFrom').submit()" />
         </div>
-        <div class="col-md-2">
-            <input type="date" name="ToDate" class="form-control" />
+        <div class="col-md-2 mobile-my-2">
+            <input type="date" name="ToDate" class="form-control" onchange="$('#searchFrom').submit()" />
         </div>
-        <div class="col-md-2">
-            <button type="button" id="btnInvoiceSearch" class="btn btn-secondary">Search</button>
+        <div class="col-md-2 mobile-my-2">
+            <button type="submit" id="btnInvoiceSearch" class="btn btn-secondary w-100">Search</button>
         </div>
     </div>
 </form>

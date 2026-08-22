@@ -4,18 +4,18 @@
 }
 <input type="hidden" id="ErrMsgHiddenField" value="" />
 
-<div class="row mb-3">
+<div class="row mb-3 g-2">
     <div class="col">
         <h4>🧑‍🤝‍🧑 Patients</h4>
     </div>
-    <div class="col text-end">
-        @if (!User.IsInRole("Doctor"))
-        {
+    @if (!User.IsInRole("Doctor"))
+    {
+        <div class="col-auto ms-auto">
             <a href="/Patients/AddEdit" data-modal class="btn btn-primary">
                 + Add Patient
             </a>
-        }
-    </div>
+        </div>
+    }
 </div>
 
 <form id="searchFrom" method="get" action="/Patients/List" data-sks-ajax="true" data-sks-target="#pageContent">
@@ -24,17 +24,21 @@
             <input type="text" name="SearchTerm" class="form-control"
                    placeholder="Search by name, phone, or patient number..." />
         </div>
-        <div class="col-md-3">
+        <div class="col-md-3 mobile-my-2">
             <select name="IsActive" class="form-control" onchange="$('#searchFrom').submit()">
             <option value="">All Status</option>
                 <option value="true">Active</option>
                 <option value="false">Inactive</option>
             </select>
         </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-secondary">Search</button>
+        <div class="col-md-2 mobile-my-2">
+            <button type="submit" class="btn btn-secondary w-100">Search</button>
         </div>
     </div>
 </form>
-
+<div id="replaceTarget">
 <partial name="_List" model="Model" />
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -3,21 +3,21 @@
     ViewData["Title"] = "Doctors";
 }
 
-<div class="row mb-3">
+<div class="row mb-3 g-2">
     <div class="col"><h4>👨‍⚕️ Doctors</h4></div>
     @if (User.IsInRole("Admin"))
     {
-        <div class="col text-end"><a href="/Doctors/Add" data-modal class="btn btn-primary">+ Add Doctor</a></div>
+        <div class="col-auto ms-auto"><a href="/Doctors/Add" data-modal class="btn btn-primary">+ Add Doctor</a></div>
     }
 </div>
 
-<form id="searchFrom">
+<form id="searchFrom" method="get" action="/Doctors/List" data-sks-ajax="true" data-sks-target="#replacetarget">
     <div class="row mb-3">
         <div class="col-md-3">
             <input type="text" name="SearchTerm" class="form-control" placeholder="Search by name, license..." />
         </div>
-        <div class="col-md-3">
-            <select name="DepartmentId" class="form-control">
+        <div class="col-md-3 mobile-my-2">
+            <select name="DepartmentId" class="form-control" onchange="$('#searchFrom').submit()">
                 <option value="">All Departments</option>
                 @foreach (var d in ViewBag.Departments as List<DepartmentListItemDto> ?? new())
                 {
@@ -25,19 +25,18 @@
                 }
             </select>
         </div>
-        <div class="col-md-2">
-            <select name="IsActive" class="form-control">
+        <div class="col-md-2 mobile-my-2">
+            <select name="IsActive" class="form-control" onchange="$('#searchFrom').submit()">
                 <option value="">All Status</option>
                 <option value="true">Active</option>
                 <option value="false">Inactive</option>
             </select>
         </div>
         <div class="col-md-2">
-            <div class="ns-grid-pager" data-sks-target="#replacetarget">
-                <a class="ns-page-link btn btn-secondary w-100" href="/Doctors/List?PageNo=1">Search</a>
-            </div>
+            <button type="submit" class="btn btn-secondary w-100">Search</button>
         </div>
     </div>
 </form>
-
-@await Html.PartialAsync("_List", Model)
+<div id="replaceTarget">
+    <partial name="_List" model="Model" />
+</div>
