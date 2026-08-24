@@ -2,7 +2,7 @@
 
 namespace ClinicMS.Domain.Entities
 {
-    public class Appointment
+    public class utblCMSAppointments
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
 
@@ -28,9 +28,9 @@ namespace ClinicMS.Domain.Entities
         public string LastUpdatedBy { get; set; } = string.Empty;
         // ── Navigation properties ──────────────────────────
         // EF fills these with .Include() — not DB columns
-        public Patient? Patient { get; set; }
-        public Doctor? Doctor { get; set; }
-        public Department? Department { get; set; }
+        public utblCMSPatients? Patient { get; set; }
+        public utblCMSDoctors? Doctor { get; set; }
+        public utblCMSDepartments? Department { get; set; }
         public ApplicationUser? CreatedBy { get; set; }
     }
 }

@@ -99,7 +99,7 @@ namespace ClinicMS.Infrastructure.Services
 
         private async Task<string> GenerateAndSaveRefreshTokenAsync(string userId)
         {
-            var refreshToken = new RefreshToken
+            var refreshToken = new utblCMSRefreshToken
             {
                 Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
                 UserId = userId,

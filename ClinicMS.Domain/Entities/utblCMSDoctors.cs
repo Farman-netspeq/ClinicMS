@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ClinicMS.Domain.Entities;
 
-public partial class Doctor
+public partial class utblCMSDoctors
 {
     public string Id { get; set; } = null!;
 
@@ -22,7 +22,7 @@ public partial class Doctor
     public bool IsActive { get; set; }
 
     public virtual ApplicationUser ApplicationUser { get; set; } = null!;
-    public virtual Department Department { get; set; } = null!;
+    public virtual utblCMSDepartments Department { get; set; } = null!;
 
-    public ICollection<DoctorSchedule> Schedules { get; set; } = new List<DoctorSchedule>();
+    public ICollection<utblCMSDoctorSchedules> Schedules { get; set; } = new List<utblCMSDoctorSchedules>();
 }

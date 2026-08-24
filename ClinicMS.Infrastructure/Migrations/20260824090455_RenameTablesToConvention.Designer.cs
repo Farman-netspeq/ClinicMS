@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ClinicMS.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260727045210_RenameCreatedOnToTransDateAspNetUsers")]
-    partial class RenameCreatedOnToTransDateAspNetUsers
+    [Migration("20260824090455_RenameTablesToConvention")]
+    partial class RenameTablesToConvention
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -30,7 +30,9 @@ namespace ClinicMS.Infrastructure.Migrations
                     b.Property<int>("TotalCount")
                         .HasColumnType("int");
 
-                    b.ToTable("AppointmentCountResultDto");
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
                 });
 
             modelBuilder.Entity("ClinicMS.Application.DTOs.Appointment.AppointmentListItemDto", b =>
@@ -76,7 +78,9 @@ namespace ClinicMS.Infrastructure.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.ToTable("AppointmentListItemDto");
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
                 });
 
             modelBuilder.Entity("ClinicMS.Application.DTOs.Appointment.AppointmentResponseDto", b =>
@@ -143,7 +147,69 @@ namespace ClinicMS.Infrastructure.Migrations
                     b.Property<DateTime>("TransDate")
                         .HasColumnType("datetime2");
 
-                    b.ToTable("AppointmentResponseDto");
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
+                });
+
+            modelBuilder.Entity("ClinicMS.Application.DTOs.Audit.AuditLogCountResultDto", b =>
+                {
+                    b.Property<int>("TotalCount")
+                        .HasColumnType("int");
+
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
+                });
+
+            modelBuilder.Entity("ClinicMS.Application.DTOs.Audit.AuditLogListItemDto", b =>
+                {
+                    b.Property<int>("Action")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Details")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EntityId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("TransDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
+                });
+
+            modelBuilder.Entity("ClinicMS.Application.DTOs.Dashboard.DashboardSummaryDto", b =>
+                {
+                    b.Property<int>("PatientsSeenToday")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PendingInvoices")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("RevenueThisMonth")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("TodaysAppointments")
+                        .HasColumnType("int");
+
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
                 });
 
             modelBuilder.Entity("ClinicMS.Application.DTOs.Department.DepartmentCountResultDto", b =>
@@ -151,7 +217,9 @@ namespace ClinicMS.Infrastructure.Migrations
                     b.Property<int>("TotalCount")
                         .HasColumnType("int");
 
-                    b.ToTable("DepartmentCountResultDto");
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
                 });
 
             modelBuilder.Entity("ClinicMS.Application.DTOs.Department.DepartmentListItemDto", b =>
@@ -170,7 +238,9 @@ namespace ClinicMS.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.ToTable("DepartmentListItemDto");
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
                 });
 
             modelBuilder.Entity("ClinicMS.Application.DTOs.Department.DepartmentResponseDto", b =>
@@ -192,11 +262,17 @@ namespace ClinicMS.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.ToTable("DepartmentResponseDto");
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
                 });
 
             modelBuilder.Entity("ClinicMS.Application.DTOs.Doctor.DoctorListItemDto", b =>
                 {
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal>("ConsultationFee")
                         .HasColumnType("decimal(18,2)");
 
@@ -222,7 +298,9 @@ namespace ClinicMS.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.ToTable("DoctorListItemDto");
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
                 });
 
             modelBuilder.Entity("ClinicMS.Application.DTOs.Doctor.DoctorResponseDto", b =>
@@ -264,7 +342,9 @@ namespace ClinicMS.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.ToTable("DoctorResponseDto");
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
                 });
 
             modelBuilder.Entity("ClinicMS.Application.DTOs.DoctorSchedule.DoctorScheduleListItemDto", b =>
@@ -654,7 +734,7 @@ namespace ClinicMS.Infrastructure.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("ClinicMS.Domain.Entities.Appointment", b =>
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSAppointments", b =>
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
@@ -727,7 +807,50 @@ namespace ClinicMS.Infrastructure.Migrations
                     b.ToTable("utblCMSAppointments", (string)null);
                 });
 
-            modelBuilder.Entity("ClinicMS.Domain.Entities.Department", b =>
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSAuditLogs", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
+
+                    b.Property<int>("Action")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("EntityId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("TransDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("utblCMSAuditLogs", (string)null);
+                });
+
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSDepartments", b =>
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
@@ -756,7 +879,42 @@ namespace ClinicMS.Infrastructure.Migrations
                     b.ToTable("utblCMSDepartments", (string)null);
                 });
 
-            modelBuilder.Entity("ClinicMS.Domain.Entities.Doctor", b =>
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSDoctorSchedules", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DoctorId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<int>("SlotDurationMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "DoctorId", "DayOfWeek" }, "IX_utblCMSDoctorSchedules_DoctorId_DayOfWeek");
+
+                    b.ToTable("utblCMSDoctorSchedules", (string)null);
+                });
+
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSDoctors", b =>
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
@@ -807,42 +965,39 @@ namespace ClinicMS.Infrastructure.Migrations
                     b.ToTable("utblCMSDoctors", (string)null);
                 });
 
-            modelBuilder.Entity("ClinicMS.Domain.Entities.DoctorSchedule", b =>
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSInvoiceItems", b =>
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
 
-                    b.Property<int>("DayOfWeek")
-                        .HasColumnType("int");
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
-                    b.Property<string>("DoctorId")
+                    b.Property<string>("InvoiceId")
                         .IsRequired()
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
 
-                    b.Property<TimeSpan>("EndTime")
-                        .HasColumnType("time");
+                    b.Property<decimal>("LineTotal")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<int>("SlotDurationMinutes")
+                    b.Property<int>("Quantity")
                         .HasColumnType("int");
 
-                    b.Property<TimeSpan>("StartTime")
-                        .HasColumnType("time");
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex(new[] { "DoctorId", "DayOfWeek" }, "IX_utblCMSDoctorSchedules_DoctorId_DayOfWeek");
+                    b.HasIndex("InvoiceId");
 
-                    b.ToTable("utblCMSDoctorSchedules", (string)null);
+                    b.ToTable("utblCMSInvoiceItems", (string)null);
                 });
 
-            modelBuilder.Entity("ClinicMS.Domain.Entities.Invoice", b =>
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSInvoices", b =>
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
@@ -893,39 +1048,7 @@ namespace ClinicMS.Infrastructure.Migrations
                     b.ToTable("utblCMSInvoices", (string)null);
                 });
 
-            modelBuilder.Entity("ClinicMS.Domain.Entities.InvoiceItem", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("nvarchar(36)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.Property<string>("InvoiceId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("nvarchar(36)");
-
-                    b.Property<decimal>("LineTotal")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InvoiceId");
-
-                    b.ToTable("utblCMSInvoiceItems", (string)null);
-                });
-
-            modelBuilder.Entity("ClinicMS.Domain.Entities.MedicalRecord", b =>
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSMedicalRecords", b =>
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
@@ -976,7 +1099,7 @@ namespace ClinicMS.Infrastructure.Migrations
                     b.ToTable("utblCMSMedicalRecords", (string)null);
                 });
 
-            modelBuilder.Entity("ClinicMS.Domain.Entities.Patient", b =>
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSPatients", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -1042,7 +1165,45 @@ namespace ClinicMS.Infrastructure.Migrations
                     b.ToTable("utblCMSPatients", (string)null);
                 });
 
-            modelBuilder.Entity("ClinicMS.Domain.Entities.Prescription", b =>
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSPrescriptionItems", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
+
+                    b.Property<string>("Dosage")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("DurationDays")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Frequency")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Instructions")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("MedicationName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("PrescriptionId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PrescriptionId");
+
+                    b.ToTable("utblCMSPrescriptionItems", (string)null);
+                });
+
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSPrescriptions", b =>
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
@@ -1082,52 +1243,11 @@ namespace ClinicMS.Infrastructure.Migrations
                     b.ToTable("utblCMSPrescriptions", (string)null);
                 });
 
-            modelBuilder.Entity("ClinicMS.Domain.Entities.PrescriptionItem", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("nvarchar(36)");
-
-                    b.Property<string>("Dosage")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int?>("DurationDays")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Frequency")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Instructions")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("MedicationName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("PrescriptionId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("nvarchar(36)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PrescriptionId");
-
-                    b.ToTable("utblCMSPrescriptionItems", (string)null);
-                });
-
-            modelBuilder.Entity("ClinicMS.Domain.Entities.RefreshToken", b =>
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSRefreshToken", b =>
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("datetime2");
@@ -1139,6 +1259,9 @@ namespace ClinicMS.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<DateTime>("TransDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasMaxLength(450)
@@ -1148,7 +1271,7 @@ namespace ClinicMS.Infrastructure.Migrations
 
                     b.HasIndex("Token");
 
-                    b.ToTable("utblCMSRefreshTokens", (string)null);
+                    b.ToTable("utblCMSRefreshToken", (string)null);
                 });
 
             modelBuilder.Entity("DoctorCountResultDto", b =>
@@ -1156,7 +1279,9 @@ namespace ClinicMS.Infrastructure.Migrations
                     b.Property<int>("TotalCount")
                         .HasColumnType("int");
 
-                    b.ToTable("DoctorCountResultDto");
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -1336,15 +1461,15 @@ namespace ClinicMS.Infrastructure.Migrations
                     b.ToView(null, (string)null);
                 });
 
-            modelBuilder.Entity("ClinicMS.Domain.Entities.Appointment", b =>
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSAppointments", b =>
                 {
-                    b.HasOne("ClinicMS.Domain.Entities.Department", "Department")
+                    b.HasOne("ClinicMS.Domain.Entities.utblCMSDepartments", "Department")
                         .WithMany()
                         .HasForeignKey("DepartmentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ClinicMS.Domain.Entities.Doctor", "Doctor")
+                    b.HasOne("ClinicMS.Domain.Entities.utblCMSDoctors", "Doctor")
                         .WithMany()
                         .HasForeignKey("DoctorId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1356,7 +1481,7 @@ namespace ClinicMS.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ClinicMS.Domain.Entities.Patient", "Patient")
+                    b.HasOne("ClinicMS.Domain.Entities.utblCMSPatients", "Patient")
                         .WithMany()
                         .HasForeignKey("PatientId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1371,7 +1496,29 @@ namespace ClinicMS.Infrastructure.Migrations
                     b.Navigation("Patient");
                 });
 
-            modelBuilder.Entity("ClinicMS.Domain.Entities.Doctor", b =>
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSAuditLogs", b =>
+                {
+                    b.HasOne("ClinicMS.Domain.Entities.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSDoctorSchedules", b =>
+                {
+                    b.HasOne("ClinicMS.Domain.Entities.utblCMSDoctors", "Doctor")
+                        .WithMany("Schedules")
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
+                });
+
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSDoctors", b =>
                 {
                     b.HasOne("ClinicMS.Domain.Entities.ApplicationUser", "ApplicationUser")
                         .WithMany()
@@ -1379,7 +1526,7 @@ namespace ClinicMS.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ClinicMS.Domain.Entities.Department", "Department")
+                    b.HasOne("ClinicMS.Domain.Entities.utblCMSDepartments", "Department")
                         .WithMany("Doctors")
                         .HasForeignKey("DepartmentId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1390,39 +1537,9 @@ namespace ClinicMS.Infrastructure.Migrations
                     b.Navigation("Department");
                 });
 
-            modelBuilder.Entity("ClinicMS.Domain.Entities.DoctorSchedule", b =>
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSInvoiceItems", b =>
                 {
-                    b.HasOne("ClinicMS.Domain.Entities.Doctor", "Doctor")
-                        .WithMany("Schedules")
-                        .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Doctor");
-                });
-
-            modelBuilder.Entity("ClinicMS.Domain.Entities.Invoice", b =>
-                {
-                    b.HasOne("ClinicMS.Domain.Entities.Appointment", "Appointment")
-                        .WithOne()
-                        .HasForeignKey("ClinicMS.Domain.Entities.Invoice", "AppointmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ClinicMS.Domain.Entities.Patient", "Patient")
-                        .WithMany()
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Appointment");
-
-                    b.Navigation("Patient");
-                });
-
-            modelBuilder.Entity("ClinicMS.Domain.Entities.InvoiceItem", b =>
-                {
-                    b.HasOne("ClinicMS.Domain.Entities.Invoice", "Invoice")
+                    b.HasOne("ClinicMS.Domain.Entities.utblCMSInvoices", "Invoice")
                         .WithMany("Items")
                         .HasForeignKey("InvoiceId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1431,32 +1548,62 @@ namespace ClinicMS.Infrastructure.Migrations
                     b.Navigation("Invoice");
                 });
 
-            modelBuilder.Entity("ClinicMS.Domain.Entities.MedicalRecord", b =>
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSInvoices", b =>
                 {
-                    b.HasOne("ClinicMS.Domain.Entities.Appointment", "Appointment")
+                    b.HasOne("ClinicMS.Domain.Entities.utblCMSAppointments", "Appointment")
                         .WithOne()
-                        .HasForeignKey("ClinicMS.Domain.Entities.MedicalRecord", "AppointmentId")
+                        .HasForeignKey("ClinicMS.Domain.Entities.utblCMSInvoices", "AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ClinicMS.Domain.Entities.utblCMSPatients", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSMedicalRecords", b =>
+                {
+                    b.HasOne("ClinicMS.Domain.Entities.utblCMSAppointments", "Appointment")
+                        .WithOne()
+                        .HasForeignKey("ClinicMS.Domain.Entities.utblCMSMedicalRecords", "AppointmentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Appointment");
                 });
 
-            modelBuilder.Entity("ClinicMS.Domain.Entities.Prescription", b =>
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSPrescriptionItems", b =>
                 {
-                    b.HasOne("ClinicMS.Domain.Entities.Appointment", "Appointment")
+                    b.HasOne("ClinicMS.Domain.Entities.utblCMSPrescriptions", "Prescription")
+                        .WithMany("Items")
+                        .HasForeignKey("PrescriptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Prescription");
+                });
+
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSPrescriptions", b =>
+                {
+                    b.HasOne("ClinicMS.Domain.Entities.utblCMSAppointments", "Appointment")
                         .WithOne()
-                        .HasForeignKey("ClinicMS.Domain.Entities.Prescription", "AppointmentId")
+                        .HasForeignKey("ClinicMS.Domain.Entities.utblCMSPrescriptions", "AppointmentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ClinicMS.Domain.Entities.Doctor", "Doctor")
+                    b.HasOne("ClinicMS.Domain.Entities.utblCMSDoctors", "Doctor")
                         .WithMany()
                         .HasForeignKey("DoctorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ClinicMS.Domain.Entities.Patient", "Patient")
+                    b.HasOne("ClinicMS.Domain.Entities.utblCMSPatients", "Patient")
                         .WithMany()
                         .HasForeignKey("PatientId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1467,17 +1614,6 @@ namespace ClinicMS.Infrastructure.Migrations
                     b.Navigation("Doctor");
 
                     b.Navigation("Patient");
-                });
-
-            modelBuilder.Entity("ClinicMS.Domain.Entities.PrescriptionItem", b =>
-                {
-                    b.HasOne("ClinicMS.Domain.Entities.Prescription", "Prescription")
-                        .WithMany("Items")
-                        .HasForeignKey("PrescriptionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Prescription");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -1531,22 +1667,22 @@ namespace ClinicMS.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ClinicMS.Domain.Entities.Department", b =>
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSDepartments", b =>
                 {
                     b.Navigation("Doctors");
                 });
 
-            modelBuilder.Entity("ClinicMS.Domain.Entities.Doctor", b =>
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSDoctors", b =>
                 {
                     b.Navigation("Schedules");
                 });
 
-            modelBuilder.Entity("ClinicMS.Domain.Entities.Invoice", b =>
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSInvoices", b =>
                 {
                     b.Navigation("Items");
                 });
 
-            modelBuilder.Entity("ClinicMS.Domain.Entities.Prescription", b =>
+            modelBuilder.Entity("ClinicMS.Domain.Entities.utblCMSPrescriptions", b =>
                 {
                     b.Navigation("Items");
                 });

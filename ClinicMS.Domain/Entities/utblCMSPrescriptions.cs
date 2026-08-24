@@ -1,6 +1,6 @@
 ﻿namespace ClinicMS.Domain.Entities
 {
-    public class Prescription
+    public class utblCMSPrescriptions
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string AppointmentId { get; set; } = string.Empty;
@@ -9,9 +9,9 @@
         public DateTime IssuedOn { get; set; } = DateTime.UtcNow;
         public string? Notes { get; set; }
 
-        public Appointment? Appointment { get; set; }
-        public Patient? Patient { get; set; }
-        public Doctor? Doctor { get; set; }
-        public ICollection<PrescriptionItem> Items { get; set; } = new List<PrescriptionItem>();
+        public utblCMSAppointments? Appointment { get; set; }
+        public utblCMSPatients? Patient { get; set; }
+        public utblCMSDoctors? Doctor { get; set; }
+        public ICollection<utblCMSPrescriptionItems> Items { get; set; } = new List<utblCMSPrescriptionItems>();
     }
 }

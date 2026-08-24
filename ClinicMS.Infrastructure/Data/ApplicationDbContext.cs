@@ -21,18 +21,18 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         : base(options) { }
 
 
-    public DbSet<RefreshToken> RefreshTokens { get; set; }
-    public DbSet<Department> Departments { get; set; }
-    public DbSet<Doctor> Doctors { get; set; }
-    public DbSet<DoctorSchedule> DoctorSchedules { get; set; }
-    public DbSet<Patient> Patients { get; set; }
-    public DbSet<Appointment> Appointments { get; set; }
-    public DbSet<MedicalRecord> MedicalRecords { get; set; }
-    public DbSet<Prescription> Prescriptions { get; set; }
-    public DbSet<PrescriptionItem> PrescriptionItems { get; set; }
-    public DbSet<Invoice> Invoices { get; set; }
-    public DbSet<InvoiceItem> InvoiceItems { get; set; }
-    public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<utblCMSRefreshToken> RefreshTokens { get; set; }
+    public DbSet<utblCMSDepartments> Departments { get; set; }
+    public DbSet<utblCMSDoctors> Doctors { get; set; }
+    public DbSet<utblCMSDoctorSchedules> DoctorSchedules { get; set; }
+    public DbSet<utblCMSPatients> Patients { get; set; }
+    public DbSet<utblCMSAppointments> Appointments { get; set; }
+    public DbSet<utblCMSMedicalRecords> MedicalRecords { get; set; }
+    public DbSet<utblCMSPrescriptions> Prescriptions { get; set; }
+    public DbSet<utblCMSPrescriptionItems> PrescriptionItems { get; set; }
+    public DbSet<utblCMSInvoices> Invoices { get; set; }
+    public DbSet<utblCMSInvoiceItems> InvoiceItems { get; set; }
+    public DbSet<utblCMSAuditLogs> AuditLogs { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -49,17 +49,17 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.ApplyConfiguration(new InvoiceConfiguration());
         modelBuilder.ApplyConfiguration(new InvoiceItemConfiguration());
         modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
-        modelBuilder.Entity<DepartmentListItemDto>().HasNoKey();
-        modelBuilder.Entity<DepartmentCountResultDto>().HasNoKey();
-        modelBuilder.Entity<DepartmentResponseDto>().HasNoKey();
-        modelBuilder.Entity<DoctorListItemDto>().HasNoKey();
-        modelBuilder.Entity<DoctorCountResultDto>().HasNoKey();
-        modelBuilder.Entity<DoctorResponseDto>().HasNoKey();
+        modelBuilder.Entity<DepartmentListItemDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<DepartmentCountResultDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<DepartmentResponseDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<DoctorListItemDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<DoctorCountResultDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<DoctorResponseDto>().HasNoKey().ToView(null);
         modelBuilder.Entity<DoctorScheduleListItemDto>().HasNoKey().ToView(null);
         modelBuilder.Entity<DoctorScheduleResponseDto>().HasNoKey().ToView(null);
-        modelBuilder.Entity<AppointmentListItemDto>().HasNoKey();
-        modelBuilder.Entity<AppointmentCountResultDto>().HasNoKey();
-        modelBuilder.Entity<AppointmentResponseDto>().HasNoKey();
+        modelBuilder.Entity<AppointmentListItemDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<AppointmentCountResultDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<AppointmentResponseDto>().HasNoKey().ToView(null);
         modelBuilder.Entity<PatientListItemDto>().HasNoKey().ToView(null);
         modelBuilder.Entity<PatientResponseDto>().HasNoKey().ToView(null);
         modelBuilder.Entity<PatientCountResultDto>().HasNoKey().ToView(null);
@@ -70,8 +70,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<InvoiceItemDto>().HasNoKey().ToView(null);
         modelBuilder.Entity<PrescriptionHeaderDto>().HasNoKey().ToView(null);
         modelBuilder.Entity<PrescriptionItemDto>().HasNoKey().ToView(null);
-        modelBuilder.Entity<AuditLogListItemDto>().HasNoKey();
-        modelBuilder.Entity<AuditLogCountResultDto>().HasNoKey();
-        modelBuilder.Entity<DashboardSummaryDto>().HasNoKey();
+        modelBuilder.Entity<AuditLogListItemDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<AuditLogCountResultDto>().HasNoKey().ToView(null);
+        modelBuilder.Entity<DashboardSummaryDto>().HasNoKey().ToView(null);
     }
 }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace ClinicMS.Domain.Entities;
 
-public partial class Patient
+public partial class utblCMSPatients
 {
     public string Id { get; set; } = null!;
 

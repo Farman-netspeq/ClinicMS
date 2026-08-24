@@ -1,6 +1,6 @@
 ﻿namespace ClinicMS.Domain.Entities
 {
-    public class InvoiceItem
+    public class utblCMSInvoiceItems
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string InvoiceId { get; set; } = string.Empty;
@@ -9,6 +9,6 @@
         public decimal UnitPrice { get; set; }
         public decimal LineTotal { get; set; }
 
-        public Invoice? Invoice { get; set; }
+        public utblCMSInvoices? Invoice { get; set; }
     }
 }

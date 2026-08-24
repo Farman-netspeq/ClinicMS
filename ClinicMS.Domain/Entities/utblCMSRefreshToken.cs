@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ClinicMS.Domain.Entities;
 
-public partial class RefreshToken
+public partial class utblCMSRefreshToken
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
 

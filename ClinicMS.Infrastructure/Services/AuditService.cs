@@ -25,7 +25,7 @@ namespace ClinicMS.Infrastructure.Services
         {
             try
             {
-                var log = new AuditLog
+                var log = new utblCMSAuditLogs
                 {
                     UserId = userId,
                     UserName = userName,

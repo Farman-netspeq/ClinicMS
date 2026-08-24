@@ -1,6 +1,6 @@
 ﻿namespace ClinicMS.Domain.Entities
 {
-    public class MedicalRecord
+    public class utblCMSMedicalRecords
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string AppointmentId { get; set; } = string.Empty;
@@ -14,6 +14,6 @@
         public DateTime TransDate { get; set; } = DateTime.UtcNow;
         public string? LastUpdatedBy { get; set; }
 
-        public Appointment? Appointment { get; set; }
+        public utblCMSAppointments? Appointment { get; set; }
     }
 }

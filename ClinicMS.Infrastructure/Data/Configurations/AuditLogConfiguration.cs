@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ClinicMS.Infrastructure.Data.Configurations
 {
-    public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
+    public class AuditLogConfiguration : IEntityTypeConfiguration<utblCMSAuditLogs>
     {
-        public void Configure(EntityTypeBuilder<AuditLog> builder)
+        public void Configure(EntityTypeBuilder<utblCMSAuditLogs> builder)
         {
             builder.ToTable("utblCMSAuditLogs");
 

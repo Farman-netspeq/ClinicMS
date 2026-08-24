@@ -2,7 +2,7 @@
 
 namespace ClinicMS.Domain.Entities
 {
-    public class Invoice
+    public class utblCMSInvoices
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string InvoiceNumber { get; set; } = string.Empty;
@@ -14,8 +14,8 @@ namespace ClinicMS.Domain.Entities
         public DateTime? PaidOn { get; set; }
         public PaymentMethod? PaymentMethod { get; set; }
 
-        public Patient? Patient { get; set; }
-        public Appointment? Appointment { get; set; }
-        public ICollection<InvoiceItem> Items { get; set; } = new List<InvoiceItem>();
+        public utblCMSPatients? Patient { get; set; }
+        public utblCMSAppointments? Appointment { get; set; }
+        public ICollection<utblCMSInvoiceItems> Items { get; set; } = new List<utblCMSInvoiceItems>();
     }
 }

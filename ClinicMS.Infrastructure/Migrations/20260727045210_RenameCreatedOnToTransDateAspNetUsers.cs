@@ -192,7 +192,7 @@ namespace ClinicMS.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "RefreshTokens",
+                name: "utblCMSRefreshTokens",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
@@ -204,7 +204,7 @@ namespace ClinicMS.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RefreshTokens", x => x.Id);
+                    table.PrimaryKey("PK_utblCMSRefreshTokens", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -627,8 +627,8 @@ namespace ClinicMS.Infrastructure.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RefreshTokens_Token",
-                table: "RefreshTokens",
+                name: "IX_utblCMSRefreshTokens_Token",
+                table: "utblCMSRefreshTokens",
                 column: "Token");
 
             migrationBuilder.CreateIndex(
@@ -802,7 +802,7 @@ namespace ClinicMS.Infrastructure.Migrations
                 name: "DoctorResponseDto");
 
             migrationBuilder.DropTable(
-                name: "RefreshTokens");
+                name: "utblCMSRefreshTokens");
 
             migrationBuilder.DropTable(
                 name: "utblCMSDoctorSchedules");

@@ -8,17 +8,17 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 namespace ClinicMS.Web.Controllers
 {
-    [Authorize(Roles ="Admin,Doctor,Receptionist")]
+    [Authorize(Roles = "Admin,Doctor,Receptionist")]
     public class AppointmentsController : Controller
     {
         private readonly IHttpService _httpService;
-        public AppointmentsController(IHttpService httpService) 
-        { 
-            _httpService = httpService; 
+        public AppointmentsController(IHttpService httpService)
+        {
+            _httpService = httpService;
         }
 
         // ── INDEX ──────────────────────────────────────────
-        [Authorize(Roles ="Admin,Receptionist")]
+        [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Index()
         {
             var filter = new AppointmentFilterDto();
@@ -178,13 +178,28 @@ namespace ClinicMS.Web.Controllers
             await _httpService.PostAsync<ApiResponseDto<string>>($"api/appointments/{id}/noshow", new { });
             return RedirectToAction("Index");
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Doctor")]
         public async Task<IActionResult> Complete(string id)
         {
-            await _httpService.PostAsync<ApiResponseDto<string>>($"api/appointments/{id}/complete", new { });
+            try
+            {
+                var result = await _httpService.PostAsync<ApiResponseDto<string>>($"api/appointments/{id}/complete", new { });
+                if (result == null || !result.Success)
+                {
+                    TempData["Error"] = result?.Message ?? "Complete failed";
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex + "Complete appointment {Id} failed" + id);
+                TempData["Error"] = "Something went wrong completing appointment";
+            }
+
+            if (User.IsInRole("Doctor") && !User.IsInRole("Admin"))
+                return RedirectToAction("MyAppointments");
+
             return RedirectToAction("Index");
         }
         // ── DOCTOR DASHBOARD ─────────────────────────────────────

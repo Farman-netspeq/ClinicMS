@@ -2,7 +2,7 @@
 
 namespace ClinicMS.Domain.Entities
 {
-    public class AuditLog
+    public class utblCMSAuditLogs
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string UserId { get; set; } = string.Empty;

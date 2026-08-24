@@ -2,7 +2,7 @@
 
 <div class="modal-header">
     <h5 class="modal-title">@(string.IsNullOrEmpty(Model.Id) ? "Add Slot" : "Edit Slot")</h5>
-    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
 
 <form action="/DoctorSchedules/Save" method="post">
@@ -33,7 +33,7 @@
         </div>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         <button type="submit" class="btn btn-success">Save</button>
     </div>
 </form>
