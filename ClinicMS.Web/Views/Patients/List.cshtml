@@ -26,7 +26,7 @@
         </div>
         <div class="col-md-3 mobile-my-2">
             <select name="IsActive" class="form-control" onchange="$('#searchFrom').submit()">
-            <option value="">All Status</option>
+                <option value="">All Status</option>
                 <option value="true">Active</option>
                 <option value="false">Inactive</option>
             </select>
@@ -36,8 +36,8 @@
         </div>
     </div>
 </form>
-<div id="replaceTarget">
-<partial name="_List" model="Model" />
+<div id="replacetarget">
+    <partial name="_List" model="Model" />
 </div>
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

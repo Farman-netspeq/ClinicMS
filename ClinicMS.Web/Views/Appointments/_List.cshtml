@@ -1,5 +1,5 @@
 ﻿@model PaginatedResult<AppointmentListItemDto>
-<div id="pageContent">
+<div id="replacetarget">
     <div class="table-responsive">
         <table class="table table-bordered table-hover">
             <thead>
@@ -38,7 +38,7 @@
                                         <button type="submit" class="btn btn-sm btn-link p-0">Check-in</button>
                                     </form>
                                     <text> | </text>
-                                    <a class="delete btn btn-sm btn-link p-0" href="/Appointments/Cancel/@a.Id">Cancel</a>
+                                                 <a data-modal href="/Appointments/CancelForm?id=@a.Id" class="btn btn-sm btn-link p-0">Cancel</a>
                                     <text> | </text>
                                     <form action="/Appointments/NoShow" method="post" class="d-inline">
                                         @Html.AntiForgeryToken()
@@ -77,7 +77,8 @@
             </tbody>
         </table>
     </div>
-    <div class="ns-grid-pager mobile-my-2" data-sks-target="#pageContent">
+    </div>
+<div class="ns-grid-pager mobile-my-2" data-sks-target="#replacetarget">
         @{
             int totalPages = (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize);
         }
@@ -87,4 +88,3 @@
                href="/Appointments/List?PageNo=@p">@p</a>
         }
     </div>
-</div>

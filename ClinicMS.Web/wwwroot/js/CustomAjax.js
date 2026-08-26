@@ -450,11 +450,11 @@ $(function () {
     $(".container-fluid").on("click", "a[data-modal]", function (e) {
         // hide dropdown if any (this is used wehen invoking modal from link in bootstrap dropdown )
         //$(e.target).closest('.btn-group').children('.dropdown-toggle').dropdown('toggle');
-        
+
         $('#AddEditModalContent').load(this.href, function () {
             $('#AddEditModal').modal('show');
             bindForm(this);
-           
+
         });
         return false;
     });
@@ -465,12 +465,12 @@ $(function () {
     $(".container-fluid").on("click", "button[data-modal]", function (e) {
         // hide dropdown if any (this is used wehen invoking modal from link in bootstrap dropdown )
         //$(e.target).closest('.btn-group').children('.dropdown-toggle').dropdown('toggle');
-       
+
         $('#AddEditModalContent').load(this.href, function () {
             $('#AddEditModal').modal('show');
             bindForm(this);
-           
-           
+
+
         });
         return false;
     });
@@ -498,7 +498,7 @@ function bindForm(dialog) {
                     // JSON response
                     if (result.success) {
                         $('#AddEditModal').modal('hide');
-                        $('#replaceTarget').load(result.url);
+                        $('#replacetarget').load(result.url);
                     } else {
                         toastr.error(result.message || 'Save failed.');
                     }

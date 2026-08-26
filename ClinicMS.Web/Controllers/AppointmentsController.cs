@@ -89,12 +89,21 @@ namespace ClinicMS.Web.Controllers
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Cancel(string id, string cancelReason)
         {
-            var dto = new CancelAppointmentDto { CancelReason = cancelReason };
-            await _httpService.PostAsync<ApiResponseDto<string>>($"api/appointments/{id}/cancel", dto);
-
-            var result = await _httpService.PostAsync<ApiResponseDto<PaginatedResult<AppointmentListItemDto>>>(
-                "api/appointments/list", new AppointmentFilterDto());
-            return PartialView("_List", result?.Data ?? new PaginatedResult<AppointmentListItemDto>());
+            try
+            {
+                var dto = new CancelAppointmentDto { CancelReason = cancelReason };
+                var result = await _httpService.PostAsync<ApiResponseDto<string>>($"api/appointments/{id}/cancel", dto);
+                return Json(new
+                {
+                    success = result?.Success ?? false,
+                    message = result?.Message ?? "Cancel failed.",
+                    url = Url.Action("List")
+                });
+            }
+            catch (HttpRequestException ex)
+            {
+                return Json(new { success = false, message = ApiErrorHelper.ExtractApiMessage(ex.Message), url = "" });
+            }
         }
 
         // ══════════════════════════════════════════════════

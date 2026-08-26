@@ -16,7 +16,8 @@
     }
 </div>
 
-<form id="searchFrom" method="get" action="/Appointments/List" data-sks-ajax="true" data-sks-target="#pageContent">
+<form id="searchFrom" method="get" action="/Appointments/List" data-sks-ajax="true" data-sks-target="#replacetarget">
+
     <div class="row mb-2">
         <div class="col-md-3">
             <input type="text" name="SearchTerm" class="form-control form-control-sm" placeholder="Search patient/number" />
@@ -43,7 +44,7 @@
     </div>
 </form>
 
-<div id="pageContent">
+<div id="replacetarget">
     <partial name="_List" model="Model" />
 </div>
 @section Scripts {
