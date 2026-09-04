@@ -1,7 +1,15 @@
 ﻿@model List<DoctorScheduleListItemDto>
 <div id="replacetarget">
     <table class="table table-sm table-bordered">
-        <thead><tr><th>Day</th><th>Start</th><th>End</th><th>Slot (min)</th><th></th></tr></thead>
+        <thead>
+            <tr>
+                <th>Day</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Slot (min)</th>
+                <th></th>
+            </tr>
+        </thead>
         <tbody>
             @foreach (var s in Model ?? new())
             {
@@ -11,16 +19,20 @@
                     <td>@s.EndTime</td>
                     <td>@s.SlotDurationMinutes</td>
                     <td>
-                        <a href="/DoctorSchedules/AddEdit?id=@s.Id&doctorId=@ViewBag.DoctorId" data-modal>Edit</a> |
-                        <form method="post" action="/DoctorSchedules/Delete/@s.Id"
-                              data-sks-ajax="true" data-sks-target="#replacetarget" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="doctorId" value="@ViewBag.DoctorId" />
-                            <button type="submit" class="btn btn-link p-0"
-                                    onclick="return confirm('Are you sure you want to delete the record..?');">
-                                Delete
-                            </button>
-                        </form>
+                        @if (ViewBag.CanEdit == true)
+                        {
+                            <a href="/DoctorSchedules/AddEdit?id=@s.Id&doctorId=@ViewBag.DoctorId" data-modal>Edit</a>
+                            <text> | </text>
+                            <form method="post" action="/DoctorSchedules/Delete/@s.Id"
+                                  data-sks-ajax="true" data-sks-target="#replacetarget" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="doctorId" value="@ViewBag.DoctorId" />
+                                <button type="submit" class="btn btn-link p-0"
+                                        onclick="return confirm('Are you sure you want to delete the record..?');">
+                                    Delete
+                                </button>
+                            </form>
+                        }
                     </td>
                 </tr>
             }

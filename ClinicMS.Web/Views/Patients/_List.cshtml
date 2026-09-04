@@ -1,7 +1,8 @@
 ﻿@model ClinicMS.Shared.Common.PaginatedResult<ClinicMS.Application.DTOs.Patient.PatientListItemDto>
 
 <div id="pageContent">
-    <table class="table table-bordered table-hover">
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
         <thead class="table-dark">
             <tr>
                 <th>Patient No.</th>
@@ -62,10 +63,10 @@
             }
         </tbody>
     </table>
-
+    </div>
     @if (Model.TotalPages > 1)
     {
-        <div class="ns-grid-pager" data-sks-target="#pageContent">
+        <div class="ns-grid-pager mobile-my-2" data-sks-target="#pageContent">
             <nav>
                 <ul class="pagination">
                     <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">

@@ -1,0 +1,40 @@
+﻿@model PaginatedResult<AuditLogListItemDto>
+@{
+    ViewData["Title"] = "Audit Log";
+}
+
+<h2>Audit Log</h2>
+
+<form id="searchFrom" method="get" action="@Url.Action("Grid")" data-sks-ajax="true" data-sks-target="#auditGrid" class="row g-2 mb-3">
+    <div class="col-md-3 mobile-my-2">
+        <input type="text" name="entityType" id="entityType" class="form-control" placeholder="Entity type (e.g. Appointment)" />
+    </div>
+    <div class="col-md-2 mobile-my-2">
+        <select name="auditAction" id="action" class="form-select" onchange="$('#searchFrom').submit()">
+            <option value="">All Actions</option>
+            <option value="0">Create</option>
+            <option value="1">Cancel</option>
+            <option value="2">Complete</option>
+            <option value="3">Pay</option>
+            <option value="4">CheckIn</option>
+            <option value="5">NoShow</option>
+        </select>
+    </div>
+    <div class="col-md-2 mobile-my-2">
+        <input type="date" name="fromDate" id="fromDate" class="form-control" onchange="$('#searchFrom').submit()" />
+    </div>
+    <div class="col-md-2 mobile-my-2">
+        <input type="date" name="toDate" id="toDate" class="form-control" onchange="$('#searchFrom').submit()" />
+    </div>
+    <div class="col-md-2 mobile-my-2">
+        <button type="submit" class="btn btn-primary w-100">Search</button>
+    </div>
+</form>
+
+<div id="replacetarget">
+    @await Html.PartialAsync("_Grid", Model)
+</div>
+
+@section Scripts {
+    <script src="~/js/CustomAjax.js"></script>
+}

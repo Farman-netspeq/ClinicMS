@@ -4,6 +4,7 @@ using ClinicMS.Shared.Common;
 using ClinicMS.Web.ApiClients;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace ClinicMS.Web.Controllers
 {
@@ -17,44 +18,39 @@ namespace ClinicMS.Web.Controllers
             _httpService = httpService;
         }
 
-        public IActionResult Index()
+        // Web DoctorsController
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var result = await _httpService.GetAsync<ApiResponseDto<PaginatedResult<DoctorListItemDto>>>(
+                "/api/doctors?PageNo=1&PageSize=10");
+            var depts = await _httpService.GetAsync<ApiResponseDto<List<DepartmentListItemDto>>>("/api/departments/active");
+            ViewBag.Departments = depts?.Data ?? new List<DepartmentListItemDto>();
+            ViewBag.CurrentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return View(result?.Data ?? new PaginatedResult<DoctorListItemDto>());
         }
 
         public async Task<IActionResult> List(DoctorFilterDto filter)
         {
-            var queryParams = new List<string>
-            {
-                $"PageNo={filter.PageNo}",
-                $"PageSize={filter.PageSize}"
-            };
+            var queryParams = new List<string> { $"PageNo={filter.PageNo}", $"PageSize={filter.PageSize}" };
 
             if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
-                queryParams.Add(
-                    $"SearchTerm={Uri.EscapeDataString(filter.SearchTerm)}");
-
+                queryParams.Add($"SearchTerm={Uri.EscapeDataString(filter.SearchTerm)}");
             if (!string.IsNullOrWhiteSpace(filter.DepartmentId))
                 queryParams.Add($"DepartmentId={filter.DepartmentId}");
-
             if (filter.IsActive.HasValue)
-                queryParams.Add(
-                    $"IsActive={filter.IsActive.Value.ToString().ToLower()}");
+                queryParams.Add($"IsActive={filter.IsActive.Value.ToString().ToLower()}");
 
             var result = await _httpService
                 .GetAsync<ApiResponseDto<PaginatedResult<DoctorListItemDto>>>(
                     $"/api/doctors?{string.Join("&", queryParams)}");
 
-            var data = result?.Data
-                ?? new PaginatedResult<DoctorListItemDto>();
+            var data = result?.Data ?? new PaginatedResult<DoctorListItemDto>();
 
-            // Get departments for filter dropdown
             var depts = await _httpService
-                .GetAsync<ApiResponseDto<List<DepartmentListItemDto>>>(
-                    "/api/departments/active");
+                .GetAsync<ApiResponseDto<List<DepartmentListItemDto>>>("/api/departments/active");
+            ViewBag.Departments = depts?.Data ?? new List<DepartmentListItemDto>();
 
-            ViewBag.Departments = depts?.Data
-                ?? new List<DepartmentListItemDto>();
+            ViewBag.CurrentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);  
 
             return PartialView("_List", data);
         }

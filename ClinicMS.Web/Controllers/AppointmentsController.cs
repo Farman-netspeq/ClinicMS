@@ -8,19 +8,22 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 namespace ClinicMS.Web.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,Doctor,Receptionist")]
     public class AppointmentsController : Controller
     {
         private readonly IHttpService _httpService;
-        public AppointmentsController(IHttpService httpService) => _httpService = httpService;
+        public AppointmentsController(IHttpService httpService)
+        {
+            _httpService = httpService;
+        }
 
         // ── INDEX ──────────────────────────────────────────
+        [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Index()
         {
             var filter = new AppointmentFilterDto();
             var result = await _httpService.PostAsync<ApiResponseDto<PaginatedResult<AppointmentListItemDto>>>(
                 "api/appointments/list", filter);
-
             return View(result?.Data ?? new PaginatedResult<AppointmentListItemDto>());
         }
 
@@ -28,6 +31,10 @@ namespace ClinicMS.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> List(AppointmentFilterDto filter)
         {
+            //if (User.IsInRole("Doctor") && !User.IsInRole("Admin") && !User.IsInRole("Receptionist")) { 
+            //    return Forbid();
+            //}
+
             var result = await _httpService.PostAsync<ApiResponseDto<PaginatedResult<AppointmentListItemDto>>>(
                 "api/appointments/list", filter);
 
@@ -82,9 +89,21 @@ namespace ClinicMS.Web.Controllers
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Cancel(string id, string cancelReason)
         {
-            var dto = new CancelAppointmentDto { CancelReason = cancelReason };
-            var result = await _httpService.PostAsync<ApiResponseDto<string>>($"api/appointments/{id}/cancel", dto);
-            return Json(new { success = result?.Success ?? false, message = result?.Message });
+            try
+            {
+                var dto = new CancelAppointmentDto { CancelReason = cancelReason };
+                var result = await _httpService.PostAsync<ApiResponseDto<string>>($"api/appointments/{id}/cancel", dto);
+                return Json(new
+                {
+                    success = result?.Success ?? false,
+                    message = result?.Message ?? "Cancel failed.",
+                    url = Url.Action("List")
+                });
+            }
+            catch (HttpRequestException ex)
+            {
+                return Json(new { success = false, message = ApiErrorHelper.ExtractApiMessage(ex.Message), url = "" });
+            }
         }
 
         // ══════════════════════════════════════════════════
@@ -156,38 +175,18 @@ namespace ClinicMS.Web.Controllers
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> CheckIn(string id)
         {
-            try
-            {
-                var result = await _httpService.PostAsync<ApiResponseDto<string>>(
-                    $"api/appointments/{id}/checkin", new { });
-                return Json(new { success = result?.Success ?? false, message = result?.Message });
-            }
-            catch (HttpRequestException ex)
-            {
-                return Json(new { success = false, message = ApiErrorHelper.ExtractApiMessage(ex.Message) });
-            }
+            await _httpService.PostAsync<ApiResponseDto<string>>($"api/appointments/{id}/checkin", new { });
+            return RedirectToAction("Index");
         }
 
-        // ── NO-SHOW ────────────────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> NoShow(string id)
         {
-            try
-            {
-                var result = await _httpService.PostAsync<ApiResponseDto<string>>(
-                    $"api/appointments/{id}/noshow", new { });
-                return Json(new { success = result?.Success ?? false, message = result?.Message });
-            }
-            catch (HttpRequestException ex)
-            {
-
-                return Json(new { success = false,  message = ApiErrorHelper.ExtractApiMessage(ex.Message) });
-            }
+            await _httpService.PostAsync<ApiResponseDto<string>>($"api/appointments/{id}/noshow", new { });
+            return RedirectToAction("Index");
         }
-
-        // ── COMPLETE ────────────────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Doctor")]
@@ -195,16 +194,23 @@ namespace ClinicMS.Web.Controllers
         {
             try
             {
-                var result = await _httpService.PostAsync<ApiResponseDto<string>>(
-                    $"api/appointments/{id}/complete", new { });
-                return Json(new { success = result?.Success ?? false, message = result?.Message });
+                var result = await _httpService.PostAsync<ApiResponseDto<string>>($"api/appointments/{id}/complete", new { });
+                if (result == null || !result.Success)
+                {
+                    TempData["Error"] = result?.Message ?? "Complete failed";
+                }
             }
-            catch (HttpRequestException ex)
+            catch (Exception ex)
             {
-                return Json(new { success = false, message = ApiErrorHelper.ExtractApiMessage(ex.Message) });
+                Console.WriteLine(ex + "Complete appointment {Id} failed" + id);
+                TempData["Error"] = "Something went wrong completing appointment";
             }
-        }
 
+            if (User.IsInRole("Doctor") && !User.IsInRole("Admin"))
+                return RedirectToAction("MyAppointments");
+
+            return RedirectToAction("Index");
+        }
         // ── DOCTOR DASHBOARD ─────────────────────────────────────
         [Authorize(Roles = "Admin,Doctor")]
         public async Task<IActionResult> MyAppointments(DateTime? date)
@@ -215,5 +221,8 @@ namespace ClinicMS.Web.Controllers
 
             return View(result?.Data ?? new List<AppointmentListItemDto>());
         }
+        [HttpGet]
+        [Authorize(Roles = "Admin,Receptionist")]
+        public IActionResult CancelForm(string id) => PartialView("_Cancel", new CancelAppointmentDto { Id = id });
     }
 }

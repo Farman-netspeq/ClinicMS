@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ClinicMS.Infrastructure.Data.Configurations
 {
-    public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
+    public class InvoiceConfiguration : IEntityTypeConfiguration<utblCMSInvoices>
     {
-        public void Configure(EntityTypeBuilder<Invoice> builder)
+        public void Configure(EntityTypeBuilder<utblCMSInvoices> builder)
         {
             builder.ToTable("utblCMSInvoices");
 
@@ -28,7 +28,7 @@ namespace ClinicMS.Infrastructure.Data.Configurations
 
             builder.HasOne(e => e.Appointment)
                 .WithOne()
-                .HasForeignKey<Invoice>(e => e.AppointmentId)
+                .HasForeignKey<utblCMSInvoices>(e => e.AppointmentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasMany(e => e.Items)

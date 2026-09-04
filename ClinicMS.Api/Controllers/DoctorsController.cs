@@ -143,5 +143,20 @@ namespace ClinicMS.Api.Controllers
             return Ok(ApiResponseDto<string>
                 .SuccessResponse("Doctor reactivated"));
         }
+        [HttpGet("by-user/{userId}", Name = "GetDoctorByUserId")]
+        public async Task<IActionResult> GetByUserId(string userId)
+        {
+            var result = await _service.GetDoctorIdByUserIdAsync(userId);
+            if (!result.IsSuccess)
+                return NotFound(ApiResponseDto<string>.ErrorResponse(result.ErrorMessage));
+
+            // build directly, skip ambiguous overload
+            return Ok(new ApiResponseDto<string>
+            {
+                Success = true,
+                Data = result.Data!,
+                Message = "Success"
+            });
+        }
     }
 }

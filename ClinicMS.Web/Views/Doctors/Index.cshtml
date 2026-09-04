@@ -1,60 +1,42 @@
-﻿@{
+﻿@model PaginatedResult<DoctorListItemDto>
+@{
     ViewData["Title"] = "Doctors";
 }
-<input type="hidden" id="ErrMsgHiddenField" value="" />
-<div class="row mb-3">
-    <div class="col">
-        <h4>👨‍⚕️ Doctors</h4>
-    </div>
+
+<div class="row mb-3 g-2">
+    <div class="col"><h4>👨‍⚕️ Doctors</h4></div>
     @if (User.IsInRole("Admin"))
     {
-        <div class="col text-end">
-            <a href="/Doctors/Add"
-               data-modal
-               class="btn btn-primary">
-                + Add Doctor
-            </a>
-        </div>
+        <div class="col-auto ms-auto"><a href="/Doctors/Add" data-modal class="btn btn-primary">+ Add Doctor</a></div>
     }
 </div>
 
-<form id="searchFrom" method="get">
+<form id="searchFrom" method="get" action="/Doctors/List" data-sks-ajax="true" data-sks-target="#replacetarget">
     <div class="row mb-3">
         <div class="col-md-3">
-            <input type="text"
-                   name="SearchTerm"
-                   class="form-control"
-                   placeholder="Search by name, license..." />
+            <input type="text" name="SearchTerm" class="form-control" placeholder="Search by name, license..." />
         </div>
-        <div class="col-md-3">
-            @*
-               Department filter dropdown
-               Options loaded by doctors.js on page load
-               via AJAX call to /api/departments/active
-            *@
-            <select name="DepartmentId"
-                    id="deptFilter"
-                    class="form-control">
+        <div class="col-md-3 mobile-my-2">
+            <select name="DepartmentId" class="form-control" onchange="$('#searchFrom').submit()">
                 <option value="">All Departments</option>
+                @foreach (var d in ViewBag.Departments as List<DepartmentListItemDto> ?? new())
+                {
+                    <option value="@d.Id">@d.Name</option>
+                }
             </select>
         </div>
-        <div class="col-md-2">
-            <select name="IsActive" class="form-control">
+        <div class="col-md-2 mobile-my-2">
+            <select name="IsActive" class="form-control" onchange="$('#searchFrom').submit()">
                 <option value="">All Status</option>
                 <option value="true">Active</option>
                 <option value="false">Inactive</option>
             </select>
         </div>
         <div class="col-md-2">
-            <button type="submit" class="btn btn-secondary">
-                Search
-            </button>
+            <button type="submit" class="btn btn-secondary w-100">Search</button>
         </div>
     </div>
 </form>
-
-<div id="pageContent"></div>
-
-@section Scripts {
-    <script src="~/js/doctors.js"></script>
-}
+<div id="replaceTarget">
+    <partial name="_List" model="Model" />
+</div>

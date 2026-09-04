@@ -15,42 +15,50 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/">🏥 ClinicMS</a>
-            @if (User.Identity?.IsAuthenticated == true)
-            {
-                <div class="navbar-nav mr-auto">
-                    <a class="nav-link text-white"
-                       href="/Departments/Index">Departments</a>
-                    <a class="nav-link text-white"
-                       href="/Doctors/Index">Doctors</a>
-                    <a class="nav-link text-white" href="/Patients/Index">Patients</a>
-                    @if (User.IsInRole("Doctor"))
-                    {
-                        <a class="nav-link text-white"
-                           href="/Appointments/MyAppointments">My Appointments</a>
-                    }
-                    else
-                    {
-                        <a class="nav-link text-white"
-                           href="/Appointments/Index">Appointments</a>
+            <a class="navbar-brand" href="/Dashboard/Index">🏥 ClinicMS</a>
 
-                        @if (User.IsInRole("Admin") || User.IsInRole("Receptionist"))
-                        {
-                            <a class="nav-link text-white"
-                               href="/Invoices/Index">Invoices</a>
-                        }
-                    }
-                </div>
-            }
-            <div class="navbar-nav ml-auto">
+            <button class="navbar-toggler" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+                    aria-controls="mainNavbar" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="mainNavbar">
                 @if (User.Identity?.IsAuthenticated == true)
                 {
-                    <span class="navbar-text text-white me-3">
-                        @User.Identity.Name
-                        (@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value)
-                    </span>
-                    <a class="btn btn-outline-light btn-sm" href="/Auth/Logout">Logout</a>
+                    <div class="navbar-nav me-auto">
+                        <a class="nav-link text-white" href="/Departments/Index">Departments</a>
+                        <a class="nav-link text-white" href="/Doctors/Index">Doctors</a>
+                        <a class="nav-link text-white" href="/Patients/List">Patients</a>
+                        @if (User.IsInRole("Doctor"))
+                        {
+                            <a class="nav-link text-white" href="/Appointments/MyAppointments">My Appointments</a>
+                        }
+                        else
+                        {
+                            <a class="nav-link text-white" href="/Appointments/Index">Appointments</a>
+                            @if (User.IsInRole("Admin") || User.IsInRole("Receptionist"))
+                            {
+                                <a class="nav-link text-white" href="/Invoices/Index">Invoices</a>
+                            }
+                        }
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a class="nav-link text-white" href="/AuditLogs/Index">Audit Log</a>
+                        }
+                    </div>
                 }
+                <div class="navbar-nav ms-auto">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <span class="navbar-text text-white me-3">
+                            @User.Identity.Name
+                            (@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value)
+                        </span>
+                        <a class="btn btn-outline-light btn-sm" href="/Auth/Logout">Logout</a>
+                    }
+                </div>
             </div>
         </div>
     </nav>
@@ -114,7 +122,8 @@
     <script src="~/lib/toastr/toastr.min.js"></script>
     <script src="~/js/CustomAjax.js"></script>
     <script src="~/js/site.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
     @RenderSection("Scripts", required: false)
 
 </body>

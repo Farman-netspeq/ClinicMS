@@ -95,7 +95,9 @@
         return false;
     };
     $("body").on("click", "a.ns-page-link", getPage);
-
+    $("body").on("change", "#searchFrom select, #searchFrom input[type='date']", function () {
+        $(this).closest("#searchFrom").find("a.ns-page-link").first().trigger("click");
+    });
     var getPageForDDL = function () {
         var TargetURL = $(this).parent().attr("data-sks-actionlink");
         if (TargetURL.indexOf("?") > -1) {
@@ -452,6 +454,7 @@ $(function () {
         $('#AddEditModalContent').load(this.href, function () {
             $('#AddEditModal').modal('show');
             bindForm(this);
+
         });
         return false;
     });
@@ -462,9 +465,12 @@ $(function () {
     $(".container-fluid").on("click", "button[data-modal]", function (e) {
         // hide dropdown if any (this is used wehen invoking modal from link in bootstrap dropdown )
         //$(e.target).closest('.btn-group').children('.dropdown-toggle').dropdown('toggle');
+
         $('#AddEditModalContent').load(this.href, function () {
             $('#AddEditModal').modal('show');
             bindForm(this);
+
+
         });
         return false;
     });
@@ -472,7 +478,17 @@ $(function () {
 
 
 function bindForm(dialog) {
+
+    var $form = $('form', dialog);
+    if ($.validator && $.validator.unobtrusive) {
+        $form.removeData("validator").removeData("unobtrusiveValidation");
+        $.validator.unobtrusive.parse($form);
+    }
+
     $('form', dialog).submit(function () {
+        if (!$form.valid()) {
+            return false;
+        }
         $.ajax({
             url: this.action,
             type: this.method,

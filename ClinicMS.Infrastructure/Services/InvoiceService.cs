@@ -2,6 +2,7 @@
 using System.Text.Json;
 using ClinicMS.Application.DTOs.Invoice;
 using ClinicMS.Application.Interfaces;
+using ClinicMS.Domain.Enums;
 using ClinicMS.Infrastructure.Data;
 using ClinicMS.Shared.Common;
 using Microsoft.Data.SqlClient;
@@ -13,11 +14,13 @@ namespace ClinicMS.Infrastructure.Services
     public class InvoiceService : IInvoiceService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IAuditService _auditService;
         private readonly ILogger<InvoiceService> _logger;
 
-        public InvoiceService(ApplicationDbContext context, ILogger<InvoiceService> logger)
+        public InvoiceService(ApplicationDbContext context, IAuditService auditService, ILogger<InvoiceService> logger)
         {
             _context = context;
+            _auditService = auditService;
             _logger = logger;
         }
 
@@ -121,7 +124,7 @@ namespace ClinicMS.Infrastructure.Services
             }
         }
 
-        public async Task<Result<string>> GenerateAsync(InvoiceRequestDto dto)
+        public async Task<Result<string>> GenerateAsync(InvoiceRequestDto dto, string userId)
         {
             try
             {
@@ -157,7 +160,16 @@ namespace ClinicMS.Infrastructure.Services
                 var invoiceNumber = newInvoiceNumberParam.Value?.ToString() ?? string.Empty;
 
                 _logger.LogInformation("Invoice generated: {Id} - {Number} for appointment {AppointmentId}",
-                    id, invoiceNumber, dto.AppointmentId);
+                      id, invoiceNumber, dto.AppointmentId);
+
+                var userNameParam = new SqlParameter("@UserId", userId);
+                var userNameResults = await _context.Database
+                    .SqlQueryRaw<string>("EXEC udspUserGetUserName @UserId", userNameParam)
+                    .ToListAsync();
+                var userName = userNameResults.FirstOrDefault() ?? userId;
+
+                await _auditService.LogAsync(userId, userName, AuditAction.Create, "Invoice", id,
+                    $"{invoiceNumber} generated");
 
                 return Result<string>.Ok(id);
             }
@@ -168,7 +180,7 @@ namespace ClinicMS.Infrastructure.Services
             }
         }
 
-        public async Task<Result> PayAsync(string id, InvoicePayDto dto)
+        public async Task<Result> PayAsync(string id, InvoicePayDto dto, string userId)
         {
             try
             {
@@ -191,6 +203,16 @@ namespace ClinicMS.Infrastructure.Services
                     return Result.Fail(errorMessage);
 
                 _logger.LogInformation("Invoice paid: {Id} via {Method}", id, dto.PaymentMethod);
+
+                var userNameParam = new SqlParameter("@UserId", userId);
+                var userNameResults = await _context.Database
+                    .SqlQueryRaw<string>("EXEC udspUserGetUserName @UserId", userNameParam)
+                    .ToListAsync();
+                var userName = userNameResults.FirstOrDefault() ?? userId;
+
+                await _auditService.LogAsync(userId, userName, AuditAction.Pay, "Invoice", id,
+                    $"Paid via {dto.PaymentMethod}");
+
                 return Result.Ok();
             }
             catch (Exception ex)

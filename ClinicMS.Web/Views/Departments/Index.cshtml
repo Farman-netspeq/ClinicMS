@@ -1,49 +1,38 @@
-﻿@{
+﻿@model ClinicMS.Shared.Common.PaginatedResult<ClinicMS.Application.DTOs.Department.DepartmentListItemDto>
+@{
     ViewData["Title"] = "Departments";
 }
-<input type="hidden" id="ErrMsgHiddenField" value="" />
 
-<div class="row mb-3">
-    <div class="col">
-        <h4>🏥 Departments</h4>
-    </div>
+<div class="row mb-3 g-2">
+    <div class="col"><h4>🏥 Departments</h4></div>
     @if (User.IsInRole("Admin"))
     {
-        <div class="col text-end">
-            <a href="/Departments/Add"
-               data-modal
-               class="btn btn-primary">
-                + Add Department
-            </a>
+        <div class="col-auto ms-auto">
+            <a href="/Departments/Add" data-modal class="btn btn-primary">+ Add Department</a>
         </div>
     }
 </div>
-<form id="searchFrom" method="get">
+
+<form id="searchFrom" method="get" action="/Departments/List" data-sks-ajax="true" data-sks-target="#replacetarget">
     <div class="row mb-3">
         <div class="col-md-4">
-            <input type="text"
-                   name="SearchTerm"
-                   class="form-control"
-                   placeholder="Search by name..." />
+            <input type="text" name="SearchTerm" class="form-control" placeholder="Search by name..." />
         </div>
-        <div class="col-md-3">
-            <select name="IsActive" class="form-control">
+        <div class="col-md-3 mobile-my-2">
+            <select name="IsActive" class="form-control" onchange="$('#searchFrom').submit()">
                 <option value="">All Status</option>
                 <option value="true">Active</option>
                 <option value="false">Inactive</option>
             </select>
         </div>
         <div class="col-md-2">
-            <button type="submit" class="btn btn-secondary">
-                Search
-            </button>
+            <button type="submit" class="btn btn-secondary w-100">Search</button>
         </div>
     </div>
 </form>
-
-<div id="pageContent"></div>
-
+<div id="replaceTarget">
+    <partial name="_List" model="Model" />
+</div>
 @section Scripts {
-    <script src="~/js/site.js"></script>
-    <script src="~/js/departments.js"></script>
+    <partial name="_ValidationScriptsPartial" />
 }

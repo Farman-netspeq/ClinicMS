@@ -318,5 +318,22 @@ namespace ClinicMS.Infrastructure.Services
 
             return (bool)(existsParam.Value ?? false);
         }
+        public async Task<Result<string>> GetDoctorIdByUserIdAsync(string userId)
+        {
+            try
+            {
+                var userIdParam = new SqlParameter("@ApplicationUserId", userId);
+                var results = await _context.Set<DoctorResponseDto>()
+                    .FromSqlRaw("EXEC udspDoctorsGetByUserId @ApplicationUserId", userIdParam)
+                    .ToListAsync();
+                var dto = results.FirstOrDefault();
+                return dto == null ? Result<string>.Fail("Doctor not found") : Result<string>.Ok(dto.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resolving doctor for user {UserId}", userId);
+                return Result<string>.Fail("Failed to resolve doctor");
+            }
+        }
     }
 }

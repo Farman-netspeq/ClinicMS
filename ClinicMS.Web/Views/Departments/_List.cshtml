@@ -6,7 +6,8 @@
        data-msg-code="@TempData["MsgCode"]"
        value="@TempData["Msg"]" />
 
-<table class="table table-bordered table-hover">
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
     <thead class="table-dark">
         <tr>
             <th>Name</th>
@@ -73,10 +74,10 @@
         }
     </tbody>
 </table>
-
+    </div>
 @if (Model.TotalPages > 1)
 {
-    <div class="ns-grid-pager"
+        <div class="ns-grid-pager mobile-my-2"
          data-sks-target="#replacetarget">
 
         <nav>
@@ -114,7 +115,7 @@
 </nav>
 
 @* Total count info *@
-<small class="text-muted">
+<small class="text-muted ">
     Showing @((Model.Page - 1) * Model.PageSize + 1)
     - @(Math.Min(Model.Page * Model.PageSize, Model.TotalCount))
     of @Model.TotalCount departments

@@ -17,6 +17,7 @@ namespace ClinicMS.Api.Controllers
 
         // grid list — POST bc filter is complex obj, avoids long querystring
         [HttpPost("list", Name = "GetAppointmentsPaged")]
+        [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> GetList([FromBody] AppointmentFilterDto filter)
         {
             var result = await _service.GetAppointmentsAsync(filter);
@@ -74,7 +75,8 @@ namespace ClinicMS.Api.Controllers
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Cancel(string id, [FromBody] CancelAppointmentDto dto)
         {
-            var result = await _service.CancelAppointmentAsync(id, dto.CancelReason);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var result = await _service.CancelAppointmentAsync(id, dto.CancelReason, userId);
             if (!result.IsSuccess)
                 return BadRequest(ApiResponseDto<string>.ErrorResponse(result.ErrorMessage));
 
@@ -85,7 +87,8 @@ namespace ClinicMS.Api.Controllers
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> CheckIn(string id)
         {
-            var result = await _service.CheckInAppointmentAsync(id);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var result = await _service.CheckInAppointmentAsync(id, userId);
             if (!result.IsSuccess)
                 return BadRequest(ApiResponseDto<string>.ErrorResponse(result.ErrorMessage));
 
@@ -112,7 +115,8 @@ namespace ClinicMS.Api.Controllers
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> NoShow(string id)
         {
-            var result = await _service.MarkNoShowAsync(id);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var result = await _service.MarkNoShowAsync(id, userId);
             if (!result.IsSuccess)
                 return BadRequest(ApiResponseDto<string>.ErrorResponse(result.ErrorMessage));
 
