@@ -47,13 +47,13 @@ namespace ClinicMS.Infrastructure.Services
             var role = roles.FirstOrDefault() ?? string.Empty;
 
             var token = GenerateJwtToken(user, role);
-            var refreshToken = await GenerateAndSaveRefreshTokenAsync(user.Id);
-
+            var (refreshToken, refreshTokenExpiration) = await GenerateAndSaveRefreshTokenAsync(user.Id);
             var response = new LoginResponseDto
             {
                 UserId = user.Id,
                 Token = token,
                 RefreshToken = refreshToken,
+                RefreshTokenExpiration = refreshTokenExpiration,
                 FullName = user.FullName,
                 Email = user.Email ?? string.Empty,
                 Role = role,
@@ -80,7 +80,7 @@ namespace ClinicMS.Infrastructure.Services
 
             // Revoke old refresh token, issue new one (rotation - more secure)
             storedToken.IsRevoked = true;
-            var newRefreshToken = await GenerateAndSaveRefreshTokenAsync(user.Id);
+            var (newRefreshToken, refreshTokenExpiration) = await GenerateAndSaveRefreshTokenAsync(user.Id);
 
             var newAccessToken = GenerateJwtToken(user, role);
 
@@ -88,6 +88,7 @@ namespace ClinicMS.Infrastructure.Services
             {
                 Token = newAccessToken,
                 RefreshToken = newRefreshToken,
+                RefreshTokenExpiration = refreshTokenExpiration,
                 FullName = user.FullName,
                 Email = user.Email ?? string.Empty,
                 Role = role,
@@ -97,20 +98,21 @@ namespace ClinicMS.Infrastructure.Services
             return Result<LoginResponseDto>.Ok(response);
         }
 
-        private async Task<string> GenerateAndSaveRefreshTokenAsync(string userId)
+        private async Task<(string Token, DateTime ExpiresAt)> GenerateAndSaveRefreshTokenAsync(string userId)
         {
+            var expiresAt = DateTime.UtcNow.AddDays(7);
             var refreshToken = new utblCMSRefreshToken
             {
                 Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
                 UserId = userId,
-                ExpiresAt = DateTime.UtcNow.AddDays(7),
+                ExpiresAt = expiresAt,
                 IsRevoked = false,
                 TransDate = DateTime.UtcNow
             };
             _context.RefreshTokens.Add(refreshToken);
             await _context.SaveChangesAsync();
 
-            return refreshToken.Token;
+            return (refreshToken.Token, expiresAt);
         }
 
         private string GenerateJwtToken(ApplicationUser user, string role)

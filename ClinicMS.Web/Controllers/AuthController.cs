@@ -61,13 +61,21 @@ namespace ClinicMS.Web.Controllers
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, loginData.UserId),
-                new Claim(ClaimTypes.NameIdentifier, loginData.Email),
-                new Claim(ClaimTypes.Name, loginData.FullName),
                 new Claim(ClaimTypes.Email, loginData.Email),
+                new Claim(ClaimTypes.Name, loginData.FullName),
                 new Claim(ClaimTypes.Role, loginData.Role),
-                new Claim("JwtToken", loginData.Token)
+                new Claim("JwtToken", loginData.Token),
+                new Claim("TokenExpiry", loginData.Expiry.ToString("o"))
             };
 
+            if (!string.IsNullOrEmpty(result.Data.RefreshToken))
+            {
+                claims.Add(new Claim("refresh_token", result.Data.RefreshToken));
+            }
+            if (result.Data.RefreshTokenExpiration.HasValue)
+            {
+                claims.Add(new Claim("refresh_token_expiration", result.Data.RefreshTokenExpiration.Value.ToString("o")));
+            }
             var identity = new ClaimsIdentity(
                 claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
@@ -78,7 +86,7 @@ namespace ClinicMS.Web.Controllers
                 new AuthenticationProperties
                 {
                     IsPersistent = true,
-                    ExpiresUtc = loginData.Expiry
+                    ExpiresUtc = loginData.RefreshTokenExpiration
                 });
 
             return RedirectToAction("Index", "Dashboard");

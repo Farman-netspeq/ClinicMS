@@ -1,4 +1,9 @@
-﻿using System.Net.Http.Headers;
+﻿using ClinicMS.Application.DTOs;
+using ClinicMS.Shared.Common;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Net.Http.Headers;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 
@@ -25,10 +30,29 @@ namespace ClinicMS.Web.ApiClients
         }
 
         // Attaches JWT token to request header.
-        private void AttachToken()
+        private async Task AttachToken()
         {
-            var token = _httpContextAccessor.HttpContext?.User
-                .FindFirst("JwtToken")?.Value;
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null) { return; }
+
+            var expiryClaim = httpContext.User.FindFirst("TokenExpiry")?.Value;
+            string? token;
+            bool isTokenExpired = false;
+            if (!string.IsNullOrEmpty(expiryClaim) &&
+        DateTime.TryParse(expiryClaim, null, System.Globalization.DateTimeStyles.RoundtripKind, out var expiryTime))
+            {
+                isTokenExpired = DateTime.UtcNow >= expiryTime.ToUniversalTime().AddSeconds(-30);
+            }
+            if (isTokenExpired)
+            {
+                token = await TryRefreshTokenAsync();
+            }
+            else
+            {
+                token = httpContext.User
+                    .FindFirst("JwtToken")?.Value;
+            }
+
 
             if (!string.IsNullOrEmpty(token))
             {
@@ -39,7 +63,7 @@ namespace ClinicMS.Web.ApiClients
 
         public async Task<T?> GetAsync<T>(string endpoint)
         {
-            AttachToken();
+            await AttachToken();
             var response = await _httpClient.GetAsync(endpoint);
             var json = await response.Content.ReadAsStringAsync();
 
@@ -53,7 +77,7 @@ namespace ClinicMS.Web.ApiClients
 
         public async Task<T?> PostAsync<T>(string endpoint, object data)
         {
-            AttachToken();
+            await AttachToken();
             var json = JsonSerializer.Serialize(data);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -71,7 +95,7 @@ namespace ClinicMS.Web.ApiClients
 
         public async Task<T?> PutAsync<T>(string endpoint, object data)
         {
-            AttachToken();
+            await AttachToken();
             var json = JsonSerializer.Serialize(data);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -88,10 +112,73 @@ namespace ClinicMS.Web.ApiClients
 
         public async Task<T?> DeleteAsync<T>(string endpoint)
         {
-            AttachToken();
+            await AttachToken();
             var response = await _httpClient.DeleteAsync(endpoint);
             var responseJson = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<T>(responseJson, _jsonOptions);
         }
+
+
+        private async Task<string?> TryRefreshTokenAsync()
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            var refreshToken = httpContext?.User.FindFirst("refresh_token")?.Value;
+            if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                await httpContext!.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return null;
+            }
+            var payload = new RefreshRequestDto
+            {
+                RefreshToken = refreshToken
+            };
+            var json = JsonSerializer.Serialize(payload);
+            using var content = new StringContent(json, Encoding.UTF8, "application/json");
+            using var response = await _httpClient.PostAsync("/api/auth/refresh", content);
+            if (!response.IsSuccessStatusCode)
+            {
+                await httpContext!.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return null;
+            }
+            var text = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<ApiResponseDto<LoginResponseDto>>(text, _jsonOptions);
+            if (result == null || !result.Success || result.Data == null)
+            {
+                await httpContext!.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return null;
+            }
+            await UpdateCookieAsync(httpContext!, result.Data);
+            return result.Data.Token;
+        }
+        public static async Task UpdateCookieAsync(HttpContext httpContext, LoginResponseDto data)
+        {
+            var oldPrincipal = httpContext.User;
+            var claims = oldPrincipal.Claims.Where(
+                c => c.Type != "JwtToken"
+                && c.Type != "TokenExpiry"
+                && c.Type != "refresh_token"
+                && c.Type != "refresh_token_expiration"
+                ).ToList();
+            claims.Add(new Claim("JwtToken", data.Token));
+            claims.Add(new Claim("TokenExpiry", data.Expiry.ToString("o")));
+            if (!string.IsNullOrEmpty(data.RefreshToken))
+            {
+                claims.Add(new Claim("refresh_token", data.RefreshToken));
+            }
+            if (data.RefreshTokenExpiration.HasValue)
+            {
+                claims.Add(new Claim("refresh_token_expiration", data.RefreshTokenExpiration.Value.ToString("o")));
+            }
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var newPrincipal = new ClaimsPrincipal(identity);
+            httpContext.User = newPrincipal;
+            await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, newPrincipal, new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = data.RefreshTokenExpiration
+            });
+        }
+
     }
 }
+
