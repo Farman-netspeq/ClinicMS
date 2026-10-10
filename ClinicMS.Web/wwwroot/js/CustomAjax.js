@@ -2,14 +2,14 @@
     //**************** JS to show loading progress during ajax call *********************//
     $(document).bind("ajaxStart.box-body", function () {
         $("#ajaxLoading").css("display", "block");
-        $("#ajaxLoading").css("top", "50%");
-        $("#ajaxLoading").css("left", "50%");
-        $("#ajaxLoading").css("position", "fixed");
-        $("#ajax-backdrop").css("display", "block");
+        // $("#ajaxLoading").css("top", "50%");
+        // $("#ajaxLoading").css("left", "50%");
+        // $("#ajaxLoading").css("position", "fixed");
+        //$("#ajax-backdrop").css("display", "block");
     });
     $(document).bind("ajaxStop.box-body", function () {
         $("#ajaxLoading").css("display", "none");
-        $("#ajax-backdrop").css("display", "none");
+       // $("#ajax-backdrop").css("display", "none");
     })
     $(document).ajaxError(function (event, jqxhr, settings, thrownError) {
         if (jqxhr && jqxhr.status === 401) {
@@ -219,7 +219,7 @@
         });
         return false;
     };
-    $("form[data-sks-ajax='true']").submit(ajaxFormSubmit);
+    $("body").on("submit", "form[data-sks-ajax='true']", ajaxFormSubmit);
     var ajaxCustomFormSubmit = function () {
 
         var $form = $(this);
@@ -498,6 +498,7 @@ function bindForm(dialog) {
                     // JSON response
                     if (result.success) {
                         $('#AddEditModal').modal('hide');
+
                         $('#replacetarget').load(result.url);
                     } else {
                         toastr.error(result.message || 'Save failed.');

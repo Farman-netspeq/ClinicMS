@@ -25,5 +25,8 @@ namespace ClinicMS.Application.Interfaces
         Task<Result<List<DoctorListItemDto>>> GetDoctorsByDepartmentAsync(
             string departmentId);
         Task<Result<string>> GetDoctorIdByUserIdAsync(string userId);
+
+        //test query method
+        Task<Result<List<string>>> GetTestQueryAsync();
     }
 }

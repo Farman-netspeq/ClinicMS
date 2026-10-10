@@ -1,0 +1,97 @@
+﻿@model PaginatedResult<AuditLogListItemDto>
+
+<div id="auditGrid">
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr><th>Date</th><th>User</th><th>Action</th><th>Entity</th><th>Entity Id</th><th>Details</th></tr>
+            </thead>
+            <tbody>
+                @if (!Model.Items.Any())
+                {
+                    <tr><td colspan="6" class="text-center">No audit records found</td></tr>
+                }
+                else
+                {
+                    @foreach (var log in Model.Items)
+                    {
+                        <tr>
+                            <td>@log.TransDate.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@log.UserName</td>
+                            <td>@log.Action</td>
+                            <td>@log.EntityType</td>
+                            <td>@log.EntityId</td>
+                            <td>@log.Details</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.TotalPages > 1)
+    {
+        <div class="ns-grid-pager mobile-my-2"
+             data-sks-target="#auditGrid">
+
+            <nav>
+                <ul class="pagination">
+                    @* Previous button *@
+                    <li class="page-item @(!Model.HasPreviousPage
+                                                                ? "disabled" : "")">
+                        <a class="page-link ns-page-link"
+                           href="@Url.Action("Grid", new { pageNo = Model.Page - 1 })">
+                            «
+                        </a>
+                    </li>
+
+                    @* Page number buttons *@
+                    @{
+                        int current = Model.Page;
+                        int total = Model.TotalPages;
+                        int window = 1; // how many neighbors each side of current page to show
+                        int? lastShown = null;
+                    }
+                    @for (int i = 1; i <= total; i++)
+                    {
+                        bool show = (i == 1) || (i == total) || (i >= current - window && i <= current + window);
+
+                        if (show)
+                        {
+                            @if (lastShown.HasValue && i - lastShown.Value > 1)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+                            <li class="page-item @(i == current ? "active" : "")">
+                                <a class="page-link ns-page-link" href="@Url.Action("Grid", new { pageNo = @i })">@i</a>
+                            </li>
+                            lastShown = i;
+                        }
+                    }
+
+
+
+            
+
+            @* Next button *@
+            <li class="page-item @(!Model.HasNextPage
+                                                ? "disabled" : "")">
+                <a class="page-link ns-page-link"
+                   href="@Url.Action("Grid", new { pageNo = Model.Page + 1 })">
+                    »
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    @* Total count info *@
+    <small class="text-muted ">
+        Showing @((Model.Page - 1) * Model.PageSize + 1)
+        - @(Math.Min(Model.Page * Model.PageSize, Model.TotalCount))
+        of @Model.TotalCount departments
+    </small>
+</div>
+}
+
+</div>

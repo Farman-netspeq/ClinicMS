@@ -46,10 +46,10 @@ namespace ClinicMS.Infrastructure.Services
                 var countToDateParam = new SqlParameter("@ToDate", (object?)filter.ToDate ?? DBNull.Value);
 
                 var countResult = (await _context.Set<InvoiceCountResultDto>()
-      .FromSqlRaw("EXEC udspInvoicesPagedCount @SearchTerm, @Status, @FromDate, @ToDate",
-          countSearchTermParam, countStatusParam, countFromDateParam, countToDateParam)
-      .ToListAsync())
-      .FirstOrDefault();
+                  .FromSqlRaw("EXEC udspInvoicesPagedCount @SearchTerm, @Status, @FromDate, @ToDate",
+                      countSearchTermParam, countStatusParam, countFromDateParam, countToDateParam)
+                  .ToListAsync())
+                  .FirstOrDefault();
                 var totalCount = countResult?.TotalCount ?? 0;
 
                 return Result<PaginatedResult<InvoiceListItemDto>>.Ok(new PaginatedResult<InvoiceListItemDto>

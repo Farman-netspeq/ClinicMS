@@ -54,7 +54,7 @@ namespace ClinicMS.Web.Controllers
             var data = result?.Data
                 ?? new PaginatedResult<DepartmentListItemDto>();
 
-            return PartialView("_List", data);
+            return PartialView("_pvList", data);
         }
         // GET /Departments/Add
         // Called when clicking [+ Add New] button
@@ -62,7 +62,7 @@ namespace ClinicMS.Web.Controllers
         public IActionResult Add()
         {
             // Empty DTO = blank form
-            return PartialView("_AddEdit",
+            return PartialView("_pvAddEdit",
                 new DepartmentRequestDto());
         }
 
@@ -110,7 +110,7 @@ namespace ClinicMS.Web.Controllers
                     $"/api/departments/{id}");
 
             if (result == null || !result.Success)
-                return PartialView("_AddEdit",
+                return PartialView("_pvAddEdit",
                     new DepartmentRequestDto());
 
             // Map ResponseDto → RequestDto for edit form
@@ -122,7 +122,7 @@ namespace ClinicMS.Web.Controllers
                 IsActive = result.Data.IsActive
             };
 
-            return PartialView("_AddEdit", dto);
+            return PartialView("_pvAddEdit", dto);
         }
 
         // POST /Departments/Edit/{id}
@@ -135,7 +135,7 @@ namespace ClinicMS.Web.Controllers
             dto.Id = id;
 
             if (!ModelState.IsValid)
-                return PartialView("_AddEdit", dto);
+                return PartialView("_pvAddEdit", dto);
 
             var result = await _httpService
                 .PutAsync<ApiResponseDto<string>>(

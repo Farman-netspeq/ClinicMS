@@ -36,7 +36,7 @@ namespace ClinicMS.Web.Controllers
                 ToDate = toDate
             };
             var data = await LoadGridAsync(filter);
-            return PartialView("_Grid", data);
+            return PartialView("_pvGrid", data);
         }
 
         private async Task<PaginatedResult<AuditLogListItemDto>> LoadGridAsync(AuditLogFilterDto filter)

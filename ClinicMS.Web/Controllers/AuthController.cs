@@ -68,7 +68,7 @@ namespace ClinicMS.Web.Controllers
                 new Claim("TokenExpiry", loginData.Expiry.ToString("o"))
             };
 
-            if (!string.IsNullOrEmpty(result.Data.RefreshToken))
+            if (!string.IsNullOrEmpty(result?.Data?.RefreshToken))
             {
                 claims.Add(new Claim("refresh_token", result.Data.RefreshToken));
             }

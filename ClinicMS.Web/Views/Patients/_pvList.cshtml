@@ -72,12 +72,32 @@
                     <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
                         <a class="page-link ns-page-link" href="/Patients/List?PageNo=@(Model.Page - 1)">«</a>
                     </li>
-                    @for (int i = 1; i <= Model.TotalPages; i++)
-                    {
-                        <li class="page-item @(i == Model.Page ? "active" : "")">
-                            <a class="page-link ns-page-link" href="/Patients/List?PageNo=@i">@i</a>
-                        </li>
+                    @{
+                        int current = Model.Page;
+                        int total = Model.TotalPages;
+                        int window = 1; // how many neighbors each side of current page to show
+                        int? lastShown = null;
                     }
+                    @for (int i = 1; i <= total; i++)
+                    {
+                        bool show = (i == 1) || (i == total) || (i >= current - window && i <= current + window);
+
+                        if (show)
+                        {
+                            @if (lastShown.HasValue && i - lastShown.Value > 1)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+                            <li class="page-item @(i == current ? "active" : "")">
+                                <a class="page-link ns-page-link" href="/Patients/List?PageNo=@i">@i</a>
+                            </li>
+                            lastShown = i;
+                        }
+                    }
+
+                  
                     <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
                         <a class="page-link ns-page-link" href="/Patients/List?PageNo=@(Model.Page + 1)">»</a>
                     </li>

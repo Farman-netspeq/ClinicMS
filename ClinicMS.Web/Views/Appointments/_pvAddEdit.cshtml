@@ -14,7 +14,7 @@
             <label>Patient <span class="text-danger">*</span></label>
             <select asp-for="PatientId" id="ddlPatient" class="form-control" required>
                 <option value="">-- Select Patient --</option>
-                @foreach (var p in ViewBag.Patients as List<PatientListItemDto> ?? new())
+                @foreach (var p in Model.Patients as List<PatientListItemDto> ?? new())
                 {
                     <option value="@p.Id">@p.FullName (@p.PatientNumber)</option>
                 }
@@ -27,7 +27,7 @@
             <select asp-for="DepartmentId" id="ddlDepartment" class="form-control dropdown-change" required
                     dataotflink="/Appointments/GetDoctorsByDepartment" dataotftarget="#ddlDoctor">
                 <option value="">-- Select Department --</option>
-                @foreach (var d in ViewBag.Departments as List<DepartmentListItemDto> ?? new())
+                @foreach (var d in Model.Departments as List<DepartmentListItemDto> ?? new())
                 {
                     <option value="@d.Id">@d.Name</option>
                 }
@@ -70,4 +70,4 @@
         <button type="submit" class="btn btn-success">Book</button>
     </div>
 </form>
-<partial name="_ValidationScriptsPartial" />
+<partial name="_pvValidationScriptsPartial" />

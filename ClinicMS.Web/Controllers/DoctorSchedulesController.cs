@@ -50,7 +50,8 @@ public class DoctorSchedulesController : Controller
         var result = await _httpService.GetAsync<ApiResponseDto<List<DoctorScheduleListItemDto>>>(
             $"api/doctorschedules/by-doctor/{doctorId}");
         ViewBag.DoctorId = doctorId;
-        return PartialView("_List", result?.Data ?? new List<DoctorScheduleListItemDto>());
+        ViewBag.CanEdit = User.IsInRole("Admin");
+        return PartialView("_pvList", result?.Data ?? new List<DoctorScheduleListItemDto>());
     }
 
     [HttpGet]
@@ -70,7 +71,7 @@ public class DoctorSchedulesController : Controller
                 dto.SlotDurationMinutes = result.Data.SlotDurationMinutes;
             }
         }
-        return PartialView("_AddEdit", dto);
+        return PartialView("_pvAddEdit", dto);
     }
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -84,7 +85,7 @@ public class DoctorSchedulesController : Controller
             if (result?.Success != true)
             {
                 ModelState.AddModelError("", result?.Message ?? "Save failed.");
-                return PartialView("_AddEdit", dto);
+                return PartialView("_pvAddEdit", dto);
             }
 
             return Json(new { success = true, url = Url.Action("List", new { doctorId = dto.DoctorId }) });
@@ -92,7 +93,7 @@ public class DoctorSchedulesController : Controller
         catch (HttpRequestException ex)
         {
             ModelState.AddModelError("", ApiErrorHelper.ExtractApiMessage(ex.Message));
-            return PartialView("_AddEdit", dto);
+            return PartialView("_pvAddEdit", dto);
         }
     }
 
@@ -106,6 +107,7 @@ public class DoctorSchedulesController : Controller
         var result = await _httpService.GetAsync<ApiResponseDto<List<DoctorScheduleListItemDto>>>(
             $"api/doctorschedules/by-doctor/{doctorId}");
         ViewBag.DoctorId = doctorId;
-        return PartialView("_List", result?.Data ?? new List<DoctorScheduleListItemDto>());
+        ViewBag.CanEdit = User.IsInRole("Admin");
+        return PartialView("_pvList", result?.Data ?? new List<DoctorScheduleListItemDto>());
     }
 }

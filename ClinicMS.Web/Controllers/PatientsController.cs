@@ -46,7 +46,7 @@ namespace ClinicMS.Web.Controllers
             bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
             if (isAjax)
             {
-                return PartialView("_List", result?.Data ?? new PaginatedResult<PatientListItemDto>());
+                return PartialView("_pvList", result?.Data ?? new PaginatedResult<PatientListItemDto>());
             }
 
             return View(result?.Data ?? new PaginatedResult<PatientListItemDto>());
@@ -74,7 +74,7 @@ namespace ClinicMS.Web.Controllers
                     dto.Address = result.Data.Address;
                 }
             }
-            return PartialView("_AddEdit", dto);
+            return PartialView("_pvAddEdit", dto);
         }
 
         // POST: /Patients/Save
@@ -85,7 +85,7 @@ namespace ClinicMS.Web.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return PartialView("_AddEdit", dto);
+                return PartialView("_pvAddEdit", dto);
             }
 
             try
@@ -99,7 +99,7 @@ namespace ClinicMS.Web.Controllers
                 if (result == null || !result.Success)
                 {
                     ModelState.AddModelError("", result?.Message ?? "Failed to save patient");
-                    return PartialView("_AddEdit", dto);
+                    return PartialView("_pvAddEdit", dto);
                 }
                
                 return Json(new { success = true, url = Url.Action("List") });
@@ -111,7 +111,7 @@ namespace ClinicMS.Web.Controllers
             catch (Exception ex)
             {
                 ModelState.AddModelError("", ex.Message);
-                return PartialView("_AddEdit", dto);
+                return PartialView("_pvAddEdit", dto);
             }
         }
 
@@ -127,7 +127,7 @@ namespace ClinicMS.Web.Controllers
             var result = await _httpService.GetAsync<ApiResponseDto<PaginatedResult<PatientListItemDto>>>(
                 $"api/patients?PageNo={filter.PageNo}&PageSize={filter.PageSize}");
 
-            return PartialView("_List", result?.Data ?? new PaginatedResult<PatientListItemDto>());
+            return PartialView("_pvList", result?.Data ?? new PaginatedResult<PatientListItemDto>());
         }
 
         [HttpPost]
@@ -141,7 +141,7 @@ namespace ClinicMS.Web.Controllers
             var result = await _httpService.GetAsync<ApiResponseDto<PaginatedResult<PatientListItemDto>>>(
                 $"api/patients?PageNo={filter.PageNo}&PageSize={filter.PageSize}");
 
-            return PartialView("_List", result?.Data ?? new PaginatedResult<PatientListItemDto>());
+            return PartialView("_pvList", result?.Data ?? new PaginatedResult<PatientListItemDto>());
         }
     }
 }

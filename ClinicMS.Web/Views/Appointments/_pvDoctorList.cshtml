@@ -26,7 +26,7 @@
                     <td>
                         @if (a.Status.ToString() == "CheckedIn")
                         {
-                            <form action="/Appointments/Complete" method="post" class="d-inline">
+                                <form action="/Appointments/Complete" method="post" class="d-inline" data-sks-ajax="true" data-sks-target="#pageContent">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@a.Id" />
                                 <button type="submit" class="btn btn-sm btn-link p-0">Complete</button>

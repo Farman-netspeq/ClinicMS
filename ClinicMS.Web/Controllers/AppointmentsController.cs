@@ -38,7 +38,7 @@ namespace ClinicMS.Web.Controllers
             var result = await _httpService.PostAsync<ApiResponseDto<PaginatedResult<AppointmentListItemDto>>>(
                 "api/appointments/list", filter);
 
-            return PartialView("_List", result?.Data ?? new PaginatedResult<AppointmentListItemDto>());
+            return PartialView("_pvList", result?.Data ?? new PaginatedResult<AppointmentListItemDto>());
         }
         // ── ADD/EDIT MODAL ─────────────────────────────────
         [HttpGet]
@@ -51,14 +51,14 @@ namespace ClinicMS.Web.Controllers
                 .GetAsync<ApiResponseDto<List<DepartmentListItemDto>>>(
                     "/api/departments/active");
 
-            ViewBag.Departments = depts?.Data ?? new List<DepartmentListItemDto>();
+            dto.Departments = depts?.Data ?? new List<DepartmentListItemDto>();
 
             var patients = await _httpService
                 .GetAsync<ApiResponseDto<PaginatedResult<PatientListItemDto>>>(
                     "/api/patients?PageNo=1&PageSize=1000&IsActive=true");
-            ViewBag.Patients = patients?.Data?.Items ?? new List<PatientListItemDto>();
+            dto.Patients = patients?.Data?.Items ?? new List<PatientListItemDto>();
 
-            return PartialView("_AddEdit", dto);
+            return PartialView("_pvAddEdit", dto);
         }
         // ── SAVE (book) ─────────────────────────────────────
         [HttpPost]
@@ -176,7 +176,7 @@ namespace ClinicMS.Web.Controllers
         public async Task<IActionResult> CheckIn(string id)
         {
             await _httpService.PostAsync<ApiResponseDto<string>>($"api/appointments/{id}/checkin", new { });
-            return RedirectToAction("Index");
+            return await  List(new AppointmentFilterDto());
         }
 
         [HttpPost]
@@ -185,8 +185,9 @@ namespace ClinicMS.Web.Controllers
         public async Task<IActionResult> NoShow(string id)
         {
             await _httpService.PostAsync<ApiResponseDto<string>>($"api/appointments/{id}/noshow", new { });
-            return RedirectToAction("Index");
+            return await List(new AppointmentFilterDto());
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Doctor")]
@@ -196,9 +197,7 @@ namespace ClinicMS.Web.Controllers
             {
                 var result = await _httpService.PostAsync<ApiResponseDto<string>>($"api/appointments/{id}/complete", new { });
                 if (result == null || !result.Success)
-                {
                     TempData["Error"] = result?.Message ?? "Complete failed";
-                }
             }
             catch (Exception ex)
             {
@@ -207,9 +206,13 @@ namespace ClinicMS.Web.Controllers
             }
 
             if (User.IsInRole("Doctor") && !User.IsInRole("Admin"))
-                return RedirectToAction("MyAppointments");
+            {
+                var result = await _httpService.GetAsync<ApiResponseDto<List<AppointmentListItemDto>>>(
+                    "api/appointments/my-appointments");
+                return PartialView("_pvDoctorList", result?.Data ?? new List<AppointmentListItemDto>());
+            }
 
-            return RedirectToAction("Index");
+            return await List(new AppointmentFilterDto());
         }
         // ── DOCTOR DASHBOARD ─────────────────────────────────────
         [Authorize(Roles = "Admin,Doctor")]
@@ -223,6 +226,6 @@ namespace ClinicMS.Web.Controllers
         }
         [HttpGet]
         [Authorize(Roles = "Admin,Receptionist")]
-        public IActionResult CancelForm(string id) => PartialView("_Cancel", new CancelAppointmentDto { Id = id });
+        public IActionResult CancelForm(string id) => PartialView("_pvCancel", new CancelAppointmentDto { Id = id });
     }
 }

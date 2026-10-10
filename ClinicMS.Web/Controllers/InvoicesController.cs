@@ -36,7 +36,7 @@ namespace ClinicMS.Web.Controllers
                 query += $"&ToDate={filter.ToDate.Value:yyyy-MM-dd}";
 
             var result = await _httpService.GetAsync<ApiResponseDto<PaginatedResult<InvoiceListItemDto>>>(query);
-            return PartialView("_List", result?.Data ?? new PaginatedResult<InvoiceListItemDto>());
+            return PartialView("_pvList", result?.Data ?? new PaginatedResult<InvoiceListItemDto>());
         }
 
         // ── GENERATE FORM (from a Completed appointment) ──

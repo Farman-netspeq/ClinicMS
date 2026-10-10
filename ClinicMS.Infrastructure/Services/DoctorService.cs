@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Data.SqlClient;
 using System.Data;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ClinicMS.Infrastructure.Services
 {
@@ -334,6 +336,19 @@ namespace ClinicMS.Infrastructure.Services
                 _logger.LogError(ex, "Error resolving doctor for user {UserId}", userId);
                 return Result<string>.Fail("Failed to resolve doctor");
             }
+        }
+
+        //This Endpoint is for testing purpose not a feature....
+        public async Task<Result<List<string>>> GetTestQueryAsync()
+        {
+            var doctors = await _context.Doctors.Where(
+                     d => _context.Departments.Where(
+                    dep => dep.Name == "Cardiac Care Unit (CCU)")
+                    .Select(dep => dep.Id)
+                    .Contains(d.DepartmentId))
+                    .Select(d => d.FullName)
+                    .ToListAsync();
+            return Result<List<string>>.Ok(doctors);
         }
     }
 }

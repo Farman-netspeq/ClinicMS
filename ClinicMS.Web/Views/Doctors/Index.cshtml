@@ -1,4 +1,4 @@
-﻿@model PaginatedResult<DoctorListItemDto>
+﻿@model DoctorListPageDto
 @{
     ViewData["Title"] = "Doctors";
 }
@@ -19,7 +19,7 @@
         <div class="col-md-3 mobile-my-2">
             <select name="DepartmentId" class="form-control" onchange="$('#searchFrom').submit()">
                 <option value="">All Departments</option>
-                @foreach (var d in ViewBag.Departments as List<DepartmentListItemDto> ?? new())
+                @foreach (var d in Model.Departments)
                 {
                     <option value="@d.Id">@d.Name</option>
                 }
@@ -38,5 +38,5 @@
     </div>
 </form>
 <div id="replaceTarget">
-    <partial name="_List" model="Model" />
+    <partial name="_pvList" model="Model" />
 </div>
