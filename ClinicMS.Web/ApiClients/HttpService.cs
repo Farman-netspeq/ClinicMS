@@ -39,7 +39,7 @@ namespace ClinicMS.Web.ApiClients
             string? token;
             bool isTokenExpired = false;
             if (!string.IsNullOrEmpty(expiryClaim) &&
-        DateTime.TryParse(expiryClaim, null, System.Globalization.DateTimeStyles.RoundtripKind, out var expiryTime))
+             DateTime.TryParse(expiryClaim, null, System.Globalization.DateTimeStyles.RoundtripKind, out var expiryTime))
             {
                 isTokenExpired = DateTime.UtcNow >= expiryTime.ToUniversalTime().AddSeconds(-30);
             }

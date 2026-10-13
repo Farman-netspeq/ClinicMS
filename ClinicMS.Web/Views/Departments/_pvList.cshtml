@@ -36,7 +36,7 @@
                         <td>@dept.Description</td>
                         <td>
                             @* Badge color based on IsActive *@
-                            <span class="badge @(dept.IsActive ? "badge-success" : "badge-secondary")">
+                            <span class="badge @(dept.IsActive ? "bg-success" : "bg-danger") font-weight-bold">
                                 @dept.StatusDisplay
                             </span>
                         </td>

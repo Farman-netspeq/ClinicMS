@@ -39,7 +39,7 @@
                     <td>@doc.Specialization</td>
                     <td>@doc.LicenseNumber</td>
                     <td>@doc.ConsultationFee.ToString("N2")</td>
-                    <td><span class="badge @(doc.IsActive ? "badge-success" : "badge-secondary")">@doc.StatusDisplay</span></td>
+                    <td><span class="badge @(doc.IsActive ? "bg-success" : "bg-danger") font-weight-bold">@doc.StatusDisplay</span></td>
 
                     <td>
                         @if (User.IsInRole("Admin") || User.IsInRole("Receptionist"))

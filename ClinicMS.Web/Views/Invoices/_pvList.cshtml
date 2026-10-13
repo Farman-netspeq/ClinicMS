@@ -25,7 +25,7 @@
                         <td>@inv.PatientName (@inv.PatientNumber)</td>
                         <td>@inv.IssuedOn.ToString("dd-MMM-yyyy")</td>
                         <td>
-                            <span class="badge @(inv.Status == "Paid" ? "badge-success" : inv.Status == "Cancelled" ? "badge-secondary" : "badge-warning") text-white">
+                            <span class="badge @(inv.Status == "Paid" ? "bg-success" : inv.Status == "Cancelled" ? "bg-danger" : "bg-warning") text-white">
                                 @inv.Status
                             </span>
                         </td>

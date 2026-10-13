@@ -106,7 +106,7 @@ namespace ClinicMS.Web.Controllers
             }
             catch (HttpRequestException ex) when (ex.Message.Contains("Unauthorized"))
             {
-                return StatusCode(401);   // let browser's real ajax error handler catch this — see Bug 3 fix below
+                return StatusCode(401);   
             }
             catch (Exception ex)
             {
