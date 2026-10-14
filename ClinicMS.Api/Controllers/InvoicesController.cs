@@ -3,6 +3,7 @@ using ClinicMS.Application.Interfaces;
 using ClinicMS.Shared.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace ClinicMS.Api.Controllers
 {
@@ -55,13 +56,13 @@ namespace ClinicMS.Api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ApiResponseDto<string>.ErrorResponse("Invalid data"));
 
-            var result = await _service.GenerateAsync(dto);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var result = await _service.GenerateAsync(dto, userId);
             if (!result.IsSuccess)
                 return BadRequest(ApiResponseDto<string>.ErrorResponse(result.ErrorMessage));
 
             return StatusCode(201, ApiResponseDto<string>.SuccessResponse(result.Data!, "Invoice generated successfully"));
         }
-
         [HttpPost("{id}/pay", Name = "PayInvoice")]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Pay(string id, [FromBody] InvoicePayDto dto)
@@ -69,7 +70,8 @@ namespace ClinicMS.Api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ApiResponseDto<string>.ErrorResponse("Invalid data"));
 
-            var result = await _service.PayAsync(id, dto);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var result = await _service.PayAsync(id, dto, userId);
             if (!result.IsSuccess)
                 return BadRequest(ApiResponseDto<string>.ErrorResponse(result.ErrorMessage));
 

@@ -72,6 +72,8 @@ namespace ClinicMS.Infrastructure
             services.AddScoped<IMedicalRecordService, MedicalRecordService>();
             services.AddScoped<IPrescriptionService, PrescriptionService>();
             services.AddScoped<IInvoiceService, InvoiceService>();
+            services.AddScoped<IAuditService, AuditService>();
+            services.AddScoped<IDashboardService, DashboardService>();
             return services;
         }
     }

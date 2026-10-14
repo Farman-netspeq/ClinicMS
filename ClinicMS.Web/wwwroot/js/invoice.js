@@ -1,22 +1,20 @@
-﻿$(function () {
-    $('#btnInvoiceSearch').on('click', function () {
-        var filter = $('#searchFrom').serializeArray();
-        var data = {};
-        filter.forEach(f => data[f.name] = f.value);
+﻿$('#btnInvoiceSearch').on('click', function () {
+    var filter = $('#searchFrom').serializeArray();
+    var data = {};
+    filter.forEach(f => data[f.name] = f.value);
 
-        $.ajax({
-            url: '/Invoices/List',
-            type: 'GET',
-            data: data,
-            success: function (html) {
-                $('#pageContent').html(html);
-            }
-        });
+    $.ajax({
+        url: '/Invoices/List',
+        type: 'GET',
+        data: data,
+        success: function (html) {
+            $('#pageContent').html(html);
+        }
     });
+});
 
-    $('#searchFrom select[name="Status"], #searchFrom input[name="FromDate"], #searchFrom input[name="ToDate"]').on('change', function () {
-        $('#btnInvoiceSearch').click();
-    });
+$('#searchFrom select[name="Status"], #searchFrom input[name="FromDate"], #searchFrom input[name="ToDate"]').on('change', function () {
+    $('#btnInvoiceSearch').click();
 });
 
 $(function () {

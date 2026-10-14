@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ClinicMS.Infrastructure.Data.Configurations
 {
-    public class InvoiceItemConfiguration : IEntityTypeConfiguration<InvoiceItem>
+    public class InvoiceItemConfiguration : IEntityTypeConfiguration<utblCMSInvoiceItems>
     {
-        public void Configure(EntityTypeBuilder<InvoiceItem> builder)
+        public void Configure(EntityTypeBuilder<utblCMSInvoiceItems> builder)
         {
             builder.ToTable("utblCMSInvoiceItems");
 

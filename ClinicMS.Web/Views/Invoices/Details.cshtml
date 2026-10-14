@@ -9,20 +9,22 @@
 
 <div class="card mb-4">
     <div class="card-body">
-        <table class="table table-bordered">
-            <thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Line Total</th></tr></thead>
-            <tbody>
-                @foreach (var item in Model.Items)
-                {
-                    <tr>
-                        <td>@item.Description</td>
-                        <td>@item.Quantity</td>
-                        <td>₹@item.UnitPrice.ToString("N2")</td>
-                        <td>₹@((item.Quantity * item.UnitPrice).ToString("N2"))</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Line Total</th></tr></thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.Description</td>
+                            <td>@item.Quantity</td>
+                            <td>₹@item.UnitPrice.ToString("N2")</td>
+                            <td>₹@((item.Quantity * item.UnitPrice).ToString("N2"))</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
         <h5 class="text-end">Total: ₹@Model.TotalAmount.ToString("N2")</h5>
 
         <div class="mb-2">
@@ -42,8 +44,8 @@
         {
             <form id="payForm">
                 @Html.AntiForgeryToken()
-                <div class="row align-items-end">
-                    <div class="col-md-4">
+                <div class="row align-items-end g-2">
+                    <div class="col-md-4 mobile-my-2">
                         <label>Payment Method</label>
                         <select id="ddlPaymentMethod" class="form-control">
                             <option value="1">Cash</option>
@@ -52,8 +54,8 @@
                             <option value="4">Online</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <button type="button" id="btnPay" class="btn btn-success" data-id="@Model.Id">Mark as Paid</button>
+                    <div class="col-md-3 mobile-my-2">
+                        <button type="button" id="btnPay" class="btn btn-success w-100" data-id="@Model.Id">Mark as Paid</button>
                     </div>
                 </div>
                 <span id="payStatus" class="ms-2"></span>

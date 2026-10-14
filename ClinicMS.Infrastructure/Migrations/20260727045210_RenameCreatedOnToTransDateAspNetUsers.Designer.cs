@@ -1148,7 +1148,7 @@ namespace ClinicMS.Infrastructure.Migrations
 
                     b.HasIndex("Token");
 
-                    b.ToTable("RefreshTokens", (string)null);
+                    b.ToTable("utblCMSRefreshTokens", (string)null);
                 });
 
             modelBuilder.Entity("DoctorCountResultDto", b =>

@@ -4,6 +4,7 @@
     {
         public string Id { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
+        public string ApplicationUserId { get; set; } = string.Empty;
         public string DepartmentName { get; set; } = string.Empty;
         public string Specialization { get; set; } = string.Empty;
         public string LicenseNumber { get; set; } = string.Empty;

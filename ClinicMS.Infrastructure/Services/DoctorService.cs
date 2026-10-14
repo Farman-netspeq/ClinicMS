@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Data.SqlClient;
 using System.Data;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ClinicMS.Infrastructure.Services
 {
@@ -317,6 +319,36 @@ namespace ClinicMS.Infrastructure.Services
                 licenseNumberParam, excludeIdParam, existsParam);
 
             return (bool)(existsParam.Value ?? false);
+        }
+        public async Task<Result<string>> GetDoctorIdByUserIdAsync(string userId)
+        {
+            try
+            {
+                var userIdParam = new SqlParameter("@ApplicationUserId", userId);
+                var results = await _context.Set<DoctorResponseDto>()
+                    .FromSqlRaw("EXEC udspDoctorsGetByUserId @ApplicationUserId", userIdParam)
+                    .ToListAsync();
+                var dto = results.FirstOrDefault();
+                return dto == null ? Result<string>.Fail("Doctor not found") : Result<string>.Ok(dto.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resolving doctor for user {UserId}", userId);
+                return Result<string>.Fail("Failed to resolve doctor");
+            }
+        }
+
+        //This Endpoint is for testing purpose not a feature....
+        public async Task<Result<List<string>>> GetTestQueryAsync()
+        {
+            var doctors = await _context.Doctors.Where(
+                     d => _context.Departments.Where(
+                    dep => dep.Name == "Cardiac Care Unit (CCU)")
+                    .Select(dep => dep.Id)
+                    .Contains(d.DepartmentId))
+                    .Select(d => d.FullName)
+                    .ToListAsync();
+            return Result<List<string>>.Ok(doctors);
         }
     }
 }

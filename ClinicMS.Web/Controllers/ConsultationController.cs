@@ -3,9 +3,10 @@ using ClinicMS.Application.DTOs.MedicalRecord;
 using ClinicMS.Application.DTOs.Prescription;
 using ClinicMS.Shared.Common;
 using ClinicMS.Web.ApiClients;
+using ClinicMS.Web.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ClinicMS.Web.Helpers;
+using System.Security.Claims;
 namespace ClinicMS.Web.Controllers
 {
     [Authorize(Roles = "Admin,Doctor")]
@@ -37,6 +38,15 @@ namespace ClinicMS.Web.Controllers
                 return RedirectToAction("Index", "Appointments");
             }
 
+            // ── BR5 ownership check: Doctor can only view own patients ──
+            if (User.IsInRole("Doctor") && !User.IsInRole("Admin"))
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var myDoc = await _httpService.GetAsync<ApiResponseDto<string>>($"api/doctors/by-user/{userId}");
+                if (myDoc?.Data != appt.Data.DoctorId)
+                    return Forbid();
+            }
+
             ViewBag.Appointment = appt.Data;
             ViewBag.AppointmentId = appointmentId;
 
@@ -49,7 +59,7 @@ namespace ClinicMS.Web.Controllers
                     $"api/medicalrecords/by-appointment/{appointmentId}");
                 existingRecord = recordResult?.Data;
             }
-            catch (HttpRequestException) {  }
+            catch (HttpRequestException) { }
 
             try
             {
@@ -57,7 +67,7 @@ namespace ClinicMS.Web.Controllers
                     $"api/prescriptions/by-appointment/{appointmentId}");
                 existingPrescription = prescriptionResult?.Data;
             }
-            catch (HttpRequestException) {  }
+            catch (HttpRequestException) { }
 
             if (existingRecord != null && existingPrescription != null)
             {

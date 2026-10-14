@@ -4,6 +4,7 @@ using ClinicMS.Shared.Common;
 using ClinicMS.Web.ApiClients;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace ClinicMS.Web.Controllers
 {
@@ -17,53 +18,58 @@ namespace ClinicMS.Web.Controllers
             _httpService = httpService;
         }
 
-        public IActionResult Index()
+        // Web DoctorsController
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var result = await _httpService.GetAsync<ApiResponseDto<PaginatedResult<DoctorListItemDto>>>(
+                "/api/doctors?PageNo=1&PageSize=10");
+            var depts = await _httpService.GetAsync<ApiResponseDto<List<DepartmentListItemDto>>>("/api/departments/active");
+            //ViewBag.Departments = depts?.Data ?? new List<DepartmentListItemDto>();
+            //ViewBag.CurrentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var dto = new DoctorListPageDto
+            {
+                Doctors = result?.Data??new PaginatedResult<DoctorListItemDto>(),
+                Departments = depts?.Data??new List<DepartmentListItemDto>()
+            };
+            return View(dto);
         }
 
         public async Task<IActionResult> List(DoctorFilterDto filter)
         {
-            var queryParams = new List<string>
-            {
-                $"PageNo={filter.PageNo}",
-                $"PageSize={filter.PageSize}"
-            };
+            var queryParams = new List<string> { $"PageNo={filter.PageNo}", $"PageSize={filter.PageSize}" };
 
             if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
-                queryParams.Add(
-                    $"SearchTerm={Uri.EscapeDataString(filter.SearchTerm)}");
-
+                queryParams.Add($"SearchTerm={Uri.EscapeDataString(filter.SearchTerm)}");
             if (!string.IsNullOrWhiteSpace(filter.DepartmentId))
                 queryParams.Add($"DepartmentId={filter.DepartmentId}");
-
             if (filter.IsActive.HasValue)
-                queryParams.Add(
-                    $"IsActive={filter.IsActive.Value.ToString().ToLower()}");
+                queryParams.Add($"IsActive={filter.IsActive.Value.ToString().ToLower()}");
 
             var result = await _httpService
                 .GetAsync<ApiResponseDto<PaginatedResult<DoctorListItemDto>>>(
                     $"/api/doctors?{string.Join("&", queryParams)}");
 
-            var data = result?.Data
-                ?? new PaginatedResult<DoctorListItemDto>();
 
-            // Get departments for filter dropdown
             var depts = await _httpService
-                .GetAsync<ApiResponseDto<List<DepartmentListItemDto>>>(
-                    "/api/departments/active");
+                .GetAsync<ApiResponseDto<List<DepartmentListItemDto>>>("/api/departments/active");
 
-            ViewBag.Departments = depts?.Data
-                ?? new List<DepartmentListItemDto>();
+            var pagedData = new DoctorListPageDto
+            {
+                Doctors = result?.Data ?? new PaginatedResult<DoctorListItemDto>(),
+                Departments = depts?.Data ?? new List<DepartmentListItemDto>()
+            };
 
-            return PartialView("_List", data);
+            ViewBag.CurrentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);  
+
+            return PartialView("_pvList", pagedData);
         }
 
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Add()
         {
-            await LoadDepartmentsToViewBag();
-            return PartialView("_AddEdit", new DoctorRequestDto());
+            var dto=new DoctorRequestDto();
+            dto.Departments = await LoadDepartmentsList();
+            return PartialView("_pvAddEdit", dto);
         }
 
         [HttpPost]
@@ -73,8 +79,8 @@ namespace ClinicMS.Web.Controllers
         {
             if (!ModelState.IsValid)
             {
-                await LoadDepartmentsToViewBag();
-                return PartialView("_AddEdit", dto);
+               dto.Departments = await LoadDepartmentsList();
+                return PartialView("_pvAddEdit", dto);
             }
 
             var result = await _httpService
@@ -85,16 +91,19 @@ namespace ClinicMS.Web.Controllers
             {
                 ModelState.AddModelError("",
                     result?.Message ?? "Failed to create doctor");
-                await LoadDepartmentsToViewBag();
-                return PartialView("_AddEdit", dto);
+                return Json(new
+                {
+                    success = false,
+                    message = result?.Message ?? "Failed to create doctor"
+                });
             }
 
-            TempData["MsgCode"] = "success";
-            TempData["Msg"] = "Doctor created successfully";
 
             return Json(new
             {
                 success = true,
+                messageCode="success",
+                message="Doctor Created Successfully",
                 url = Url.Action("List", "Doctors")
             });
         }
@@ -108,8 +117,9 @@ namespace ClinicMS.Web.Controllers
 
             if (result == null || !result.Success)
             {
-                await LoadDepartmentsToViewBag();
-                return PartialView("_AddEdit", new DoctorRequestDto());
+               var emptyDTO = new DoctorRequestDto();
+                emptyDTO.Departments = await LoadDepartmentsList();
+                return PartialView("_pvAddEdit", emptyDTO);
             }
 
             var dto = new DoctorRequestDto
@@ -120,12 +130,12 @@ namespace ClinicMS.Web.Controllers
                 Specialization = result.Data.Specialization,
                 LicenseNumber = result.Data.LicenseNumber,
                 ConsultationFee = result.Data.ConsultationFee,
-                IsActive = result.Data.IsActive
+                IsActive = result.Data.IsActive,
+                Departments = await LoadDepartmentsList()
                 // Email/Password NOT prefilled — not editable
             };
 
-            await LoadDepartmentsToViewBag();
-            return PartialView("_AddEdit", dto);
+            return PartialView("_pvAddEdit", dto);
         }
 
         [HttpPost]
@@ -141,8 +151,8 @@ namespace ClinicMS.Web.Controllers
 
             if (!ModelState.IsValid)
             {
-                await LoadDepartmentsToViewBag();
-                return PartialView("_AddEdit", dto);
+                dto.Departments = await LoadDepartmentsList();
+                return PartialView("_pvAddEdit", dto);
             }
 
             var result = await _httpService
@@ -153,16 +163,15 @@ namespace ClinicMS.Web.Controllers
             {
                 ModelState.AddModelError("",
                     result?.Message ?? "Failed to update doctor");
-                await LoadDepartmentsToViewBag();
-                return PartialView("_AddEdit", dto);
+                dto.Departments = await LoadDepartmentsList();
+                return PartialView("_pvAddEdit", dto);
             }
-
-            TempData["MsgCode"] = "success";
-            TempData["Msg"] = "Doctor updated successfully";
 
             return Json(new
             {
                 success = true,
+                messageCode = "success",
+                message = "Doctor updated successfully",
                 url = Url.Action("List", "Doctors")
             });
         }
@@ -201,14 +210,15 @@ namespace ClinicMS.Web.Controllers
 
         // Private helper — loads departments into ViewBag
         // Used by Add/Edit actions for department dropdown in form
-        private async Task LoadDepartmentsToViewBag()
+        private async Task<List<DepartmentListItemDto>> LoadDepartmentsList()
         {
             var depts = await _httpService
                 .GetAsync<ApiResponseDto<List<DepartmentListItemDto>>>(
                     "/api/departments/active");
 
-            ViewBag.Departments = depts?.Data
+           var result = depts?.Data
                 ?? new List<DepartmentListItemDto>();
+            return result;
         }
     }
 }
