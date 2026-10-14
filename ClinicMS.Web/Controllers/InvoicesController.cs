@@ -96,6 +96,7 @@ namespace ClinicMS.Web.Controllers
                 {
                     success = result?.Success ?? false,
                     message = result?.Message ?? "Failed to generate invoice.",
+                    messageCode = result?.Success == true ? "success" : "error",
                     url = result?.Success == true ? Url.Action("Details", new { id = result.Data }) : ""
                 });
             }

@@ -1,192 +1,200 @@
-﻿using ClinicMS.Application.DTOs.Department;
-using ClinicMS.Shared.Common;
-using ClinicMS.Web.ApiClients;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿    using ClinicMS.Application.DTOs.Department;
+    using ClinicMS.Shared.Common;
+    using ClinicMS.Web.ApiClients;
+    using Microsoft.AspNetCore.Authorization;
+    using Microsoft.AspNetCore.Mvc;
 
-namespace ClinicMS.Web.Controllers
-{
-    [Authorize]
-    // All department pages need login
-    public class DepartmentsController : Controller
+    namespace ClinicMS.Web.Controllers
     {
-        private readonly IHttpService _httpService;
-
-        public DepartmentsController(IHttpService httpService)
+        [Authorize]
+        // All department pages need login
+        public class DepartmentsController : Controller
         {
-            _httpService = httpService;
-        }
+            private readonly IHttpService _httpService;
 
-        // GET /Departments
-        // Returns full page (Index.cshtml)
-        public async Task<IActionResult> Index()
-        {
-            var result = await _httpService.GetAsync<ApiResponseDto<PaginatedResult<DepartmentListItemDto>>>(
-                "/api/departments?PageNo=1&PageSize=10");
-            return View(result?.Data ?? new PaginatedResult<DepartmentListItemDto>());
-        }
-
-        // GET /Departments/List
-        public async Task<IActionResult> List(DepartmentFilterDto filter)
-        {
-            var queryParams = new List<string>
-    {
-        $"PageNo={filter.PageNo}",
-        $"PageSize={filter.PageSize}"
-    };
-
-            if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
-                queryParams.Add(
-                    $"SearchTerm={Uri.EscapeDataString(filter.SearchTerm)}");
-
-            if (filter.IsActive.HasValue)
-                queryParams.Add(
-                    $"IsActive={filter.IsActive.Value.ToString().ToLower()}");
-            // .ToLower() = sends "true"/"false" not "True"/"False"
-            // API model binder handles lowercase reliably
-
-            var queryString = string.Join("&", queryParams);
-
-            var result = await _httpService
-                .GetAsync<ApiResponseDto<PaginatedResult<DepartmentListItemDto>>>(
-                    $"/api/departments?{queryString}");
-
-            var data = result?.Data
-                ?? new PaginatedResult<DepartmentListItemDto>();
-
-            return PartialView("_pvList", data);
-        }
-        // GET /Departments/Add
-        // Called when clicking [+ Add New] button
-        [Authorize(Roles = "Admin")]
-        public IActionResult Add()
-        {
-            // Empty DTO = blank form
-            return PartialView("_pvAddEdit",
-                new DepartmentRequestDto());
-        }
-
-        // POST /Departments/Add
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Add(DepartmentRequestDto dto)
-        {
-            if (!ModelState.IsValid)
+            public DepartmentsController(IHttpService httpService)
             {
-                // Return partial WITH validation errors
-                // CustomAjax.js bindForm() keeps modal open
-                return PartialView("_AddEdit", dto);
+                _httpService = httpService;
             }
 
-            var result = await _httpService
-                .PostAsync<ApiResponseDto<string>>(
-                    "/api/departments", dto);
-
-            if (result == null || !result.Success)
+            // GET /Departments
+            // Returns full page (Index.cshtml)
+            public async Task<IActionResult> Index()
             {
-                ModelState.AddModelError("",
-                    result?.Message ?? "Failed to create department");
-                return PartialView("_AddEdit", dto);
+                var result = await _httpService.GetAsync<ApiResponseDto<PaginatedResult<DepartmentListItemDto>>>(
+                    "/api/departments?PageNo=1&PageSize=10");
+                return View(result?.Data ?? new PaginatedResult<DepartmentListItemDto>());
             }
 
-            TempData["MsgCode"] = "success";
-            TempData["Msg"] = "Department created successfully";
-
-            return Json(new
+            // GET /Departments/List
+            public async Task<IActionResult> List(DepartmentFilterDto filter)
             {
-                success = true,
-                url = Url.Action("List", "Departments")
-            });
-        }
+                var queryParams = new List<string>
+                {
+                    $"PageNo={filter.PageNo}",
+                    $"PageSize={filter.PageSize}"
+                };
 
-        // GET /Departments/Edit/{id}
-        // Called when clicking Edit button on grid row
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Edit(string id)
-        {
-            var result = await _httpService
-                .GetAsync<ApiResponseDto<DepartmentResponseDto>>(
-                    $"/api/departments/{id}");
+                if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
+                    queryParams.Add(
+                        $"SearchTerm={Uri.EscapeDataString(filter.SearchTerm)}");
 
-            if (result == null || !result.Success)
+                if (filter.IsActive.HasValue)
+                    queryParams.Add(
+                        $"IsActive={filter.IsActive.Value.ToString().ToLower()}");
+                // .ToLower() = sends "true"/"false" not "True"/"False"
+                // API model binder handles lowercase reliably
+
+                var queryString = string.Join("&", queryParams);
+
+                var result = await _httpService
+                    .GetAsync<ApiResponseDto<PaginatedResult<DepartmentListItemDto>>>(
+                        $"/api/departments?{queryString}");
+
+                var data = result?.Data
+                    ?? new PaginatedResult<DepartmentListItemDto>();
+
+                return PartialView("_pvList", data);
+            }
+            // GET /Departments/Add
+            // Called when clicking [+ Add New] button
+            [Authorize(Roles = "Admin")]
+            public IActionResult Add()
+            {
+                // Empty DTO = blank form
                 return PartialView("_pvAddEdit",
                     new DepartmentRequestDto());
-
-            // Map ResponseDto → RequestDto for edit form
-            var dto = new DepartmentRequestDto
-            {
-                Id = result.Data!.Id,
-                Name = result.Data.Name,
-                Description = result.Data.Description,
-                IsActive = result.Data.IsActive
-            };
-
-            return PartialView("_pvAddEdit", dto);
-        }
-
-        // POST /Departments/Edit/{id}
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Edit(
-            string id, DepartmentRequestDto dto)
-        {
-            dto.Id = id;
-
-            if (!ModelState.IsValid)
-                return PartialView("_pvAddEdit", dto);
-
-            var result = await _httpService
-                .PutAsync<ApiResponseDto<string>>(
-                    $"/api/departments/{id}", dto);
-
-            if (result == null || !result.Success)
-            {
-                ModelState.AddModelError("",
-                    result?.Message ?? "Failed to update department");
-                return PartialView("_AddEdit", dto);
             }
 
-            TempData["MsgCode"] = "success";
-            TempData["Msg"] = "Department updated successfully";
-
-            return Json(new
+            // POST /Departments/Add
+            [HttpPost]
+            [ValidateAntiForgeryToken]
+            [Authorize(Roles = "Admin")]
+            public async Task<IActionResult> Add(DepartmentRequestDto dto)
             {
-                success = true,
-                url = Url.Action("List", "Departments")
-            });
+                if (!ModelState.IsValid)
+                {
+                    // Return partial WITH validation errors
+                    // CustomAjax.js bindForm() keeps modal open
+                    return PartialView("_pvAddEdit", dto);
+                }
+            try
+            {
+
+                var result = await _httpService
+                    .PostAsync<ApiResponseDto<string>>(
+                        "/api/departments", dto);
+
+                if (result == null || !result.Success)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = result?.Message ?? "Failed to create department"
+                    });
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    messageCode="success",
+                    message="Department Craeted Successfully",
+                    url = Url.Action("List", "Departments")
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+
+            }
         }
 
-        // POST /Departments/Deactivate/{id}
-        // Called by CustomAjax delete confirm modal
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Deactivate(string id)
-        {
-            var result = await _httpService
-                .DeleteAsync<ApiResponseDto<string>>(
-                    $"/api/departments/{id}");
+            // GET /Departments/Edit/{id}
+            // Called when clicking Edit button on grid row
+            [Authorize(Roles = "Admin")]
+            public async Task<IActionResult> Edit(string id)
+            {
+                var result = await _httpService
+                    .GetAsync<ApiResponseDto<DepartmentResponseDto>>(
+                        $"/api/departments/{id}");
+
+                if (result == null || !result.Success)
+                    return PartialView("_pvAddEdit",
+                        new DepartmentRequestDto());
+
+                // Map ResponseDto → RequestDto for edit form
+                var dto = new DepartmentRequestDto
+                {
+                    Id = result.Data!.Id,
+                    Name = result.Data.Name,
+                    Description = result.Data.Description,
+                    IsActive = result.Data.IsActive
+                };
+
+                return PartialView("_pvAddEdit", dto);
+            }
+
+            // POST /Departments/Edit/{id}
+            [HttpPost]
+            [ValidateAntiForgeryToken]
+            [Authorize(Roles = "Admin")]
+            public async Task<IActionResult> Edit(
+                string id, DepartmentRequestDto dto)
+            {
+                dto.Id = id;
+
+                if (!ModelState.IsValid)
+                    return PartialView("_pvAddEdit", dto);
+
+                var result = await _httpService
+                    .PutAsync<ApiResponseDto<string>>(
+                        $"/api/departments/{id}", dto);
+
+                if (result == null || !result.Success)
+                {
+                    ModelState.AddModelError("",
+                        result?.Message ?? "Failed to update department");
+                    return PartialView("_pvAddEdit", dto);
+                }
+
+
+                return Json(new
+                {
+                    success = true,
+                    messageCode = "success",
+                    message = "Department Updated Successfully",
+                    url = Url.Action("List", "Departments")
+                });
+            }
+
+            // POST /Departments/Deactivate/{id}
+            // Called by CustomAjax delete confirm modal
+            [HttpPost]
+            [ValidateAntiForgeryToken]
+            [Authorize(Roles = "Admin")]
+            public async Task<IActionResult> Deactivate(string id)
+            {
+                var result = await _httpService
+                    .DeleteAsync<ApiResponseDto<string>>(
+                        $"/api/departments/{id}");
 
             // After deactivate → return updated grid partial
             // CustomAjax replaces grid with this
-            TempData["MsgCode"] = result?.Success == true
-                ? "success" : "error";
-            TempData["Msg"] = result?.Message
-                ?? "Operation failed";
+
+            TempData["Message"] = result?.Message ?? "Operation failed";
+            TempData["MessageCode"] = result?.Success == true ? "success" : "error";
 
             return await List(new DepartmentFilterDto());
-        }
-        // Returns JSON list for dropdown — called by doctors.js
-        [HttpGet]
-        public async Task<IActionResult> ActiveList()
-        {
-            var result = await _httpService
-                .GetAsync<ApiResponseDto<List<DepartmentListItemDto>>>(
-                    "/api/departments/active");
+            }
+            // Returns JSON list for dropdown — called by doctors.js
+            [HttpGet]
+            public async Task<IActionResult> ActiveList()
+            {
+                var result = await _httpService
+                    .GetAsync<ApiResponseDto<List<DepartmentListItemDto>>>(
+                        "/api/departments/active");
 
-            return Json(result?.Data ?? new List<DepartmentListItemDto>());
+                return Json(result?.Data ?? new List<DepartmentListItemDto>());
+            }
         }
     }
-}

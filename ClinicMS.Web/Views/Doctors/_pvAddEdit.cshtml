@@ -8,6 +8,7 @@
 </div>
 
 <form method="post"
+      data-sks-ajax="true" data-sks-target="#replaceTarget"
       action="@(string.IsNullOrEmpty(Model.Id)
                       ? "/Doctors/Add"
                       : $"/Doctors/Edit/{Model.Id}")">

@@ -497,9 +497,14 @@ function bindForm(dialog) {
                 if (typeof result === 'object' && result !== null) {
                     // JSON response
                     if (result.success) {
+                        $('#ErrMsgHiddenField')
+                            .attr('data-msg-code', result.messageCode)
+                            .val(result.message);
+
+                        ShowMessageBox();
                         $('#AddEditModal').modal('hide');
 
-                        $('#replacetarget').load(result.url);
+                        $('#replaceTarget').load(result.url);
                     } else {
                         toastr.error(result.message || 'Save failed.');
                     }

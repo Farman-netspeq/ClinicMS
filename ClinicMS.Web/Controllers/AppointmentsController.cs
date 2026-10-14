@@ -73,6 +73,7 @@ namespace ClinicMS.Web.Controllers
                 {
                     success = result?.Success ?? false,
                     message = result?.Message ?? "Booking failed.",
+                    messageCode = result?.Success == true ? "success" : "error",
                     url = Url.Action("List")
                 });
             }
@@ -97,6 +98,7 @@ namespace ClinicMS.Web.Controllers
                 {
                     success = result?.Success ?? false,
                     message = result?.Message ?? "Cancel failed.",
+                    messageCode = result?.Success == true ? "success" : "error",
                     url = Url.Action("List")
                 });
             }

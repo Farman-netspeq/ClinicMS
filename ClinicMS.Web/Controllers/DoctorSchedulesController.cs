@@ -88,7 +88,15 @@ public class DoctorSchedulesController : Controller
                 return PartialView("_pvAddEdit", dto);
             }
 
-            return Json(new { success = true, url = Url.Action("List", new { doctorId = dto.DoctorId }) });
+            return Json(new
+            {
+                success = true,
+                message = string.IsNullOrEmpty(dto.Id)
+                ? "Schedule Created Successfully"
+                : "Schedule Updated Successfully",
+                messageCode = "success",
+                url = Url.Action("List", new { doctorId = dto.DoctorId })
+            });
         }
         catch (HttpRequestException ex)
         {

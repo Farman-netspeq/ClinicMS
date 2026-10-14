@@ -91,16 +91,19 @@ namespace ClinicMS.Web.Controllers
             {
                 ModelState.AddModelError("",
                     result?.Message ?? "Failed to create doctor");
-               dto.Departments = await LoadDepartmentsList();
-                return PartialView("_pvAddEdit", dto);
+                return Json(new
+                {
+                    success = false,
+                    message = result?.Message ?? "Failed to create doctor"
+                });
             }
 
-            TempData["MsgCode"] = "success";
-            TempData["Msg"] = "Doctor created successfully";
 
             return Json(new
             {
                 success = true,
+                messageCode="success",
+                message="Doctor Created Successfully",
                 url = Url.Action("List", "Doctors")
             });
         }
@@ -164,12 +167,11 @@ namespace ClinicMS.Web.Controllers
                 return PartialView("_pvAddEdit", dto);
             }
 
-            TempData["MsgCode"] = "success";
-            TempData["Msg"] = "Doctor updated successfully";
-
             return Json(new
             {
                 success = true,
+                messageCode = "success",
+                message = "Doctor updated successfully",
                 url = Url.Action("List", "Doctors")
             });
         }

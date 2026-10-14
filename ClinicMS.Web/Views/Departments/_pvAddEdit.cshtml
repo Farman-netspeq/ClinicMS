@@ -9,7 +9,7 @@
     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
 
-<form method="post" data-sks-ajax="true" data-sks-target="#replacetarget"
+<form method="post" data-sks-ajax="true" data-sks-target="#replaceTarget"
       action="@(string.IsNullOrEmpty(Model.Id)
                                       ? "/Departments/Add"
                                       : $"/Departments/Edit/{Model.Id}")">

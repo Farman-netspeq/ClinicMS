@@ -84,13 +84,17 @@ namespace ClinicMS.Web.ApiClients
             var response = await _httpClient.PostAsync(endpoint, content);
             var responseJson = await response.Content.ReadAsStringAsync();
 
-            if (!response.IsSuccessStatusCode)
-            {
-                // Api rejected it — surface real reason instead of silent empty deserialize
-                throw new HttpRequestException($"Api call failed: {response.StatusCode} — {responseJson}");
-            }
+            if (string.IsNullOrWhiteSpace(responseJson))
+                return default;
 
-            return JsonSerializer.Deserialize<T>(responseJson, _jsonOptions);
+            try
+            {
+                return JsonSerializer.Deserialize<T>(responseJson, _jsonOptions);
+            }
+            catch (JsonException)
+            {
+                return default; 
+            }
         }
 
         public async Task<T?> PutAsync<T>(string endpoint, object data)
@@ -102,12 +106,19 @@ namespace ClinicMS.Web.ApiClients
             var response = await _httpClient.PutAsync(endpoint, content);
             var responseJson = await response.Content.ReadAsStringAsync();
 
-            if (!response.IsSuccessStatusCode)
+            if (string.IsNullOrEmpty(responseJson))
             {
-                throw new HttpRequestException($"Api call failed: {response.StatusCode} — {responseJson}");
+                return default;
             }
 
-            return JsonSerializer.Deserialize<T>(responseJson, _jsonOptions);
+            try
+            {
+                return JsonSerializer.Deserialize<T>(responseJson, _jsonOptions);
+            }
+            catch (JsonException)
+            {
+                return default;
+            }
         }
 
         public async Task<T?> DeleteAsync<T>(string endpoint)

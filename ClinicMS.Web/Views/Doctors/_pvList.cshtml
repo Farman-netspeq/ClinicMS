@@ -1,12 +1,15 @@
 ﻿@model DoctorListPageDto
 
-<div id="replacetarget">
+<div id="replaceTarget">
 
-    <input type="hidden"
-           id="ErrMsgHiddenField"
-           data-msg-code="@TempData["MsgCode"]"
-           value="@TempData["Msg"]" />
-
+    @if (TempData["Msg"] != null)
+    {
+        <script>
+                $('#ErrMsgHiddenField')
+                    .attr('data-msg-code', '@TempData["MsgCode"]')
+                    .val('@TempData["Msg"]');
+        </script>
+    }
     <div class="table-responsive">
         <table class="table table-bordered table-hover">
         <thead class="table-dark">
@@ -59,7 +62,7 @@
                             @if (doc.IsActive)
                             {
                                 <form method="post" action="/Doctors/Deactivate/@doc.Id"
-                                      data-sks-ajax="true" data-sks-target="#replacetarget" class="d-inline">
+                                      data-sks-ajax="true" data-sks-target="#replaceTarget" class="d-inline">
                                     @Html.AntiForgeryToken()
                                     <a class="delete btn btn-sm btn-danger" href="/Doctors/Deactivate/@doc.Id">Deactivate</a>
                                 </form>
@@ -67,7 +70,7 @@
                             else
                             {
                                 <form method="post" action="/Doctors/Reactivate/@doc.Id"
-                                      data-sks-ajax="true" data-sks-target="#replacetarget" class="d-inline">
+                                      data-sks-ajax="true" data-sks-target="#replaceTarget" class="d-inline">
                                     @Html.AntiForgeryToken()
                                     <a class="delete btn btn-sm btn-success" href="/Doctors/Reactivate/@doc.Id">Reactivate</a>
                                 </form>
@@ -80,17 +83,17 @@
     </table>
 </div>
 
-    <div class="ns-grid-pager d-flex justify-content-between align-items-center flex-wrap gap-2 mobile-my-2" data-sks-target="#replacetarget">
+    <div class="ns-grid-pager d-flex justify-content-between align-items-center flex-wrap gap-2 mobile-my-2" data-sks-target="#replaceTarget">
         <div class="d-flex flex-wrap align-items-center gap-3">
             <span class="text-muted  fw-bold">Page</span>
             <nav>
                 <ul class="pagination pagination-sm mb-0">
-                    <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
-                        <a class="page-link ns-page-link" href="/Doctors/List?PageNo=@(Model.Page - 1)">«</a>
+                    <li class="page-item @(!Model.Doctors.HasPreviousPage ? "disabled" : "")">
+                        <a class="page-link ns-page-link" href="/Doctors/List?PageNo=@(Model.Doctors.Page - 1)">«</a>
                     </li>
                     @{
-                        int current = Model.Page;
-                        int total = Model.TotalPages;
+                        int current = Model.Doctors.Page;
+                        int total = Model.Doctors.TotalPages;
                         int window = 1; // how many neighbors each side of current page to show
                         int? lastShown = null;
                     }
@@ -114,26 +117,26 @@
                     }
 
 
-                    <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
-                        <a class="page-link ns-page-link" href="/Doctors/List?PageNo=@(Model.Page + 1)">»</a>
+                    <li class="page-item @(!Model.Doctors.HasNextPage ? "disabled" : "")">
+                        <a class="page-link ns-page-link" href="/Doctors/List?PageNo=@(Model.Doctors.Page + 1)">»</a>
                     </li>
                 </ul>
             </nav>
         </div>
         <div class="d-flex align-items-center flex-wrap gap-2 flex-nowrap">
             <small class="text-muted mb-0">
-                Showing @((Model.Page - 1) * Model.PageSize + 1)
-                - @(Math.Min(Model.Page * Model.PageSize, Model.TotalCount))
-                of @Model.TotalCount doctors
+                Showing @((Model.Doctors.Page - 1) * Model.Doctors.PageSize + 1)
+                - @(Math.Min(Model.Doctors.Page * Model.Doctors.PageSize, Model.Doctors.TotalCount))
+                of @Model.Doctors.TotalCount doctors
             </small>
 
         </div>
-        <div class="d-flex align-items-center gap-2" data-sks-actionlink="/Doctors/List" data-sks-target="#replacetarget">
+        <div class="d-flex align-items-center gap-2" data-sks-actionlink="/Doctors/List" data-sks-target="#replaceTarget">
             <label for="pageSize" class="fw-bold text-muted mb-0 text-nowrap flex-shrink-0">Page Size</label>
             <select id="pageSize" class="page-size  form-select form-select-sm w-auto">
-                <option value="10" selected="@(Model.PageSize == 10)">10</option>
-                <option value="20" selected="@(Model.PageSize == 20)">20</option>
-                <option value="50" selected="@(Model.PageSize == 50)">50</option>
+                <option value="10" selected="@(Model.Doctors.PageSize == 10)">10</option>
+                <option value="20" selected="@(Model.Doctors.PageSize == 20)">20</option>
+                <option value="50" selected="@(Model.Doctors.PageSize == 50)">50</option>
             </select>
         </div>
     </div>

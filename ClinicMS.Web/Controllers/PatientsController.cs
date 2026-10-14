@@ -102,7 +102,7 @@ namespace ClinicMS.Web.Controllers
                     return PartialView("_pvAddEdit", dto);
                 }
                
-                return Json(new { success = true, url = Url.Action("List") });
+                return Json(new { success = true,message=string.IsNullOrEmpty(dto.Id)?"Patient Created Successfully":"Patient Updated Successfully",messageCode="success", url = Url.Action("List") });
             }
             catch (HttpRequestException ex) when (ex.Message.Contains("Unauthorized"))
             {
@@ -126,7 +126,6 @@ namespace ClinicMS.Web.Controllers
             var filter = new PatientFilterDto();
             var result = await _httpService.GetAsync<ApiResponseDto<PaginatedResult<PatientListItemDto>>>(
                 $"api/patients?PageNo={filter.PageNo}&PageSize={filter.PageSize}");
-
             return PartialView("_pvList", result?.Data ?? new PaginatedResult<PatientListItemDto>());
         }
 

@@ -5,7 +5,7 @@
     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
 
-<form action="/DoctorSchedules/Save" method="post">
+<form action="/DoctorSchedules/Save" method="post" >
     @Html.AntiForgeryToken()
     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
     <div class="modal-body">
