@@ -1,0 +1,44 @@
+﻿@model DashboardSummaryDto
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h2>Dashboard</h2>
+
+<div class="row g-3 mt-2">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h6 class="card-title">Today's Appointments</h6>
+                <h2>@Model.TodaysAppointments</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h6 class="card-title">Patients Seen Today</h6>
+                <h2>@Model.PatientsSeenToday</h2>
+            </div>
+        </div>
+    </div>
+    @if (!User.IsInRole("Doctor"))
+    {
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h6 class="card-title">Pending Invoices</h6>
+                    <h2>@Model.PendingInvoices</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h6 class="card-title">Revenue This Month</h6>
+                    <h2>@Model.RevenueThisMonth.ToString("C")</h2>
+                </div>
+            </div>
+        </div>
+    }
+</div>

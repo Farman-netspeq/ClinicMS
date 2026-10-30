@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ClinicMS.Infrastructure.Data.Configurations
 {
-    public class MedicalRecordConfiguration : IEntityTypeConfiguration<MedicalRecord>
+    public class MedicalRecordConfiguration : IEntityTypeConfiguration<utblCMSMedicalRecords>
     {
-        public void Configure(EntityTypeBuilder<MedicalRecord> builder)
+        public void Configure(EntityTypeBuilder<utblCMSMedicalRecords> builder)
         {
             builder.ToTable("utblCMSMedicalRecords");
 
@@ -24,7 +24,7 @@ namespace ClinicMS.Infrastructure.Data.Configurations
 
             builder.HasOne(e => e.Appointment)
                 .WithOne()
-                .HasForeignKey<MedicalRecord>(e => e.AppointmentId)
+                .HasForeignKey<utblCMSMedicalRecords>(e => e.AppointmentId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

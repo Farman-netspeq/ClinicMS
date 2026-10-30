@@ -1,0 +1,143 @@
+﻿@model DoctorListPageDto
+
+<div id="replaceTarget">
+
+    @if (TempData["Msg"] != null)
+    {
+        <script>
+                $('#ErrMsgHiddenField')
+                    .attr('data-msg-code', '@TempData["MsgCode"]')
+                    .val('@TempData["Msg"]');
+        </script>
+    }
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Specialization</th>
+                <th>License No.</th>
+                <th>Fee (₹)</th>
+                <th>Status</th>
+                <th>Schedule</th>
+                @if (User.IsInRole("Admin"))
+                {
+                    <th>Actions</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Doctors.Items.Any())
+            {
+                <tr>
+                    <td colspan="8" class="text-center text-muted">No doctors found</td>
+                </tr>
+            }
+            @foreach (var doc in Model.Doctors.Items)
+            {
+                <tr>
+                    <td>@doc.FullName</td>
+                    <td>@doc.DepartmentName</td>
+                    <td>@doc.Specialization</td>
+                    <td>@doc.LicenseNumber</td>
+                    <td>@doc.ConsultationFee.ToString("N2")</td>
+                    <td><span class="badge @(doc.IsActive ? "bg-success" : "bg-danger") font-weight-bold">@doc.StatusDisplay</span></td>
+
+                    <td>
+                        @if (User.IsInRole("Admin") || User.IsInRole("Receptionist"))
+                        {
+                            <a href="/DoctorSchedules/Index?doctorId=@doc.Id" class="btn btn-sm btn-info">Schedule</a>
+                        }
+                        else if (User.IsInRole("Doctor") && string.Equals(doc.ApplicationUserId, ViewBag.CurrentUserId as string, StringComparison.OrdinalIgnoreCase))
+                        {
+                            <a href="/DoctorSchedules/Index?doctorId=@doc.Id" class="btn btn-sm btn-info">Schedule</a>
+                        }
+                    </td>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <td>
+                            <a href="/Doctors/Edit/@doc.Id" data-modal class="btn btn-sm btn-warning">Edit</a>
+                            @if (doc.IsActive)
+                            {
+                                <form method="post" action="/Doctors/Deactivate/@doc.Id"
+                                      data-sks-ajax="true" data-sks-target="#replaceTarget" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <a class="delete btn btn-sm btn-danger" href="/Doctors/Deactivate/@doc.Id">Deactivate</a>
+                                </form>
+                            }
+                            else
+                            {
+                                <form method="post" action="/Doctors/Reactivate/@doc.Id"
+                                      data-sks-ajax="true" data-sks-target="#replaceTarget" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <a class="delete btn btn-sm btn-success" href="/Doctors/Reactivate/@doc.Id">Reactivate</a>
+                                </form>
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+    <div class="ns-grid-pager d-flex justify-content-between align-items-center flex-wrap gap-2 mobile-my-2" data-sks-target="#replaceTarget">
+        <div class="d-flex flex-wrap align-items-center gap-3">
+            <span class="text-muted  fw-bold">Page</span>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(!Model.Doctors.HasPreviousPage ? "disabled" : "")">
+                        <a class="page-link ns-page-link" href="/Doctors/List?PageNo=@(Model.Doctors.Page - 1)">«</a>
+                    </li>
+                    @{
+                        int current = Model.Doctors.Page;
+                        int total = Model.Doctors.TotalPages;
+                        int window = 1; // how many neighbors each side of current page to show
+                        int? lastShown = null;
+                    }
+                    @for (int i = 1; i <= total; i++)
+                    {
+                        bool show = (i == 1) || (i == total) || (i >= current - window && i <= current + window);
+
+                        if (show)
+                        {
+                            @if (lastShown.HasValue && i - lastShown.Value > 1)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+                            <li class="page-item @(i == current ? "active" : "")">
+                                <a class="page-link ns-page-link" href="/Doctors/List?PageNo=@i">@i</a>
+                            </li>
+                            lastShown = i;
+                        }
+                    }
+
+
+                    <li class="page-item @(!Model.Doctors.HasNextPage ? "disabled" : "")">
+                        <a class="page-link ns-page-link" href="/Doctors/List?PageNo=@(Model.Doctors.Page + 1)">»</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <div class="d-flex align-items-center flex-wrap gap-2 flex-nowrap">
+            <small class="text-muted mb-0">
+                Showing @((Model.Doctors.Page - 1) * Model.Doctors.PageSize + 1)
+                - @(Math.Min(Model.Doctors.Page * Model.Doctors.PageSize, Model.Doctors.TotalCount))
+                of @Model.Doctors.TotalCount doctors
+            </small>
+
+        </div>
+        <div class="d-flex align-items-center gap-2" data-sks-actionlink="/Doctors/List" data-sks-target="#replaceTarget">
+            <label for="pageSize" class="fw-bold text-muted mb-0 text-nowrap flex-shrink-0">Page Size</label>
+            <select id="pageSize" class="page-size  form-select form-select-sm w-auto">
+                <option value="10" selected="@(Model.Doctors.PageSize == 10)">10</option>
+                <option value="20" selected="@(Model.Doctors.PageSize == 20)">20</option>
+                <option value="50" selected="@(Model.Doctors.PageSize == 50)">50</option>
+            </select>
+        </div>
+    </div>
+</div>

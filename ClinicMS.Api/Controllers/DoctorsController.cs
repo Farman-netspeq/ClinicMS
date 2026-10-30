@@ -2,6 +2,7 @@
 using ClinicMS.Application.Interfaces;
 using ClinicMS.Shared.Common;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ClinicMS.Api.Controllers
@@ -142,6 +143,41 @@ namespace ClinicMS.Api.Controllers
 
             return Ok(ApiResponseDto<string>
                 .SuccessResponse("Doctor reactivated"));
+        }
+        [HttpGet("by-user/{userId}", Name = "GetDoctorByUserId")]
+        public async Task<IActionResult> GetByUserId(string userId)
+        {
+            var result = await _service.GetDoctorIdByUserIdAsync(userId);
+            if (!result.IsSuccess)
+                return NotFound(ApiResponseDto<string>.ErrorResponse(result.ErrorMessage));
+
+            // build directly, skip ambiguous overload
+            return Ok(new ApiResponseDto<string>
+            {
+                Success = true,
+                Data = result.Data!,
+                Message = "Success"
+            });
+        }
+
+
+
+        //This is a test query
+        [HttpGet("test-query")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetTestQuery()
+        {
+            var result = await _service.GetTestQueryAsync();
+            if (!result.IsSuccess)
+                return BadRequest(ApiResponseDto<string>.ErrorResponse(result.ErrorMessage));
+
+            return Ok(new ApiResponseDto<List<string>>
+            {
+                Success = true,
+                Data = result.Data!,
+                Message = "Success"
+
+            });
         }
     }
 }

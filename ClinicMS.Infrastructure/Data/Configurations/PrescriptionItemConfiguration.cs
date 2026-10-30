@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ClinicMS.Infrastructure.Data.Configurations
 {
-    public class PrescriptionItemConfiguration : IEntityTypeConfiguration<PrescriptionItem>
+    public class PrescriptionItemConfiguration : IEntityTypeConfiguration<utblCMSPrescriptionItems>
     {
-        public void Configure(EntityTypeBuilder<PrescriptionItem> builder)
+        public void Configure(EntityTypeBuilder<utblCMSPrescriptionItems> builder)
         {
             builder.ToTable("utblCMSPrescriptionItems");
 

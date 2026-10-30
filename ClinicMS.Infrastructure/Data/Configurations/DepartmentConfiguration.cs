@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ClinicMS.Infrastructure.Data.Configurations
 {
-    public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
+    public class DepartmentConfiguration : IEntityTypeConfiguration<utblCMSDepartments>
     {
-        public void Configure(EntityTypeBuilder<Department> builder)
+        public void Configure(EntityTypeBuilder<utblCMSDepartments> builder)
         {
             builder.ToTable("utblCMSDepartments");
 

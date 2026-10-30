@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using ClinicMS.Application.DTOs.Department;
+using System.ComponentModel.DataAnnotations;
 
 namespace ClinicMS.Application.DTOs.Doctor
 {
@@ -34,5 +35,6 @@ namespace ClinicMS.Application.DTOs.Doctor
         public string? Password { get; set; }
 
         public bool IsActive { get; set; } = true;
+        public List<DepartmentListItemDto> Departments { get; set; } = new();
     }
 }

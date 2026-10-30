@@ -6,9 +6,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace ClinicMS.Infrastructure.Data.Configurations
 {
     public class AppointmentConfiguration
-        : IEntityTypeConfiguration<Appointment>
+        : IEntityTypeConfiguration<utblCMSAppointments>
     {
-        public void Configure(EntityTypeBuilder<Appointment> builder)
+        public void Configure(EntityTypeBuilder<utblCMSAppointments> builder)
         {
             builder.ToTable("utblCMSAppointments");
 

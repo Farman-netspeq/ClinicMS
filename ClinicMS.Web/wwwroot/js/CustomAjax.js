@@ -2,14 +2,14 @@
     //**************** JS to show loading progress during ajax call *********************//
     $(document).bind("ajaxStart.box-body", function () {
         $("#ajaxLoading").css("display", "block");
-        $("#ajaxLoading").css("top", "50%");
-        $("#ajaxLoading").css("left", "50%");
-        $("#ajaxLoading").css("position", "fixed");
-        $("#ajax-backdrop").css("display", "block");
+        // $("#ajaxLoading").css("top", "50%");
+        // $("#ajaxLoading").css("left", "50%");
+        // $("#ajaxLoading").css("position", "fixed");
+        //$("#ajax-backdrop").css("display", "block");
     });
     $(document).bind("ajaxStop.box-body", function () {
         $("#ajaxLoading").css("display", "none");
-        $("#ajax-backdrop").css("display", "none");
+       // $("#ajax-backdrop").css("display", "none");
     })
     $(document).ajaxError(function (event, jqxhr, settings, thrownError) {
         if (jqxhr && jqxhr.status === 401) {
@@ -95,7 +95,9 @@
         return false;
     };
     $("body").on("click", "a.ns-page-link", getPage);
-
+    $("body").on("change", "#searchFrom select, #searchFrom input[type='date']", function () {
+        $(this).closest("#searchFrom").find("a.ns-page-link").first().trigger("click");
+    });
     var getPageForDDL = function () {
         var TargetURL = $(this).parent().attr("data-sks-actionlink");
         if (TargetURL.indexOf("?") > -1) {
@@ -217,7 +219,7 @@
         });
         return false;
     };
-    $("form[data-sks-ajax='true']").submit(ajaxFormSubmit);
+    $("body").on("submit", "form[data-sks-ajax='true']", ajaxFormSubmit);
     var ajaxCustomFormSubmit = function () {
 
         var $form = $(this);
@@ -452,6 +454,7 @@ $(function () {
         $('#AddEditModalContent').load(this.href, function () {
             $('#AddEditModal').modal('show');
             bindForm(this);
+
         });
         return false;
     });
@@ -462,9 +465,12 @@ $(function () {
     $(".container-fluid").on("click", "button[data-modal]", function (e) {
         // hide dropdown if any (this is used wehen invoking modal from link in bootstrap dropdown )
         //$(e.target).closest('.btn-group').children('.dropdown-toggle').dropdown('toggle');
+
         $('#AddEditModalContent').load(this.href, function () {
             $('#AddEditModal').modal('show');
             bindForm(this);
+
+
         });
         return false;
     });
@@ -472,7 +478,17 @@ $(function () {
 
 
 function bindForm(dialog) {
+
+    var $form = $('form', dialog);
+    if ($.validator && $.validator.unobtrusive) {
+        $form.removeData("validator").removeData("unobtrusiveValidation");
+        $.validator.unobtrusive.parse($form);
+    }
+
     $('form', dialog).submit(function () {
+        if (!$form.valid()) {
+            return false;
+        }
         $.ajax({
             url: this.action,
             type: this.method,
@@ -481,8 +497,14 @@ function bindForm(dialog) {
                 if (typeof result === 'object' && result !== null) {
                     // JSON response
                     if (result.success) {
+                        $('#ErrMsgHiddenField')
+                            .attr('data-msg-code', result.messageCode)
+                            .val(result.message);
+
+                        ShowMessageBox();
                         $('#AddEditModal').modal('hide');
-                        $('#replacetarget').load(result.url);
+
+                        $('#replaceTarget').load(result.url);
                     } else {
                         toastr.error(result.message || 'Save failed.');
                     }
