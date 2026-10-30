@@ -225,7 +225,10 @@ namespace ClinicMS.Infrastructure.Migrations
                 name: "utblCMSPatients",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                            Id = table.Column<string>(
+                                type: "nvarchar(36)",
+                                maxLength: 36,
+                                nullable: false),
                     PatientNumber = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
