@@ -31,10 +31,6 @@ namespace ClinicMS.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> List(AppointmentFilterDto filter)
         {
-            //if (User.IsInRole("Doctor") && !User.IsInRole("Admin") && !User.IsInRole("Receptionist")) { 
-            //    return Forbid();
-            //}
-
             var result = await _httpService.PostAsync<ApiResponseDto<PaginatedResult<AppointmentListItemDto>>>(
                 "api/appointments/list", filter);
 

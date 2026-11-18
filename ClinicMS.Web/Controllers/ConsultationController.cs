@@ -47,8 +47,6 @@ namespace ClinicMS.Web.Controllers
                     return Forbid();
             }
 
-            ViewBag.Appointment = appt.Data;
-            ViewBag.AppointmentId = appointmentId;
 
             MedicalRecordResponseDto? existingRecord = null;
             PrescriptionResponseDto? existingPrescription = null;
@@ -71,19 +69,18 @@ namespace ClinicMS.Web.Controllers
 
             if (existingRecord != null && existingPrescription != null)
             {
-                ViewBag.MedicalRecord = existingRecord;
-                ViewBag.Prescription = existingPrescription;
-                return View("View");
+                ConsultationViewDto existing = new ConsultationViewDto
+                {
+                    Appointment = appt.Data,
+                    MedicalRecord=existingRecord,
+                    Prescription=existingPrescription
+                };
+
+                return View("View", existing);
             }
 
-            var dto = new MedicalRecordRequestDto { AppointmentId = appointmentId };
-            var rxDto = new PrescriptionRequestDto
-            {
-                AppointmentId = appointmentId,
-                Items = new List<PrescriptionItemDto> { new PrescriptionItemDto() }
-            };
+            var dto = new MedicalRecordRequestDto { AppointmentId = appointmentId,Appointment=appt.Data };
 
-            ViewBag.PrescriptionDto = rxDto;
             return View("Index", dto);
         }
 

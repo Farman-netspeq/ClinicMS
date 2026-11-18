@@ -1,5 +1,8 @@
 ﻿@model DoctorListPageDto
-
+@using System.Security.Claims
+@{
+    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+}
 <div id="replaceTarget">
 
     @if (TempData["Msg"] != null)
@@ -49,7 +52,7 @@
                         {
                             <a href="/DoctorSchedules/Index?doctorId=@doc.Id" class="btn btn-sm btn-info">Schedule</a>
                         }
-                        else if (User.IsInRole("Doctor") && string.Equals(doc.ApplicationUserId, ViewBag.CurrentUserId as string, StringComparison.OrdinalIgnoreCase))
+                        else if (User.IsInRole("Doctor") && string.Equals(doc.ApplicationUserId,currentUserId, StringComparison.OrdinalIgnoreCase))
                         {
                             <a href="/DoctorSchedules/Index?doctorId=@doc.Id" class="btn btn-sm btn-info">Schedule</a>
                         }

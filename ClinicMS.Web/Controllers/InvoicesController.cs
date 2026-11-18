@@ -66,11 +66,11 @@ namespace ClinicMS.Web.Controllers
                 // 404 from Api = no invoice yet for this appointment, this is the expected/normal path — fall through
             }
 
-            ViewBag.Appointment = appt.Data;
 
             var dto = new InvoiceRequestDto
             {
                 AppointmentId = appointmentId,
+                Appointment = appt.Data,
                 Items = new List<InvoiceItemDto>
         {
             new InvoiceItemDto
@@ -80,6 +80,7 @@ namespace ClinicMS.Web.Controllers
                 UnitPrice = appt.Data.ConsultationFee
             }
         }
+
             };
 
             return View(dto);

@@ -1,4 +1,4 @@
-﻿@model List<DoctorScheduleListItemDto>
+﻿@model DoctorScheduleListViewModel
 <div id="replacetarget">
     <table class="table table-sm table-bordered">
         <thead>
@@ -11,7 +11,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var s in Model ?? new())
+            @foreach (var s in Model.Items)
             {
                 <tr>
                     <td>@s.DayOfWeek</td>
@@ -19,14 +19,14 @@
                     <td>@s.EndTime</td>
                     <td>@s.SlotDurationMinutes</td>
                     <td>
-                        @if (ViewBag.CanEdit == true)
+                        @if (Model.CanEdit == true)
                         {
-                            <a href="/DoctorSchedules/AddEdit?id=@s.Id&doctorId=@ViewBag.DoctorId" data-modal>Edit</a>
+                            <a href="/DoctorSchedules/AddEdit?id=@s.Id&doctorId=@Model.DoctorId" data-modal>Edit</a>
                             <text> | </text>
                             <form method="post" action="/DoctorSchedules/Delete/@s.Id"
                                   data-sks-ajax="true" data-sks-target="#replacetarget" class="d-inline">
                                 @Html.AntiForgeryToken()
-                                <input type="hidden" name="doctorId" value="@ViewBag.DoctorId" />
+                                <input type="hidden" name="doctorId" value="@Model.DoctorId" />
                                 <button type="submit" class="btn btn-link p-0"
                                         onclick="return confirm('Are you sure you want to delete the record..?');">
                                     Delete

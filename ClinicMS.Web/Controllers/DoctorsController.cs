@@ -24,8 +24,6 @@ namespace ClinicMS.Web.Controllers
             var result = await _httpService.GetAsync<ApiResponseDto<PaginatedResult<DoctorListItemDto>>>(
                 "/api/doctors?PageNo=1&PageSize=10");
             var depts = await _httpService.GetAsync<ApiResponseDto<List<DepartmentListItemDto>>>("/api/departments/active");
-            //ViewBag.Departments = depts?.Data ?? new List<DepartmentListItemDto>();
-            //ViewBag.CurrentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var dto = new DoctorListPageDto
             {
                 Doctors = result?.Data??new PaginatedResult<DoctorListItemDto>(),
@@ -59,7 +57,6 @@ namespace ClinicMS.Web.Controllers
                 Departments = depts?.Data ?? new List<DepartmentListItemDto>()
             };
 
-            ViewBag.CurrentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);  
 
             return PartialView("_pvList", pagedData);
         }

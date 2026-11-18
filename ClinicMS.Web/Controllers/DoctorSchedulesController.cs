@@ -13,8 +13,7 @@ public class DoctorSchedulesController : Controller
     public DoctorSchedulesController(IHttpService httpService) => _httpService = httpService;
 
 
-    [HttpGet]
-    [Authorize(Roles = "Doctor")]
+
     [HttpGet]
     [Authorize(Roles = "Doctor")]
     public async Task<IActionResult> MySchedule()
@@ -36,22 +35,13 @@ public class DoctorSchedulesController : Controller
             if (myDoc?.Data != doctorId)
                 return Forbid();
         }
-
-        var result = await _httpService.GetAsync<ApiResponseDto<List<DoctorScheduleListItemDto>>>(
-            $"api/doctorschedules/by-doctor/{doctorId}");
-        ViewBag.DoctorId = doctorId;
-        ViewBag.CanEdit = User.IsInRole("Admin");
-        return View(result?.Data ?? new List<DoctorScheduleListItemDto>());
+        return View(await BuildListVm(doctorId));
     }
 
     [HttpGet]
     public async Task<IActionResult> List(string doctorId)
     {
-        var result = await _httpService.GetAsync<ApiResponseDto<List<DoctorScheduleListItemDto>>>(
-            $"api/doctorschedules/by-doctor/{doctorId}");
-        ViewBag.DoctorId = doctorId;
-        ViewBag.CanEdit = User.IsInRole("Admin");
-        return PartialView("_pvList", result?.Data ?? new List<DoctorScheduleListItemDto>());
+        return PartialView("_pvList", await BuildListVm(doctorId));
     }
 
     [HttpGet]
@@ -111,11 +101,18 @@ public class DoctorSchedulesController : Controller
     public async Task<IActionResult> Delete(string id, string doctorId)
     {
         await _httpService.DeleteAsync<ApiResponseDto<string>>($"api/doctorschedules/{id}");
-
+        return PartialView("_pvList", await BuildListVm(doctorId));
+    }
+    private async Task<DoctorScheduleListViewModel> BuildListVm(string doctorId)
+    {
         var result = await _httpService.GetAsync<ApiResponseDto<List<DoctorScheduleListItemDto>>>(
             $"api/doctorschedules/by-doctor/{doctorId}");
-        ViewBag.DoctorId = doctorId;
-        ViewBag.CanEdit = User.IsInRole("Admin");
-        return PartialView("_pvList", result?.Data ?? new List<DoctorScheduleListItemDto>());
+
+        return new DoctorScheduleListViewModel
+        {
+            DoctorId = doctorId,
+            CanEdit = User.IsInRole("Admin"),
+            Items = result?.Data ?? new()
+        };
     }
 }
