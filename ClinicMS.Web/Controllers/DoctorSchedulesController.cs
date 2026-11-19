@@ -4,7 +4,7 @@ using ClinicMS.Web.ApiClients;
 using ClinicMS.Web.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
+using System.Security.Claims;
 
 [Authorize]
 public class DoctorSchedulesController : Controller
@@ -12,21 +12,36 @@ public class DoctorSchedulesController : Controller
     private readonly IHttpService _httpService;
     public DoctorSchedulesController(IHttpService httpService) => _httpService = httpService;
 
+
+
+    [HttpGet]
+    [Authorize(Roles = "Doctor")]
+    public async Task<IActionResult> MySchedule()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var myDoc = await _httpService.GetAsync<ApiResponseDto<string>>($"api/doctors/by-user/{userId}");
+
+        if (string.IsNullOrEmpty(myDoc?.Data))
+            return NotFound();
+
+        return RedirectToAction("Index", new { doctorId = myDoc.Data });
+    }
     public async Task<IActionResult> Index(string doctorId)
     {
-        var result = await _httpService.GetAsync<ApiResponseDto<List<DoctorScheduleListItemDto>>>(
-            $"api/doctorschedules/by-doctor/{doctorId}");
-        ViewBag.DoctorId = doctorId;
-        return View(result?.Data ?? new List<DoctorScheduleListItemDto>());
+        if (User.IsInRole("Doctor") && !User.IsInRole("Admin") && !User.IsInRole("Receptionist"))
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var myDoc = await _httpService.GetAsync<ApiResponseDto<string>>($"api/doctors/by-user/{userId}");
+            if (myDoc?.Data != doctorId)
+                return Forbid();
+        }
+        return View(await BuildListVm(doctorId));
     }
 
     [HttpGet]
     public async Task<IActionResult> List(string doctorId)
     {
-        var result = await _httpService.GetAsync<ApiResponseDto<List<DoctorScheduleListItemDto>>>(
-            $"api/doctorschedules/by-doctor/{doctorId}");
-        ViewBag.DoctorId = doctorId;
-        return PartialView("_List", result?.Data ?? new List<DoctorScheduleListItemDto>());
+        return PartialView("_pvList", await BuildListVm(doctorId));
     }
 
     [HttpGet]
@@ -46,10 +61,8 @@ public class DoctorSchedulesController : Controller
                 dto.SlotDurationMinutes = result.Data.SlotDurationMinutes;
             }
         }
-        return PartialView("_AddEdit", dto);
+        return PartialView("_pvAddEdit", dto);
     }
-
-
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = "Admin")]
@@ -58,16 +71,27 @@ public class DoctorSchedulesController : Controller
         try
         {
             var result = await _httpService.PostAsync<ApiResponseDto<string>>("api/doctorschedules/save", dto);
+
+            if (result?.Success != true)
+            {
+                ModelState.AddModelError("", result?.Message ?? "Save failed.");
+                return PartialView("_pvAddEdit", dto);
+            }
+
             return Json(new
             {
-                success = result?.Success ?? false,
-                message = result?.Message ?? "Save failed.",
+                success = true,
+                message = string.IsNullOrEmpty(dto.Id)
+                ? "Schedule Created Successfully"
+                : "Schedule Updated Successfully",
+                messageCode = "success",
                 url = Url.Action("List", new { doctorId = dto.DoctorId })
             });
         }
         catch (HttpRequestException ex)
         {
-            return Json(new { success = false, message = ApiErrorHelper.ExtractApiMessage(ex.Message), url = "" });
+            ModelState.AddModelError("", ApiErrorHelper.ExtractApiMessage(ex.Message));
+            return PartialView("_pvAddEdit", dto);
         }
     }
 
@@ -77,10 +101,18 @@ public class DoctorSchedulesController : Controller
     public async Task<IActionResult> Delete(string id, string doctorId)
     {
         await _httpService.DeleteAsync<ApiResponseDto<string>>($"api/doctorschedules/{id}");
-
+        return PartialView("_pvList", await BuildListVm(doctorId));
+    }
+    private async Task<DoctorScheduleListViewModel> BuildListVm(string doctorId)
+    {
         var result = await _httpService.GetAsync<ApiResponseDto<List<DoctorScheduleListItemDto>>>(
             $"api/doctorschedules/by-doctor/{doctorId}");
-        ViewBag.DoctorId = doctorId;
-        return PartialView("_List", result?.Data ?? new List<DoctorScheduleListItemDto>());
+
+        return new DoctorScheduleListViewModel
+        {
+            DoctorId = doctorId,
+            CanEdit = User.IsInRole("Admin"),
+            Items = result?.Data ?? new()
+        };
     }
 }

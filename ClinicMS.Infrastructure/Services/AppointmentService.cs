@@ -14,12 +14,23 @@ namespace ClinicMS.Infrastructure.Services
     public class AppointmentService : IAppointmentService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IAuditService _auditService;
         private readonly ILogger<AppointmentService> _logger;
 
-        public AppointmentService(ApplicationDbContext context, ILogger<AppointmentService> logger)
+        public AppointmentService(ApplicationDbContext context, IAuditService auditService, ILogger<AppointmentService> logger)
         {
             _context = context;
+            _auditService = auditService;
             _logger = logger;
+        }
+
+        private async Task<string> GetUserNameAsync(string userId)
+        {
+            var userIdParam = new SqlParameter("@UserId", userId);
+            var results = await _context.Database
+                .SqlQueryRaw<string>("EXEC udspUserGetUserName @UserId", userIdParam)
+                .ToListAsync();
+            return results.FirstOrDefault() ?? userId;
         }
 
         // ── GET PAGED LIST ────────────────────────────────────
@@ -201,7 +212,11 @@ namespace ClinicMS.Infrastructure.Services
 
                 _logger.LogInformation("Appointment created: {Number} for Patient {PatientId}", appointmentNumber, dto.PatientId);
 
+                await _auditService.LogAsync(createdByUserId, await GetUserNameAsync(createdByUserId),
+                    AuditAction.Create, "Appointment", newId, $"Booked {appointmentNumber}");
+
                 return Result<string>.Ok(newId);
+
             }
             catch (Exception ex)
             {
@@ -267,7 +282,7 @@ namespace ClinicMS.Infrastructure.Services
         }
 
         // ── CANCEL ────────────────────────────────────────────
-        public async Task<Result> CancelAppointmentAsync(string id, string cancelReason)
+        public async Task<Result> CancelAppointmentAsync(string id, string cancelReason, string userId)
         {
             try
             {
@@ -297,6 +312,8 @@ namespace ClinicMS.Infrastructure.Services
                 }
 
                 _logger.LogInformation("Appointment cancelled: {Id}", id);
+                await _auditService.LogAsync(userId, await GetUserNameAsync(userId),
+                    AuditAction.Cancel, "Appointment", id, $"Reason: {cancelReason}");
                 return Result.Ok();
             }
             catch (Exception ex)
@@ -307,12 +324,12 @@ namespace ClinicMS.Infrastructure.Services
         }
 
         // ── CHECK-IN ────────────────────────────────────────────
-        public async Task<Result> CheckInAppointmentAsync(string id)
-            => await RunTransitionAsync(id, "udspApptCheckIn", "checked in");
+        public async Task<Result> CheckInAppointmentAsync(string id, string userId)
+          => await RunTransitionAsync(id, "udspApptCheckIn", "checked in", userId, AuditAction.CheckIn);
 
         // ── NO-SHOW ─────────────────────────────────────────────
-        public async Task<Result> MarkNoShowAsync(string id)
-            => await RunTransitionAsync(id, "udspApptNoShow", "marked no-show");
+        public async Task<Result> MarkNoShowAsync(string id, string userId)
+            => await RunTransitionAsync(id, "udspApptNoShow", "marked no-show", userId, AuditAction.NoShow);
 
         // ── COMPLETE ────────────────────────────────────────────
         // Ownership: only assigned doctor (or Admin) can complete
@@ -344,7 +361,7 @@ namespace ClinicMS.Infrastructure.Services
                         return Result.Fail("You can only complete your own appointments");
                 }
 
-                return await RunTransitionAsync(id, "udspApptComplete", "completed");
+                return await RunTransitionAsync(id, "udspApptComplete", "completed", currentUserId, AuditAction.Complete);
             }
             catch (Exception ex)
             {
@@ -391,9 +408,8 @@ namespace ClinicMS.Infrastructure.Services
                 return Result<List<AppointmentListItemDto>>.Fail("Failed to fetch appointments");
             }
         }
-
         // ── PRIVATE: shared status-transition runner ──────────
-        private async Task<Result> RunTransitionAsync(string id, string spName, string actionLabel)
+        private async Task<Result> RunTransitionAsync(string id, string spName, string actionLabel, string userId, AuditAction auditAction)
         {
             try
             {
@@ -418,6 +434,7 @@ namespace ClinicMS.Infrastructure.Services
                 }
 
                 _logger.LogInformation("Appointment {Action}: {Id}", actionLabel, id);
+                await _auditService.LogAsync(userId, await GetUserNameAsync(userId), auditAction, "Appointment", id, null);
                 return Result.Ok();
             }
             catch (Exception ex)
@@ -426,7 +443,6 @@ namespace ClinicMS.Infrastructure.Services
                 return Result.Fail($"Failed to mark appointment as {actionLabel}");
             }
         }
-
         // ── SLOT GENERATION HELPER ────
         private List<(TimeSpan Start, TimeSpan End)> GenerateSlots(
             TimeSpan scheduleStart, TimeSpan scheduleEnd, int slotDurationMinutes)

@@ -1,24 +1,6 @@
 ﻿$(function () {
 
-    function getToken() {
-        return $('input[name="__RequestVerificationToken"]').val();
-    }
-
-    // ── Search button → reload grid via existing CustomAjax convention ──
-    $('#btnSearch').on('click', function () {
-        var filter = $('#searchFrom').serializeArray();
-        var data = {};
-        filter.forEach(f => data[f.name] = f.value);
-
-        $.ajax({
-            url: '/Appointments/List',
-            type: 'GET',
-            data: data,
-            success: function (html) {
-                $('#pageContent').html(html);
-            }
-        });
-    });
+    // ── Department → Doctor cascade ──
     $(document).on('change', '#ddlDepartment', function () {
         var deptId = $(this).val();
         var $doctor = $('#ddlDoctor');
@@ -41,6 +23,19 @@
             },
             error: function () {
                 $doctor.append('<option value="">Error loading doctors</option>');
+            }
+        });
+    });
+    $(document).on('click', '#btnSearch', function () {
+        var qs = $('#searchFrom').serialize();
+        $.ajax({
+            url: '/Appointments/List?' + qs,
+            type: 'GET',
+            success: function (html) {
+                $('#pageContent').html(html);
+            },
+            error: function () {
+                toastr.error('Search failed');
             }
         });
     });
@@ -85,28 +80,6 @@
         $('#hdnStartTime').val(parts[0]);
     });
 
-    // ── Cancel appointment: prompt reason, then AJAX ──
-    $(document).on('click', '.btn-cancel-apt', function () {
-        var id = $(this).data('id');
-        var reason = prompt('Enter cancellation reason:');
-        if (!reason || reason.trim() === '') {
-            alert('Cancellation reason is required.');
-            return;
-        }
-        $.ajax({
-            url: '/Appointments/Cancel',
-            type: 'POST',
-            data: { id: id, cancelReason: reason, __RequestVerificationToken: getToken() },
-            success: function (res) {
-                if (res.success) {
-                    $('#btnSearch').click();
-                } else {
-                    alert(res.message || 'Cancel failed.');
-                }
-            }
-        });
-    });
-
     // ── Client-side validation before Book form submits ──
     $(document).on('click', 'form[action="/Appointments/Save"] button[type="submit"]', function (e) {
         var errors = [];
@@ -124,58 +97,6 @@
             toastr.error(errors.join('<br>'));
             return false;
         }
-    });
-    // ── Check-in ─────────────────────────────────────────
-    $(document).on('click', '.btn-checkin-apt', function () {
-        var id = $(this).data('id');
-        $.ajax({
-            url: '/Appointments/CheckIn',
-            type: 'POST',
-            data: { id: id, __RequestVerificationToken: getToken() },
-            success: function (res) {
-                if (res.success) {
-                    $('#btnSearch').click();
-                } else {
-                    toastr.error(res.message || 'Check-in failed.');
-                }
-            }
-        });
-    });
-
-    // ── Complete ─────────────────────────────────────────
-    $(document).on('click', '.btn-complete-apt', function () {
-        var id = $(this).data('id');
-        $.ajax({
-            url: '/Appointments/Complete',
-            type: 'POST',
-            data: { id: id, __RequestVerificationToken: getToken() },
-            success: function (res) {
-                if (res.success) {
-                    location.reload();  // works on both grid page and dashboard page
-                } else {
-                    toastr.error(res.message || 'Complete failed.');
-                }
-            }
-        });
-    });
-
-    // ── No-show ──────────────────────────────────────────
-    $(document).on('click', '.btn-noshow-apt', function () {
-        var id = $(this).data('id');
-        if (!confirm('Mark this appointment as No-show?')) return;
-
-        $.ajax({
-            url: '/Appointments/NoShow',
-            type: 'POST',
-            data: { id: id, __RequestVerificationToken: getToken() },
-            success: function (res) {
-                if (res.success) {
-                    $('#btnSearch').click();
-                } else {
-                    toastr.error(res.message || 'No-show update failed.');
-                }
-            }
-        });
     });
 
 });

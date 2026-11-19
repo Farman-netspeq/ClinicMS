@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using ClinicMS.Application.DTOs.Department;
+using ClinicMS.Application.DTOs.Patient;
+using System.ComponentModel.DataAnnotations;
 
 namespace ClinicMS.Application.DTOs.Appointment
 {
@@ -28,5 +30,7 @@ namespace ClinicMS.Application.DTOs.Appointment
         public string ChiefComplaint { get; set; } = string.Empty;
 
         public string? CancelReason { get; set; }
+        public List<DepartmentListItemDto> Departments { get; set; } = new();
+        public List<PatientListItemDto> Patients { get; set; } = new();
     }
 }

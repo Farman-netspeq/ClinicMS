@@ -36,7 +36,7 @@ namespace ClinicMS.Web.Controllers
                 query += $"&ToDate={filter.ToDate.Value:yyyy-MM-dd}";
 
             var result = await _httpService.GetAsync<ApiResponseDto<PaginatedResult<InvoiceListItemDto>>>(query);
-            return PartialView("_List", result?.Data ?? new PaginatedResult<InvoiceListItemDto>());
+            return PartialView("_pvList", result?.Data ?? new PaginatedResult<InvoiceListItemDto>());
         }
 
         // ── GENERATE FORM (from a Completed appointment) ──
@@ -66,11 +66,11 @@ namespace ClinicMS.Web.Controllers
                 // 404 from Api = no invoice yet for this appointment, this is the expected/normal path — fall through
             }
 
-            ViewBag.Appointment = appt.Data;
 
             var dto = new InvoiceRequestDto
             {
                 AppointmentId = appointmentId,
+                Appointment = appt.Data,
                 Items = new List<InvoiceItemDto>
         {
             new InvoiceItemDto
@@ -80,6 +80,7 @@ namespace ClinicMS.Web.Controllers
                 UnitPrice = appt.Data.ConsultationFee
             }
         }
+
             };
 
             return View(dto);
@@ -96,6 +97,7 @@ namespace ClinicMS.Web.Controllers
                 {
                     success = result?.Success ?? false,
                     message = result?.Message ?? "Failed to generate invoice.",
+                    messageCode = result?.Success == true ? "success" : "error",
                     url = result?.Success == true ? Url.Action("Details", new { id = result.Data }) : ""
                 });
             }

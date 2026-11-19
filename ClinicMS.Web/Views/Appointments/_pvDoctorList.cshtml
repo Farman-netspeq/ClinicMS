@@ -1,0 +1,45 @@
+﻿@model List<AppointmentListItemDto>
+<div id="replacetarget">
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>Apt #</th>
+                <th>Patient</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Complaint</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var a in Model ?? new())
+            {
+                <tr>
+                    <td>@a.AppointmentNumber</td>
+                    <td>@a.PatientName (@a.PatientNumber)</td>
+                    <td>@a.AppointmentDate.ToString("dd-MMM-yyyy")</td>
+                    <td>@a.StartTime - @a.EndTime</td>
+                    <td>@a.Status</td>
+                    <td>@a.ChiefComplaint</td>
+                    <td>
+                        @if (a.Status.ToString() == "CheckedIn")
+                        {
+                                <form action="/Appointments/Complete" method="post" class="d-inline" data-sks-ajax="true" data-sks-target="#pageContent">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@a.Id" />
+                                <button type="submit" class="btn btn-sm btn-link p-0">Complete</button>
+                            </form>
+                        }
+                        @if (a.Status.ToString() == "Completed")
+                        {
+                            <a href="/Consultation/Index?appointmentId=@a.Id" class="btn btn-sm btn-info">Consultation</a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    </div>
+</div>

@@ -1,16 +1,18 @@
-﻿@model List<DoctorScheduleListItemDto>
+﻿@model DoctorScheduleListViewModel
 @{
     ViewBag.Title = "Doctor Schedule";
 }
 <input type="hidden" id="ErrMsgHiddenField" value="" />
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4>Weekly Schedule</h4>
-    <a href="/DoctorSchedules/AddEdit?id=&doctorId=@ViewBag.DoctorId"
-       class="btn btn-primary btn-sm" data-modal>
-        + Add Slot
-    </a>
+    @if (Model.CanEdit == true)
+    {
+        <a href="/DoctorSchedules/AddEdit?id=&doctorId=@Model.DoctorId" class="btn btn-primary btn-sm" data-modal>
+            + Add Slot
+        </a>
+    }
 </div>
 
-<div id="pageContent">
-    <partial name="_List" model="Model" />
+<div id="replaceTarget">
+    <partial name="_pvList" model="Model" />
 </div>

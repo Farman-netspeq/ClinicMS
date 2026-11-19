@@ -1,14 +1,11 @@
 ﻿@model ClinicMS.Application.DTOs.MedicalRecord.MedicalRecordRequestDto
-@using ClinicMS.Application.DTOs.Prescription
 @{
     ViewData["Title"] = "Consultation";
-    var appt = ViewBag.Appointment;
-    var rxDto = (PrescriptionRequestDto)ViewBag.PrescriptionDto;
 }
 <input type="hidden" id="ErrMsgHiddenField" value="" />
 
-<h4>Consultation — @appt.PatientName (@appt.AppointmentNumber)</h4>
-<p class="text-muted">@appt.AppointmentDate.ToString("dd MMM yyyy") | Dr. @appt.DoctorName</p>
+<h4>Consultation — @Model.Appointment!.PatientName (@Model.Appointment.AppointmentNumber)</h4>
+<p class="text-muted">@Model.Appointment.AppointmentDate.ToString("dd MMM yyyy") | Dr. @Model.Appointment.DoctorName</p>
 
 <div class="card mb-4">
     <div class="card-header">Vitals & Diagnosis</div>
@@ -48,8 +45,8 @@
                 <label>Notes</label>
                 <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
             </div>
-            <button type="button" id="saveRecordBtn" class="btn btn-primary">Save Vitals & Diagnosis</button>
-            <span id="recordStatus" class="ms-2"></span>
+            <button type="button" id="saveRecordBtn" class="btn btn-primary w-100 w-md-auto">Save Vitals & Diagnosis</button>
+            <span id="recordStatus" class="ms-2 d-block mobile-my-2"></span>
         </form>
     </div>
 </div>
@@ -59,33 +56,34 @@
     <div class="card-body">
         <form id="prescriptionForm">
             @Html.AntiForgeryToken()
-            <input type="hidden" id="rxAppointmentId" value="@rxDto.AppointmentId" />
+            <input type="hidden" id="rxAppointmentId" value="@Model.AppointmentId" />
+            <div class="table-responsive">
+                <table class="table table-bordered" id="rxItemsTable">
+                    <thead>
+                        <tr>
+                            <th>Medication</th>
+                            <th>Dosage</th>
+                            <th>Frequency</th>
+                            <th>Duration (days)</th>
+                            <th>Instructions</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="rxItemsBody">
+                        <!-- rows injected by JS, one blank row on load -->
+                    </tbody>
+                </table>
+            </div>
 
-            <table class="table table-bordered" id="rxItemsTable">
-                <thead>
-                    <tr>
-                        <th>Medication</th>
-                        <th>Dosage</th>
-                        <th>Frequency</th>
-                        <th>Duration (days)</th>
-                        <th>Instructions</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody id="rxItemsBody">
-                    <!-- rows injected by JS, one blank row on load -->
-                </tbody>
-            </table>
-
-            <button type="button" id="addRxRowBtn" class="btn btn-sm btn-outline-secondary mb-3">+ Add Medication</button>
+            <button type="button" id="addRxRowBtn" class="btn btn-sm btn-outline-secondary mb-3 w-100 w-md-auto">+ Add Medication</button>
 
             <div class="mb-3">
                 <label>Prescription Notes</label>
                 <textarea id="rxNotes" class="form-control" rows="2"></textarea>
             </div>
 
-            <button type="button" id="savePrescriptionBtn" class="btn btn-success">Save Prescription</button>
-            <span id="rxStatus" class="ms-2"></span>
+            <button type="button" id="savePrescriptionBtn" class="btn btn-success w-100 w-md-auto">Save Prescription</button>
+            <span id="rxStatus" class="ms-2 d-block mobile-my-2"></span>
         </form>
     </div>
 </div>

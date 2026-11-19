@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using ClinicMS.Application.DTOs.Appointment;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace ClinicMS.Application.DTOs.MedicalRecord
 {
@@ -28,5 +30,7 @@ namespace ClinicMS.Application.DTOs.MedicalRecord
 
         [StringLength(2000)]
         public string? Notes { get; set; }
+        [JsonIgnore]
+        public AppointmentResponseDto? Appointment { get; set; }
     }
 }

@@ -29,18 +29,19 @@ namespace ClinicMS.Application.Interfaces
 
         // Cancel appointment — requires reason (BR8)
         Task<Result>
-            CancelAppointmentAsync(
-                string id,
-                string cancelReason);
+             CancelAppointmentAsync(
+                 string id,
+                 string cancelReason,
+                 string userId);
 
         // BR4: Scheduled/CheckedIn → Completed. Only assigned doctor or Admin.
         Task<Result> CompleteAppointmentAsync(string id, string currentUserId, bool isAdmin);
 
         // BR4: Scheduled → CheckedIn. Admin/Receptionist.
-        Task<Result> CheckInAppointmentAsync(string id);
+        Task<Result> CheckInAppointmentAsync(string id, string userId);
 
         // BR4: Scheduled → NoShow. Admin/Receptionist.
-        Task<Result> MarkNoShowAsync(string id);
+        Task<Result> MarkNoShowAsync(string id, string userId);
 
         // BR10: doctor's own appointments only — resolves ApplicationUserId → Doctor.Id internally
         Task<Result<List<AppointmentListItemDto>>> GetDoctorAppointmentsAsync(string doctorUserId, DateTime? date);

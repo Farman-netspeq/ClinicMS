@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((context, services, loggerConfig) =>
 {
-    if (context.HostingEnvironment.IsProduction())
+    if (context.HostingEnvironment.IsProduction()||context.HostingEnvironment.IsStaging())
     {
         loggerConfig
             .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day)
@@ -14,7 +14,8 @@ builder.Host.UseSerilog((context, services, loggerConfig) =>
     }
     else
     {
-        loggerConfig.MinimumLevel.Fatal();
+        loggerConfig.WriteTo.Console()
+        .MinimumLevel.Fatal();
     }
 });
 // ── Services ──────────────────────────────────────────────────

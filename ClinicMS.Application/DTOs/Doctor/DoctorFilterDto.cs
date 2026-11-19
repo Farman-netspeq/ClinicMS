@@ -1,4 +1,6 @@
-﻿namespace ClinicMS.Application.DTOs.Doctor
+﻿using ClinicMS.Application.DTOs.Department;
+
+namespace ClinicMS.Application.DTOs.Doctor
 {
     public class DoctorFilterDto
     {

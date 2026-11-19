@@ -14,11 +14,13 @@ namespace ClinicMS.Infrastructure.Services
     public class MedicalRecordService : IMedicalRecordService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IAuditService _auditService;
         private readonly ILogger<MedicalRecordService> _logger;
 
-        public MedicalRecordService(ApplicationDbContext context, ILogger<MedicalRecordService> logger)
+        public MedicalRecordService(ApplicationDbContext context, IAuditService auditService, ILogger<MedicalRecordService> logger)
         {
             _context = context;
+            _auditService = auditService;
             _logger = logger;
         }
 
@@ -80,6 +82,16 @@ namespace ClinicMS.Infrastructure.Services
                     return Result<string>.Fail(errorMessage);
 
                 _logger.LogInformation("Medical record created: {Id} for appointment {AppointmentId}", id, dto.AppointmentId);
+
+                var userNameParam = new SqlParameter("@UserId", doctorUserId);
+                var userNameResults = await _context.Database
+                    .SqlQueryRaw<string>("EXEC udspUserGetUserName @UserId", userNameParam)
+                    .ToListAsync();
+                var userName = userNameResults.FirstOrDefault() ?? doctorUserId;
+
+                await _auditService.LogAsync(doctorUserId, userName, AuditAction.Create, "MedicalRecord", id,
+                    $"Diagnosis: {dto.Diagnosis.Trim()}");
+
                 return Result<string>.Ok(id);
             }
             catch (Exception ex)
